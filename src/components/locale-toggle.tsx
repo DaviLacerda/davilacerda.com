@@ -9,11 +9,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { i18n } from "@/i18n/i18n-config";
+import { Locale, i18n } from "@/i18n/i18n-config";
 import Link from "next/link";
 
 interface LocaleToggleProps {
-    lang: string;
+    lang: Locale;
 }
 
 function uppercaseFirstLetter(str: string) {

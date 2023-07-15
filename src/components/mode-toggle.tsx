@@ -10,8 +10,26 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Locale } from "@/i18n/i18n-config";
 
-export function ModeToggle() {
+interface ModeToggleProps {
+    lang: Locale;
+}
+
+const modesDisplayNames = {
+    "en": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System",
+    },
+    "pt-br": {
+        "light": "Claro",
+        "dark": "Escuro",
+        "system": "Sistema",
+    }
+};
+
+export function ModeToggle({ lang }: ModeToggleProps) {
     const { setTheme } = useTheme();
 
     return (
@@ -25,13 +43,13 @@ export function ModeToggle() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme("light")}>
-                    Light
+                    {modesDisplayNames[lang]["light"]}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    Dark
+                    {modesDisplayNames[lang]["dark"]}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme("system")}>
-                    System
+                    {modesDisplayNames[lang]["system"]}
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

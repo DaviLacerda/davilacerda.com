@@ -21,7 +21,7 @@ export function Header({ lang }: HeaderProps) {
                 </Link>
                 <div className="space-x-4">
                     <LocaleToggle lang={lang} />
-                    <ModeToggle />
+                    <ModeToggle lang={lang} />
                 </div>
             </div>
         </header>
