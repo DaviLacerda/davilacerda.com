@@ -1,6 +1,8 @@
+import { Icon, Icons } from "@/components/icons";
 import { siteConfig } from "@/config/site";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { Locale } from "@/i18n/i18n-config";
+import Link from "next/link";
 
 type Props = {
     params: {
@@ -8,9 +10,69 @@ type Props = {
     };
 };
 
+function SocialLink({ icon, href, title }: { icon: Icon, href: string, title: string }){
+    const Icon = Icons[icon];
+
+    return (
+        <Link href={href} className="flex items-center space-x-2 group" target="_blank" rel="noopener noreferrer">
+            <Icon className="w-6 h-6 group-hover:text-brand-700 transition-all" />
+            <span className="text-foreground/75 group-hover:text-brand-700 transition-all">{title}</span>
+        </Link>
+    )
+}
+
 export default async function Home({ params }: Props) {
     const { lang } = params;
-    const dictionary = await getDictionary(lang);
+    const dictionary = (await getDictionary(lang)).home;
 
-    return <span>{dictionary["home"].hello}</span>;
+    return (
+        <div className="container flex flex-col space-y-6 divide-y">
+            <div className="space-y-2 pt-6">
+                <h2 className="sm:text-lg font-bold">
+                    {dictionary.about.title}
+                </h2>
+                <p className="text-muted-foreground/75">
+                    {dictionary.about.description}
+                </p>
+            </div>
+            <div className="space-y-2 pt-6">
+                <h2 className="sm:text-lg font-bold">
+                    {dictionary.projects.title}
+                </h2>
+                <p className="text-muted-foreground/75">
+                    {dictionary.projects.description}
+                </p>
+                <div className="flex flex-col">
+                    {dictionary.projects.content.map((project) => (
+                        <Link
+                            key={project.title}
+                            href={project.url}
+                            className="border border-transparent hover:border-foreground/25 rounded px-2 py-4 transition-all"
+                        >
+                            <h3 className="underline underline-offset-4 font-semibold">
+                                {project.title}
+                            </h3>
+                            <p className="text-muted-foreground/75">
+                                {project.description}
+                            </p>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+            <div className="space-y-2 pt-6">
+                <h2 className="sm:text-lg font-bold">
+                    {dictionary.links.title}
+                </h2>
+                <p className="text-muted-foreground/75">
+                    {dictionary.links.description}
+                </p>
+                <div className="flex flex-col gap-2">
+                    <SocialLink icon="Github" href={siteConfig.links.github} title="Github" />
+                    <SocialLink icon="Linkedin" href={siteConfig.links.linkedin} title="LinkedIn" />
+                    <SocialLink icon="Instagram" href={siteConfig.links.instagram} title="Instagram" />
+                    <SocialLink icon="Email" href={siteConfig.links.email} title="E-mail" />
+                </div>
+            </div>
+        </div>
+    );
 }
