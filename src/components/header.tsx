@@ -2,9 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { LocaleToggle } from "./locale-toggle";
 import { ModeToggle } from "./mode-toggle";
+import { Locale } from "@/i18n/i18n-config";
 
 interface HeaderProps {
-    lang: string;
+    lang: Locale;
 }
 
 export function Header({ lang }: HeaderProps) {
