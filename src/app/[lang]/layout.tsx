@@ -1,6 +1,8 @@
+import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/config/site";
 import { Locale } from "@/i18n/i18n-config";
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../../styles/globals.css";
@@ -56,12 +58,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             title: siteConfig.name,
             description,
             siteName: siteConfig.name,
-            images: [{
-                url: siteConfig.ogImage,
-                width: 1200,
-                height: 630,
-                alt: siteConfig.name,
-            }],
+            images: [
+                {
+                    url: siteConfig.ogImage,
+                    width: 1200,
+                    height: 630,
+                    alt: siteConfig.name,
+                },
+            ],
         },
         twitter: {
             card: "summary_large_image",
@@ -74,24 +78,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             icon: "/favicon.ico",
             shortcut: "/favicon-16x16.png",
             apple: "/apple-touch-icon.png",
-        }
+        },
     };
 }
 
 export default function RootLayout({
     children,
+    params,
 }: {
     children: React.ReactNode;
+    params: Props["params"];
 }) {
+    const { lang } = params;
+
     return (
-        <html lang="en">
-            <body className={inter.className}>
+        <html lang={lang}>
+            <body
+                className={cn(
+                    "relative min-h-screen flex flex-col gap-4",
+                    inter.className
+                )}
+            >
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="system"
                     enableSystem
                 >
-                    {children}
+                    <Header lang={lang} />
+                    <div className="flex-1">{children}</div>
                 </ThemeProvider>
             </body>
         </html>
