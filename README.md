@@ -27,6 +27,7 @@ After that, to run project, run this commands:
 ##### yarn
 ```
   yarn install
+  yarn build
   yarn start
 ```
 
