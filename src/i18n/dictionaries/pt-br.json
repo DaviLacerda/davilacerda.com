@@ -2,14 +2,14 @@
     "home": {
         "about": {
             "title": "Sobre mim",
-            "description": "Davi Lacerda é um desenvolvedor com conhecimentos em Next.js, React, TypeScript, Tailwind CSS, e mais. Atualmente estudante de graduação em Ciência da Computação na Universidade Federal de Uberlândia(UFU)."
+            "description": "Sou um desenvolvedor com conhecimentos em Next.js, React, TypeScript, Tailwind CSS, e mais. Atualmente estudante de graduação em Ciência da Computação na Universidade Federal de Uberlândia(UFU)."
         },
         "projects": {
             "title": "Projetos",
             "description": "Uma lista dos projetos no qual eu tenho trabalhado.",
             "content": [
                 {
-                    "title": "Randomify",
+                    "title": "randomify",
                     "description": "Um projeto que surgiu com um hobby pessoal de assistir episódios aleatórios de algumas séries.",
                     "url": "https://randomify.davilacerda.com"
                 },
@@ -19,6 +19,10 @@
                     "url": "https://davilacerda.com"
                 }
             ]
+        },
+        "links": {
+            "title": "Links",
+            "description": "Uma lista de links para me encontrar na internet."
         }
     }
 }
