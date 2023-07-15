@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/config/site";
 import { Locale } from "@/i18n/i18n-config";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../../styles/globals.css";
@@ -107,6 +108,7 @@ export default function RootLayout({
                     <Header lang={lang} />
                     <div className="flex-1">{children}</div>
                 </ThemeProvider>
+                <Analytics />
             </body>
         </html>
     );
