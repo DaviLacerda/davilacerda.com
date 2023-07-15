@@ -75,4 +75,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  ::selection {
+    @apply bg-brand-700 text-white;
+  }
 }
