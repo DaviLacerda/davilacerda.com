@@ -10,15 +10,49 @@ type Props = {
     };
 };
 
-function SocialLink({ icon, href, title }: { icon: Icon, href: string, title: string }){
+type SocialLink = {
+    icon: Icon;
+    href: string;
+    title: string;
+};
+
+type Project = {
+    title: string;
+    description: string;
+    url: string;
+};
+
+function SocialLink({ icon, href, title }: SocialLink) {
     const Icon = Icons[icon];
 
     return (
-        <Link href={href} className="flex items-center space-x-2 group" target="_blank" rel="noopener noreferrer">
+        <Link
+            href={href}
+            className="flex items-center space-x-2 group"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             <Icon className="w-6 h-6 group-hover:text-brand-700 transition-all" />
-            <span className="text-foreground/75 group-hover:text-brand-700 transition-all">{title}</span>
+            <span className="text-foreground/75 group-hover:text-brand-700 transition-all">
+                {title}
+            </span>
         </Link>
-    )
+    );
+}
+
+function Project({ title, description, url }: Project) {
+    return (
+        <Link
+            key={title}
+            href={url}
+            className="border bg-muted/50 border rounded p-4 transition-all hover:border-brand"
+        >
+            <h3 className="underline underline-offset-4 font-semibold">
+                {title}
+            </h3>
+            <p className="text-muted-foreground/75">{description}</p>
+        </Link>
+    );
 }
 
 export default async function Home({ params }: Props) {
@@ -42,20 +76,14 @@ export default async function Home({ params }: Props) {
                 <p className="text-muted-foreground/75">
                     {dictionary.projects.description}
                 </p>
-                <div className="flex flex-col">
+                <div className="flex flex-col space-y-4">
                     {dictionary.projects.content.map((project) => (
-                        <Link
+                        <Project
                             key={project.title}
-                            href={project.url}
-                            className="border border-transparent hover:border-foreground/25 rounded px-2 py-4 transition-all"
-                        >
-                            <h3 className="underline underline-offset-4 font-semibold">
-                                {project.title}
-                            </h3>
-                            <p className="text-muted-foreground/75">
-                                {project.description}
-                            </p>
-                        </Link>
+                            title={project.title}
+                            description={project.description}
+                            url={project.url}
+                        />
                     ))}
                 </div>
             </div>
@@ -67,10 +95,26 @@ export default async function Home({ params }: Props) {
                     {dictionary.links.description}
                 </p>
                 <div className="flex flex-col gap-2">
-                    <SocialLink icon="Github" href={siteConfig.links.github} title="Github" />
-                    <SocialLink icon="Linkedin" href={siteConfig.links.linkedin} title="LinkedIn" />
-                    <SocialLink icon="Instagram" href={siteConfig.links.instagram} title="Instagram" />
-                    <SocialLink icon="Email" href={siteConfig.links.email} title="E-mail" />
+                    <SocialLink
+                        icon="Github"
+                        href={siteConfig.links.github}
+                        title="Github"
+                    />
+                    <SocialLink
+                        icon="Linkedin"
+                        href={siteConfig.links.linkedin}
+                        title="LinkedIn"
+                    />
+                    <SocialLink
+                        icon="Instagram"
+                        href={siteConfig.links.instagram}
+                        title="Instagram"
+                    />
+                    <SocialLink
+                        icon="Email"
+                        href={siteConfig.links.email}
+                        title="E-mail"
+                    />
                 </div>
             </div>
         </div>
