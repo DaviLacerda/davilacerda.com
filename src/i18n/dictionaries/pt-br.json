@@ -17,6 +17,11 @@
                     "title": "davilacerda.com",
                     "description": "Meu portfólio criado com Next.js, TypeScript, Tailwind CSS e shadcn/ui.",
                     "url": "https://davilacerda.com"
+                },
+                {
+                    "title": "ignite-react",
+                    "description": "Projetos desenvolvidos no curso Ignite da Rocketseat sobre React. Início em 2022, de 22 de Fevereiro até 31 de Março.",
+                    "url": "https://github.com/DaviLacerda/ignite-react"
                 }
             ]
         },
