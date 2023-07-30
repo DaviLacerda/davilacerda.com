@@ -46,6 +46,8 @@ function Project({ title, description, url }: Project) {
             key={title}
             href={url}
             className="border bg-muted/50 border rounded p-4 transition-all hover:border-brand"
+            target="_blank"
+            rel="noopener noreferrer"
         >
             <h3 className="underline underline-offset-4 font-semibold">
                 {title}
