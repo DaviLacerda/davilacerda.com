@@ -2,32 +2,27 @@
     "home": {
         "about": {
             "title": "Sobre mim",
-            "description": "Sou um desenvolvedor com conhecimentos em Next.js, React, TypeScript, Tailwind CSS, e mais. Atualmente estudante de graduação em Ciência da Computação na Universidade Federal de Uberlândia(UFU)."
+            "description": "Sou Desenvolvedor de Software Júnior com foco em IA Generativa e desenvolvimento full‑stack. Trabalho com Azure OpenAI, LangChain/LangGraph, Copilot Studio, Power Automate e construo apps em Python e TypeScript. Na Algar Telecom entrego soluções como um Sales Copilot em tempo real para calls, um sistema de validação de faturas (Billy) que reduziu o tempo de revisão em 96%, otimização de custos acima de 40% e benchmarking de LLMs para garantir acurácia."
         },
         "projects": {
             "title": "Projetos",
-            "description": "Uma lista dos projetos no qual eu tenho trabalhado.",
+            "description": "Iniciativas reais com IA Generativa.",
             "content": [
                 {
-                    "title": "randomify",
-                    "description": "Um projeto que surgiu com um hobby pessoal de assistir episódios aleatórios de algumas séries.",
-                    "url": "https://randomify.davilacerda.com"
+                    "title": "Sales Copilot",
+                    "description": "Assistente de vendas para o time SMB da Algar Telecom. Em Azure OpenAI, ouve as ligações, analisa pistas da conversa em tempo real e sugere argumentos e ofertas personalizadas conforme o perfil e dores do cliente.",
+                    "url": "https://www.mobiletime.com.br/noticias/14/06/2024/algar-telecom-amplia-uso-de-inteligencia-artificial-generativa/"
                 },
                 {
-                    "title": "davilacerda.com",
-                    "description": "Meu portfólio criado com Next.js, TypeScript, Tailwind CSS e shadcn/ui.",
-                    "url": "https://davilacerda.com"
-                },
-                {
-                    "title": "ignite-react",
-                    "description": "Projetos desenvolvidos no curso Ignite da Rocketseat sobre React. Início em 2022, de 22 de Fevereiro até 31 de Março.",
-                    "url": "https://github.com/DaviLacerda/ignite-react"
+                    "title": "Billy",
+                    "description": "Aplicação com IA Generativa para automatizar a análise e validação de faturas de telecom, extraindo e interpretando dados contratuais. Com Azure OpenAI e RPA, reduziu o tempo de revisão manual em 96% e gerou milhões em economia.",
+                    "url": "https://teletime.com.br/16/09/2024/algar-telecom-usa-inteligencia-artificial-para-automacao-de-faturas/"
                 }
             ]
         },
         "links": {
             "title": "Links",
-            "description": "Uma lista de links para me encontrar na internet."
+            "description": "Uma lista de links para minhas redes sociais."
         }
     }
 }
