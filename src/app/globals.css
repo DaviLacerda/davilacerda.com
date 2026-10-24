@@ -3,15 +3,31 @@
 /*
  * Design system for davilacerda.com
  * ---------------------------------
+ * One column, one typeface (Jost), white and near-black, one signal red.
+ *
  * 1. Tokens (CSS variables) for light and dark themes. next-themes toggles the
  *    `.dark` class on <html>; system preference is the default.
- * 2. Tailwind theme mapping: bg-background, text-foreground, text-muted-foreground,
- *    border-border, text-accent, bg-accent-subtle, font-display, text-display, max-w-page...
- * 3. Base styles, focus rings, selection and reduced motion.
- * 4. Components: site backdrop (top glow), body grain and `.markdown` (blog prose + code).
+ * 2. Tailwind theme mapping: bg-background, bg-surface, text-foreground,
+ *    text-muted-foreground, bg-accent, text-accent-text, text-display,
+ *    max-w-column...
+ * 3. Base styles, focus rings, selection.
+ * 4. Motion: the first-paint entrance (CSS, works without JavaScript) and the
+ *    press feedback shared by chips and buttons. Scroll reveals and the chat
+ *    turn use Motion (see `src/components/motion`).
+ * 5. `.markdown`: blog prose and code.
  *
- * Contrast (WCAG): foreground/background 17:1 (light) and 16:1 (dark);
- * muted-foreground >= 6:1 and accent >= 7:1 on background in both themes.
+ * Rules the components follow:
+ * - Surfaces are a fill one tone step from the page (`bg-surface`), never a
+ *   1px outline, never a shadow. Only form fields and real tables have lines.
+ * - Controls (chips, buttons, tabs, the composer, the question bubble) are
+ *   fully round; surfaces use `rounded-surface` (20px).
+ * - Red is for the one action on a screen (send, email) and for hover
+ *   underlines. Everything else is ink and grey.
+ * - Text is never below 15px; body copy is 17–19px in full ink.
+ *
+ * Contrast (WCAG 2.2): foreground/background 19.8:1 light, 16.6:1 dark;
+ * muted >= 5.1:1 on page and surface in both themes; white on accent 4.9:1;
+ * accent-text >= 4.9:1 on page and surface.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -21,47 +37,37 @@
  * ------------------------------------------------------------------------- */
 
 :root {
-  /* Warm paper neutrals with an ink foreground. */
-  --background: oklch(0.985 0.004 95); /* #fbfaf7 */
-  --foreground: oklch(0.21 0.014 285); /* #17171f */
-  --surface: oklch(0.995 0.002 95); /* cards, code blocks */
-  --muted: oklch(0.958 0.005 95); /* subtle fills */
-  --muted-foreground: oklch(0.49 0.014 285); /* secondary text, 6.1:1 */
-  --border: oklch(0.905 0.006 95);
-  --border-strong: oklch(0.82 0.008 95);
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --surface: #f2f2f2; /* widgets, chips, code, the question bubble */
+  --surface-strong: #e8e8e8; /* hover on surface */
+  --muted-foreground: #666666; /* 5.7:1 on page, 5.1:1 on surface */
+  --border: #d4d4d4; /* form fields and table rules only */
 
-  /* Brand violet (the logo is #5b21b6), tuned per theme for AA contrast. */
-  --accent: oklch(0.46 0.2 293); /* ~#5f2fbd, 7.3:1 on background */
-  --accent-foreground: oklch(0.985 0.004 95); /* text on accent fills */
-  --accent-subtle: oklch(
-    0.945 0.028 293
-  ); /* tinted fills, highlighted code lines */
+  --accent: #d92b21; /* signal red: fills with white text (4.9:1) */
+  --accent-foreground: #ffffff;
+  --accent-text: #c4251c; /* red as text: 5.8:1 on page, 5.2:1 on surface */
 
-  --ring: var(--accent);
-  --selection: color-mix(in oklch, var(--accent) 18%, transparent);
-  --grain-opacity: 0.045;
-  --glow-strength: 9%;
+  --ring: #0a0a0a;
+  --selection: color-mix(in srgb, #d92b21 20%, transparent);
 
   color-scheme: light;
 }
 
 .dark {
-  /* Deep ink neutrals, slightly violet. */
-  --background: oklch(0.165 0.008 285); /* #0e0e12 */
-  --foreground: oklch(0.94 0.006 285); /* #eaebef */
-  --surface: oklch(0.19 0.009 285);
-  --muted: oklch(0.205 0.01 285);
-  --muted-foreground: oklch(0.72 0.012 285); /* 7.7:1 */
-  --border: oklch(0.285 0.012 285);
-  --border-strong: oklch(0.37 0.014 285);
+  --background: #0d0d0d;
+  --foreground: #ededed;
+  --surface: #1b1b1b;
+  --surface-strong: #262626;
+  --muted-foreground: #a3a3a3; /* 7.4:1 on page, 6.8:1 on surface */
+  --border: #3a3a3a;
 
-  --accent: oklch(0.78 0.12 292); /* ~#b9a9fe, 9.3:1 on background */
-  --accent-foreground: oklch(0.17 0.01 285);
-  --accent-subtle: oklch(0.27 0.05 292);
+  --accent: #d92b21;
+  --accent-foreground: #ffffff;
+  --accent-text: #ff5a50; /* 6.3:1 on page, 5.6:1 on surface */
 
-  --selection: color-mix(in oklch, var(--accent) 28%, transparent);
-  --grain-opacity: 0.035;
-  --glow-strength: 12%;
+  --ring: #ededed;
+  --selection: color-mix(in srgb, #ff5a50 30%, transparent);
 
   color-scheme: dark;
 }
@@ -74,94 +80,84 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --color-muted: var(--muted);
+  --color-surface-strong: var(--surface-strong);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-text: var(--accent-text);
   --color-ring: var(--ring);
 
-  --font-sans:
-    var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display:
-    var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
-  --font-mono:
-    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  /* Literal code only (pre, code, kbd). */
+  --font-mono: var(--font-geist-mono), monospace; /* taste-skill-ignore */
 }
 
-@theme {
-  /* Fluid type scale (360px -> 1280px). Pair display sizes with font-display. */
-  --text-display: clamp(3rem, 1.95rem + 4.7vw, 6rem);
-  --text-display--line-height: 0.95;
-  --text-display--letter-spacing: -0.025em;
-  --text-h1: clamp(2.5rem, 1.85rem + 2.9vw, 4.25rem);
-  --text-h1--line-height: 1.02;
-  --text-h1--letter-spacing: -0.02em;
-  --text-h2: clamp(2rem, 1.6rem + 1.75vw, 3rem);
-  --text-h2--line-height: 1.08;
-  --text-h2--letter-spacing: -0.015em;
-  --text-h3: clamp(1.375rem, 1.22rem + 0.7vw, 1.75rem);
-  --text-h3--line-height: 1.2;
-  --text-h3--letter-spacing: -0.01em;
-  --text-lead: clamp(1.125rem, 1.06rem + 0.3vw, 1.3125rem);
-  --text-lead--line-height: 1.6;
-  --text-eyebrow: 0.75rem;
-  --text-eyebrow--line-height: 1rem;
-  --text-eyebrow--letter-spacing: 0.14em;
+@theme static {
+  /*
+   * Type scale (fluid, 360px -> 1440px). Five steps carry the site: display,
+   * title, heading, lead, body; `small` is for secondary lines. Jost has a
+   * small x-height, so the steps run a little larger than usual: body is
+   * 17px on a phone and 19px on a desktop, display 52px to 112px.
+   */
+  --text-display: clamp(3.25rem, 1.85rem + 6vw, 7rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.03em;
+  --text-title: clamp(2.5rem, 1.6rem + 4vw, 5rem);
+  --text-title--line-height: 1.04;
+  --text-title--letter-spacing: -0.025em;
+  --text-heading: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);
+  --text-heading--line-height: 1.2;
+  --text-heading--letter-spacing: -0.015em;
+  --text-lead: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  --text-lead--line-height: 1.55;
+  --text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --text-body--line-height: 1.65;
+  --text-small: clamp(0.9375rem, 0.9rem + 0.1vw, 1rem);
+  --text-small--line-height: 1.5;
 
-  /* Container widths: max-w-content (reading), max-w-page (default), max-w-wide. */
-  --container-content: 42rem;
-  --container-page: 70rem;
-  --container-wide: 80rem;
+  /* One column for everything: header, pages, footer. */
+  --container-column: 48rem;
 
-  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius-surface: 1.25rem;
 
-  /* Entrance animations. Stagger with style={{ animationDelay: "120ms" }}. */
-  --animate-fade-up: fade-up 0.7s var(--ease-editorial) both;
-  --animate-fade-in: fade-in 0.6s ease-out both;
-
-  @keyframes fade-up {
-    from {
-      opacity: 0;
-      transform: translateY(0.75rem);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
+  /* Emil Kowalski's curves: ease-out for arrivals, ease-in-out for movement. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-/* Page gutter + max width. Prefer the <Container> component. */
-@utility container-page {
+/* The page column with its gutters (16px on a phone). Prefer <Container>. */
+@utility container-column {
   width: 100%;
   margin-inline: auto;
-  max-width: var(--container-page);
-  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  max-width: calc(var(--container-column) + 2 * var(--gutter));
+  padding-inline: var(--gutter);
+  --gutter: clamp(1rem, 4vw, 2rem);
 }
 
-/* Understated underline that turns accent on hover. */
+/* Ink underline that turns red on hover. */
 @utility link-underline {
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
-  text-underline-offset: 0.22em;
-  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
-  transition:
-    text-decoration-color 0.2s ease,
-    color 0.2s ease;
+  text-underline-offset: 0.24em;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  transition: text-decoration-color 150ms ease;
   &:hover {
     text-decoration-color: var(--accent);
+  }
+}
+
+/* Press feedback for every control: a 3% squeeze, released on the way up. */
+@utility pressable {
+  transition-property: background-color, color, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+  @media (prefers-reduced-motion: no-preference) {
+    &:active {
+      transform: scale(0.97);
+      transition-duration: 120ms;
+      transition-timing-function: var(--ease-out);
+    }
   }
 }
 
@@ -183,17 +179,15 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    scroll-behavior: smooth;
-    scroll-padding-top: 6rem;
+    scroll-padding-top: 2rem;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
     min-height: 100dvh;
-    position: relative;
-    isolation: isolate;
-    font-size: 1rem;
-    line-height: 1.6;
+    background-color: var(--background);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
   }
 
   h1,
@@ -201,6 +195,7 @@
   h3,
   h4 {
     text-wrap: balance;
+    font-weight: 500;
   }
 
   p,
@@ -217,108 +212,106 @@
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 3px;
-    border-radius: 0.25rem;
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  @media (prefers-reduced-motion: no-preference) {
     html {
-      scroll-behavior: auto;
-    }
-
-    *,
-    ::before,
-    ::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0.01ms !important;
+      scroll-behavior: smooth;
     }
   }
 }
 
 /* ---------------------------------------------------------------------------
- * 4. Components
+ * 4. Motion
+ *
+ * First paint: the parts of the first screen marked `data-enter` rise 8px and
+ * fade in, 50ms apart (`--i` sets the order), settled within ~0.9s. Pure CSS,
+ * so it runs without JavaScript. It only plays on a full page load:
+ * `data-nav` is set on <html> as soon as the visitor navigates inside the
+ * site, and from then on arrivals are handled by the chat turn (Motion) or
+ * not animated at all. The hidden starting state lives inside the
+ * no-preference query, so with reduced motion the page is simply there.
+ * ------------------------------------------------------------------------- */
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-nav]) [data-enter] {
+    animation: enter 450ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 50ms + 40ms);
+  }
+
+  /*
+   * An answer's first block builds itself: its parts follow the block in,
+   * 60ms apart, every time an answer opens (first load or a chat turn).
+   */
+  [data-build] > * > * {
+    animation: enter 450ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 50ms + 120ms + var(--n, 0) * 60ms);
+  }
+}
+
+[data-build] > * > :nth-child(2) {
+  --n: 1;
+}
+[data-build] > * > :nth-child(3) {
+  --n: 2;
+}
+[data-build] > * > :nth-child(4) {
+  --n: 3;
+}
+[data-build] > * > :nth-child(5) {
+  --n: 4;
+}
+[data-build] > * > :nth-child(n + 6) {
+  --n: 5;
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Markdown prose (blog posts). Wrap rendered HTML in `.markdown`.
  * ------------------------------------------------------------------------- */
 
 @layer components {
-  /* Fixed decorative layer behind the page: accent glow + film grain. */
-  /* Decorative accent glow at the top of the page (scrolls away with it). */
-  .site-backdrop {
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 60rem;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(
-        60rem 30rem at 12% -10rem,
-        color-mix(in oklch, var(--accent) var(--glow-strength), transparent),
-        transparent 70%
-      ),
-      radial-gradient(
-        42rem 26rem at 100% -4rem,
-        color-mix(
-          in oklch,
-          var(--accent) calc(var(--glow-strength) * 0.55),
-          transparent
-        ),
-        transparent 70%
-      );
-    mask-image: linear-gradient(to bottom, #000 50%, transparent);
-  }
-
-  /* Film grain over the whole viewport, behind content. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  .dark body::before {
-    filter: invert(1);
-  }
-
-  /* -------------------------------------------------------------------------
-   * Markdown prose (blog posts). Wrap rendered HTML in `.markdown`.
-   * ----------------------------------------------------------------------- */
   .markdown {
-    font-size: 1.0625rem;
+    font-size: var(--text-body);
     line-height: 1.75;
-    color: color-mix(in oklch, var(--foreground) 90%, var(--background));
+    color: var(--foreground);
   }
 
   .markdown > * + * {
     margin-top: 1.25em;
   }
 
+  .markdown > :where(p, ul, ol, blockquote) {
+    max-width: 66ch;
+  }
+
   .markdown :where(h2, h3, h4) {
     color: var(--foreground);
-    scroll-margin-top: 6rem;
+    font-weight: 500;
+    scroll-margin-top: 2rem;
   }
 
   .markdown h2 {
-    margin-top: 2.25em;
-    font-family: var(--font-display);
-    font-size: var(--text-h3);
-    font-weight: 400;
-    line-height: 1.15;
-    letter-spacing: -0.01em;
+    margin-top: 2.5em;
+    font-size: var(--text-heading);
+    line-height: var(--text-heading--line-height);
+    letter-spacing: var(--text-heading--letter-spacing);
   }
 
   .markdown h3 {
     margin-top: 2em;
-    font-size: 1.1875rem;
-    font-weight: 600;
+    font-size: 1.25rem;
     line-height: 1.35;
   }
 
   .markdown h4 {
     margin-top: 1.75em;
-    font-weight: 600;
   }
 
   .markdown :where(h2, h3, h4) + * {
@@ -333,9 +326,9 @@
   .markdown .heading-anchor::after {
     content: "#";
     margin-left: 0.35em;
-    color: var(--accent);
+    color: var(--muted-foreground);
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 150ms ease;
   }
 
   .markdown :where(h2, h3, h4):hover .heading-anchor::after,
@@ -347,9 +340,9 @@
     color: var(--foreground);
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
-    text-underline-offset: 0.22em;
-    text-decoration-color: color-mix(in oklch, var(--accent) 55%, transparent);
-    transition: text-decoration-color 0.2s ease;
+    text-underline-offset: 0.24em;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    transition: text-decoration-color 150ms ease;
   }
 
   .markdown a:not(.heading-anchor):hover {
@@ -357,12 +350,11 @@
   }
 
   .markdown strong {
-    color: var(--foreground);
     font-weight: 600;
   }
 
   .markdown :where(ul, ol) {
-    padding-left: 1.4em;
+    padding-left: 1.25em;
   }
 
   .markdown ul {
@@ -391,28 +383,26 @@
     accent-color: var(--accent);
   }
 
+  /* A quotation is set larger, not boxed or ruled. */
   .markdown blockquote {
-    border-left: 2px solid var(--accent);
     padding-left: 1.25em;
-    font-family: var(--font-display);
-    font-size: 1.375em;
-    font-style: italic;
-    line-height: 1.45;
-    color: var(--foreground);
+    font-size: 1.25em;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
   }
 
+  /* A thematic break is space, not a line. */
   .markdown hr {
-    margin-block: 3em;
+    height: 0;
+    margin-block: 3.5em;
     border: 0;
-    height: 1px;
-    background-color: var(--border);
   }
 
   .markdown img {
     max-width: 100%;
     height: auto;
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-surface);
   }
 
   .markdown table {
@@ -420,7 +410,7 @@
     max-width: 100%;
     overflow-x: auto;
     border-collapse: collapse;
-    font-size: 0.9375rem;
+    font-size: var(--text-small);
   }
 
   .markdown :where(th, td) {
@@ -431,48 +421,41 @@
   }
 
   .markdown th {
-    color: var(--foreground);
-    font-weight: 600;
+    font-weight: 500;
   }
 
   .markdown :not(pre) > code {
-    border: 1px solid var(--border);
     border-radius: 0.375rem;
-    background-color: var(--muted);
+    background-color: var(--surface);
     padding: 0.1em 0.35em;
     font-family: var(--font-mono);
     font-size: 0.85em;
-    color: var(--foreground);
   }
 
   .markdown kbd {
-    border: 1px solid var(--border-strong);
-    border-bottom-width: 2px;
     border-radius: 0.375rem;
-    padding: 0.05em 0.4em;
+    background-color: var(--surface);
+    padding: 0.1em 0.4em;
     font-family: var(--font-mono);
     font-size: 0.8em;
   }
 
   .markdown .footnotes {
-    margin-top: 3em;
-    border-top: 1px solid var(--border);
-    padding-top: 1.5em;
-    font-size: 0.9375rem;
+    margin-top: 4em;
+    font-size: var(--text-small);
     color: var(--muted-foreground);
   }
 
-  /* Code blocks (rehype-pretty-code + Shiki, dual light/dark themes). */
+  /* Code blocks (rehype-pretty-code + Shiki, with the ink theme in src/lib/code-theme.ts). */
   .markdown figure[data-rehype-pretty-code-figure] {
-    margin-block: 1.75em;
+    margin-block: 2em;
   }
 
   .markdown pre {
     overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 0.875rem;
+    border-radius: var(--radius-surface);
     background-color: var(--surface);
-    padding-block: 1.1rem;
+    padding-block: 1.25rem;
     font-family: var(--font-mono);
     font-size: 0.875rem;
     line-height: 1.7;
@@ -485,29 +468,25 @@
   }
 
   .markdown pre [data-line] {
-    padding-inline: 1.25rem;
-    border-left: 2px solid transparent;
+    padding-inline: 1.5rem;
   }
 
   .markdown pre [data-highlighted-line] {
-    background-color: var(--accent-subtle);
-    border-left-color: var(--accent);
+    background-color: var(--surface-strong);
   }
 
   .markdown pre [data-highlighted-chars] {
     border-radius: 0.25rem;
-    background-color: var(--accent-subtle);
+    background-color: var(--surface-strong);
     padding: 0.1em 0.2em;
   }
 
   .markdown [data-rehype-pretty-code-title] {
-    border: 1px solid var(--border);
-    border-bottom: 0;
-    border-radius: 0.875rem 0.875rem 0 0;
-    background-color: var(--muted);
-    padding: 0.55rem 1.25rem;
+    border-radius: var(--radius-surface) var(--radius-surface) 0 0;
+    background-color: var(--surface-strong);
+    padding: 0.6rem 1.5rem;
     font-family: var(--font-mono);
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     color: var(--muted-foreground);
   }
 
@@ -518,17 +497,19 @@
 
   .markdown [data-rehype-pretty-code-caption] {
     margin-top: 0.6rem;
-    font-size: 0.875rem;
+    font-size: var(--text-small);
     color: var(--muted-foreground);
   }
 
   .markdown code[data-theme],
   .markdown code[data-theme] span {
     color: var(--shiki-light);
+    font-weight: var(--shiki-light-font-weight, inherit);
   }
 
   .dark .markdown code[data-theme],
   .dark .markdown code[data-theme] span {
     color: var(--shiki-dark);
+    font-weight: var(--shiki-dark-font-weight, inherit);
   }
 }

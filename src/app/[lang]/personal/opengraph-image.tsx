@@ -28,19 +28,11 @@ export default async function Image({
   const { lang: value } = await params;
   const lang = isLocale(value) ? value : defaultLocale;
   const dict = getDictionary(lang);
-  const sections = dict.personal.sections;
 
   return new ImageResponse(
-    <OgFrame
-      eyebrow={`${profile.name} · ${dict.nav.personal}`}
-      footer={[
-        sections.writing.title,
-        sections.sideProjects.title,
-        sections.elsewhere.title,
-      ]}
-    >
+    <OgFrame>
       <OgTitle text={dict.personal.intro.title} />
-      <OgLead>{dict.personal.intro.description}</OgLead>
+      <OgLead>{dict.meta.personal.description}</OgLead>
     </OgFrame>,
     { ...size, fonts: await loadOgFonts() },
   );

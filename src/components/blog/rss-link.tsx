@@ -1,6 +1,6 @@
-import { Rss } from "lucide-react";
+import { RssSimpleIcon } from "@phosphor-icons/react/dist/ssr/RssSimple";
 
-import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { type Locale } from "@/i18n";
 import { routes } from "@/lib/routes";
 
@@ -21,9 +21,12 @@ export function RssLink({
     <a
       href={routes.rss(lang)}
       type="application/rss+xml"
-      className={buttonVariants({ variant: "outline", size: "sm", className })}
+      className={cn(
+        "inline-flex items-center gap-2 font-medium text-foreground link-underline",
+        className,
+      )}
     >
-      <Rss aria-hidden="true" className="size-3.5" strokeWidth={2} />
+      <RssSimpleIcon aria-hidden="true" className="size-4 shrink-0" />
       {label}
     </a>
   );

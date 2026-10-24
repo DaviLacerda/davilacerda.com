@@ -5,8 +5,9 @@ import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { formatDateRange, formatPartialDate } from "@/i18n/format";
 import { routes } from "@/lib/routes";
 import { absoluteUrl } from "@/lib/utils";
+import type { TopicId } from "@/lib/work/topics";
 
-import { markdownPath } from "./discovery";
+import { markdownPath, type PageRef } from "./discovery";
 import { getRawPosts } from "./posts";
 
 /**
@@ -70,26 +71,42 @@ function countOccurrences(haystack: string, needle: string): number {
   return count;
 }
 
+/**
+ * Each profile document points at the page that answers it best: a Work
+ * answer (`/en/work/<topic>`) or, for side projects and the summary, the
+ * Personal and Work pages.
+ */
 function profileDocuments(lang: Locale): SearchDocument[] {
   const dict = getDictionary(lang);
   const s = dict.work.sections;
-  const url = absoluteUrl(routes.work(lang));
-  const markdownUrl = absoluteUrl(markdownPath({ kind: "work", lang }));
   const doc = (
     id: string,
     section: string,
     title: string,
     text: string,
-  ): SearchDocument => ({
-    id: `profile:${lang}:${id}`,
-    lang,
-    type: "profile",
-    section,
-    title,
-    url,
-    markdownUrl,
-    text,
-  });
+    where: TopicId | "work" | "personal" = "work",
+  ): SearchDocument => {
+    const page: PageRef =
+      where === "work" || where === "personal"
+        ? { kind: where, lang }
+        : { kind: "topic", lang, topic: where };
+    return {
+      id: `profile:${lang}:${id}`,
+      lang,
+      type: "profile",
+      section,
+      title,
+      url: absoluteUrl(
+        page.kind === "topic"
+          ? routes.topic(lang, page.topic)
+          : page.kind === "personal"
+            ? routes.personal(lang)
+            : routes.work(lang),
+      ),
+      markdownUrl: absoluteUrl(markdownPath(page)),
+      text,
+    };
+  };
 
   return [
     doc(
@@ -124,6 +141,7 @@ function profileDocuments(lang: Locale): SearchDocument[] {
           ...t(job.highlights, lang),
           job.stack.join(", "),
         ].join("\n"),
+        "experience",
       ),
     ),
     ...profile.projects.map((project) =>
@@ -142,6 +160,11 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         ]
           .filter(Boolean)
           .join("\n"),
+        project.id === "sales-copilot"
+          ? "sales-copilot"
+          : project.kind === "work"
+            ? "experience"
+            : "personal",
       ),
     ),
     ...profile.skills.map((group) =>
@@ -150,6 +173,7 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         s.skills.title,
         t(group.title, lang),
         group.skills.join(", "),
+        "skills",
       ),
     ),
     ...getCertifications().map((cert) =>
@@ -165,6 +189,7 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         ]
           .filter(Boolean)
           .join("\n"),
+        "certifications",
       ),
     ),
     ...profile.education.map((edu) =>
@@ -180,6 +205,7 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         ]
           .filter(Boolean)
           .join("\n"),
+        "education",
       ),
     ),
     ...profile.achievements.map((item) =>
@@ -188,6 +214,11 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         s.achievements.title,
         t(item.title, lang),
         [item.issuer, t(item.description, lang)].filter(Boolean).join("\n"),
+        item.id.startsWith("conecta-latam")
+          ? "sales-copilot"
+          : item.id.startsWith("microsoft")
+            ? "certifications"
+            : "work",
       ),
     ),
     ...profile.faq.map((item) =>
@@ -196,7 +227,22 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         s.faq.title,
         t(item.question, lang),
         t(item.answer, lang),
+        "faq",
       ),
+    ),
+    doc(
+      "contact",
+      s.contact.title,
+      `${profile.name}: ${s.contact.title}`,
+      [
+        s.contact.description,
+        profile.email,
+        t(profile.availability.modes, lang),
+        ...profile.socials.map(
+          (social) => `${dict.socials[social.id]}: ${social.url}`,
+        ),
+      ].join("\n"),
+      "contact",
     ),
   ];
 }

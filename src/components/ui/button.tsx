@@ -3,24 +3,26 @@ import type { ComponentPropsWithoutRef } from "react";
 
 import { cn, isExternalUrl } from "@/lib/utils";
 
-type Variant = "primary" | "accent" | "outline" | "ghost";
-type Size = "sm" | "md" | "lg";
+type Variant = "primary" | "accent" | "quiet" | "raised";
+type Size = "md" | "lg";
 
 const base =
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-[background-color,color,border-color,transform] duration-200 ease-editorial active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0";
+  "pressable inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0";
 
 const variants: Record<Variant, string> = {
+  /** Ink fill. */
   primary: "bg-foreground text-background hover:bg-foreground/85",
+  /** Signal red: the one action on a screen. */
   accent: "bg-accent text-accent-foreground hover:bg-accent/90",
-  outline:
-    "border border-border-strong bg-surface/60 text-foreground hover:border-foreground/40 hover:bg-muted",
-  ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+  /** Surface fill, for secondary actions next to a primary one. */
+  quiet: "bg-surface text-foreground hover:bg-surface-strong",
+  /** Page fill, for a secondary action that sits on a surface. */
+  raised: "bg-background text-foreground hover:bg-surface-strong",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-8 px-3 text-sm",
-  md: "h-10 px-5 text-[0.9375rem]",
-  lg: "h-12 px-6 text-base",
+  md: "h-11 px-5 text-small",
+  lg: "h-12 px-6 text-body",
 };
 
 /** Class names for button-styled elements (use on any element). */
@@ -30,27 +32,6 @@ export function buttonVariants({
   className,
 }: { variant?: Variant; size?: Size; className?: string } = {}) {
   return cn(base, variants[variant], sizes[size], className);
-}
-
-type ButtonProps = ComponentPropsWithoutRef<"button"> & {
-  variant?: Variant;
-  size?: Size;
-};
-
-export function Button({
-  variant,
-  size,
-  className,
-  type = "button",
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      type={type}
-      className={buttonVariants({ variant, size, className })}
-      {...props}
-    />
-  );
 }
 
 type ButtonLinkProps = Omit<ComponentPropsWithoutRef<"a">, "href"> & {

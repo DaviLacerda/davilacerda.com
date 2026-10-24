@@ -11,10 +11,10 @@ import { siteConfig } from "@/config/site";
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
-      text: ["display", "h1", "h2", "h3", "lead", "eyebrow"],
-      container: ["content", "page", "wide"],
-      animate: ["fade-up", "fade-in"],
-      ease: ["editorial"],
+      text: ["display", "title", "heading", "lead", "body", "small"],
+      container: ["column"],
+      radius: ["surface"],
+      ease: ["out", "in-out"],
     },
   },
 });

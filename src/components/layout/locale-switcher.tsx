@@ -1,6 +1,5 @@
 "use client";
 
-import { Languages } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -25,7 +24,7 @@ type LocaleSwitcherProps = {
  * Links to the current page in the other locale, keeping the path (and hash).
  * Pages whose slugs differ per locale register their URLs with
  * <LocaleAlternates>. Choosing a locale stores it in a cookie so the proxy
- * sends future visits of "/" there.
+ * sends future visits of "/" there. No animation: it is a page change.
  */
 export function LocaleSwitcher({
   lang,
@@ -54,12 +53,11 @@ export function LocaleSwitcher({
         document.cookie = `${LOCALE_COOKIE}=${target}; path=/; max-age=31536000; samesite=lax`;
       }}
       className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 font-mono text-xs font-medium tracking-wide text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        "inline-flex h-10 min-w-10 pressable items-center justify-center rounded-full px-2 text-small font-medium text-muted-foreground hover:bg-surface hover:text-foreground",
         className,
       )}
     >
-      <Languages aria-hidden="true" className="size-4" strokeWidth={1.75} />
-      <span>{meta.short}</span>
+      {meta.short}
     </Link>
   );
 }

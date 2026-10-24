@@ -1,33 +1,32 @@
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand-mark";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
-import { Monogram } from "@/components/layout/monogram";
 import { NavTabs } from "@/components/layout/nav-tabs";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Container } from "@/components/ui/container";
+import { profile } from "@/content/profile";
 import { getDictionary, type Locale } from "@/i18n";
 import { routes } from "@/lib/routes";
 
 /**
- * Sticky, translucent header: monogram + name (name hidden on small screens),
- * Work/Personal tabs, locale switcher and theme toggle. Fits a 320px screen
- * without a hamburger: the tabs are the whole navigation.
+ * A plain bar on the page column: Davi's mark and name (the name from 640px
+ * up), the Work/Personal tabs, the locale link and the theme toggle. It
+ * scrolls away with the page, so nothing ever sits on top of the text.
  */
 export function SiteHeader({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/75 backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-background/60">
-      <Container className="flex h-16 items-center justify-between gap-3">
+    <header>
+      <Container className="flex h-16 items-center justify-between gap-3 sm:h-20">
         <Link
           href={routes.work(lang)}
           aria-label={dict.a11y.home}
-          className="group -ml-1 flex items-center gap-3 rounded-full p-1"
+          className="-ml-1 flex items-center gap-2.5 rounded-lg p-1 text-body font-medium tracking-tight"
         >
-          <Monogram />
-          <span className="hidden font-display text-[1.35rem] leading-none tracking-tight md:inline">
-            Davi Lacerda<span className="text-accent">.</span>
-          </span>
+          <BrandMark className="h-5 w-auto" />
+          <span className="hidden sm:inline">{profile.name}</span>
         </Link>
 
         <NavTabs
@@ -36,7 +35,7 @@ export function SiteHeader({ lang }: { lang: Locale }) {
           labels={{ work: dict.nav.work, personal: dict.nav.personal }}
         />
 
-        <div className="-mr-1 flex items-center gap-0.5">
+        <div className="-mr-2 flex items-center">
           <LocaleSwitcher lang={lang} label={dict.locale.switchTo} />
           <ThemeToggle label={dict.theme.toggle} />
         </div>

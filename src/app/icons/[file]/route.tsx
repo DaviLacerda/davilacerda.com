@@ -1,11 +1,13 @@
 import { ImageResponse } from "next/og";
 
-import { loadOgFonts, ogColors, ogFonts } from "@/lib/og/template";
+import { OgMark } from "@/lib/og/template";
 
 /*
  * App icons for the web manifest, the MCP server card and the ARD catalog:
- * the "dl" monogram in Instrument Serif italic on the brand violet.
- * `maskable-*` keeps the mark inside the 80% safe zone and bleeds the color.
+ * Davi's pixel "d" in his violet on near-black, the same composition as the
+ * favicons in /public (apple-touch-icon.png), drawn from the vector mark so it
+ * stays sharp at 512px. `maskable-*` keeps the mark inside the 80% safe zone
+ * and bleeds the ground to the edges.
  */
 export const dynamic = "force-static";
 export const dynamicParams = false;
@@ -15,6 +17,10 @@ const ICONS = {
   "icon-512.png": { size: 512, maskable: false },
   "maskable-512.png": { size: 512, maskable: true },
 } as const;
+
+/** Colours of the favicons in /public (Davi's brand mark). */
+const GROUND = "#09090b";
+const MARK = "#5b21b6";
 
 type IconFile = keyof typeof ICONS;
 
@@ -30,7 +36,8 @@ export async function GET(
   const icon = ICONS[file as IconFile];
   if (!icon) return new Response("Not found", { status: 404 });
   const { size, maskable } = icon;
-  const glyph = maskable ? size * 0.36 : size * 0.48;
+  // Mark height relative to the icon: 50% like the favicons, 38% when maskable.
+  const markHeight = Math.round(size * (maskable ? 0.38 : 0.5));
 
   return new ImageResponse(
     <div
@@ -40,20 +47,13 @@ export async function GET(
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: ogColors.accent,
-        backgroundImage:
-          "radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%)",
+        background: GROUND,
         borderRadius: maskable ? 0 : size * 0.22,
-        color: ogColors.paper,
-        fontFamily: ogFonts.serif,
-        fontStyle: "italic",
-        fontSize: glyph,
-        lineHeight: 1,
-        paddingBottom: glyph * 0.12,
+        paddingLeft: size * 0.04,
       }}
     >
-      dl
+      <OgMark height={markHeight} color={MARK} />
     </div>,
-    { width: size, height: size, fonts: await loadOgFonts() },
+    { width: size, height: size },
   );
 }

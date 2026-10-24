@@ -286,7 +286,7 @@ export function personJsonLd(lang: Locale): PersonLeaf {
       .map((achievement) =>
         [t(achievement.title, lang), achievement.issuer]
           .filter(Boolean)
-          .join(" – "),
+          .join(", "),
       ),
     sameAs: profile.socials
       .filter((social) => social.sameAs)

@@ -10,6 +10,8 @@ import {
   siteLinks,
   formatLink,
 } from "@/lib/agents/discovery";
+import { routes } from "@/lib/routes";
+import { matchTopic } from "@/lib/work/topics";
 
 /**
  * Locale routing and agent content negotiation (Next.js 16 "proxy", formerly middleware).
@@ -18,8 +20,12 @@ import {
  *   (canonical, hreflang, Markdown alternate, llms.txt, API catalog, sitemap, RSS).
  *   When the `Accept` header prefers `text/markdown`, known pages are rewritten
  *   to their Markdown rendition instead (`Vary: Accept` on both variants).
- * - `/en.md`, `/en/index.md`, `/en/personal.md`, `/en/personal/blog/<slug>.md`
- *   are rewritten to the internal Markdown routes (`src/app/markdown`).
+ * - `/en.md`, `/en/index.md`, `/en/work/<topic>.md`, `/en/personal.md`,
+ *   `/en/personal/blog/<slug>.md` are rewritten to the internal Markdown
+ *   routes (`src/app/markdown`).
+ * - `/en/ask?q=...` (the Work composer's form without JavaScript) is
+ *   redirected (303) to the best-matching answer, `/en/work/<topic>`; with no
+ *   match it falls through to the static "no written answer" page.
  * - A wrongly-cased prefix (`/pt-BR/blog`) is redirected to the canonical one.
  * - Any other path gets a locale prefix: the `NEXT_LOCALE` cookie (set by the
  *   locale switcher) wins, then `Accept-Language`, then the default locale.
@@ -41,6 +47,15 @@ export function proxy(request: NextRequest) {
   }
 
   if (isLocale(firstSegment)) {
+    if (pathname === routes.ask(firstSegment)) {
+      const topic = matchTopic(request.nextUrl.searchParams.get("q") ?? "");
+      if (topic) {
+        const target = request.nextUrl.clone();
+        target.pathname = routes.topic(firstSegment, topic);
+        target.search = "";
+        return NextResponse.redirect(target, 303);
+      }
+    }
     const page = parsePagePath(pathname);
     if (page && prefersMarkdown(accept)) {
       const response = NextResponse.rewrite(
@@ -102,7 +117,7 @@ export const config = {
      * - extension-less metadata routes: opengraph-image, twitter-image, icon, apple-icon
      */
     "/((?!_next/|api/|mcp$|mcp/|.*\\..*|opengraph-image|twitter-image|icon|apple-icon).*)",
-    // Markdown renditions: /en.md, /en/index.md, /en/personal.md, /en/personal/blog/<slug>.md
+    // Markdown renditions: /en.md, /en/index.md, /en/work/<topic>.md, /en/personal.md, /en/personal/blog/<slug>.md
     "/(.*\\.md)",
   ],
 };

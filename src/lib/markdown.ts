@@ -14,6 +14,7 @@ import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
 import { siteConfig } from "@/config/site";
+import { codeThemes } from "@/lib/code-theme";
 
 export type Heading = {
   /** 2 for `##`, 3 for `###`. */
@@ -28,12 +29,6 @@ export type RenderedMarkdown = {
   /** h2/h3 outline, for a table of contents. */
   headings: Heading[];
 };
-
-/** Shiki themes; colors switch via CSS variables (see `.markdown` in globals.css). */
-export const codeThemes = {
-  light: "github-light",
-  dark: "github-dark-dimmed",
-} as const;
 
 const prettyCodeOptions: PrettyCodeOptions = {
   theme: codeThemes,
@@ -83,6 +78,26 @@ function rehypeExternalLinks() {
 }
 
 /**
+ * Marks each highlighted code block as an interface fragment (`data-ui`):
+ * code keeps its own face, surface and horizontal scroll, so page-level
+ * layout rules (margins, measure) do not apply inside it.
+ */
+function rehypeMarkCodeBlocks() {
+  return (tree: Root) => {
+    walk(tree, (el) => {
+      const props = el.properties;
+      if (
+        el.tagName === "figure" &&
+        ("dataRehypePrettyCodeFigure" in props ||
+          "data-rehype-pretty-code-figure" in props)
+      ) {
+        props.dataUi = "";
+      }
+    });
+  };
+}
+
+/**
  * Markdown -> HTML: GFM (tables, task lists, footnotes, autolinks), heading ids
  * and self-links, external link handling, and Shiki highlighting with dual
  * light/dark themes. Raw HTML in markdown is NOT rendered (safe by default).
@@ -107,6 +122,7 @@ export async function renderMarkdown(
     })
     .use(rehypeExternalLinks)
     .use(rehypePrettyCode, prettyCodeOptions)
+    .use(rehypeMarkCodeBlocks)
     .use(rehypeStringify)
     .process(markdown);
 

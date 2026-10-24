@@ -1,4 +1,5 @@
 import { type Locale } from "@/i18n/config";
+import type { TopicId } from "@/lib/work/topics";
 
 /**
  * Single source of truth for internal URLs. Always build links with these
@@ -8,8 +9,15 @@ import { type Locale } from "@/i18n/config";
  * Paths are locale-prefixed and have no trailing slash.
  */
 export const routes = {
-  /** Work tab (home). */
+  /** Work tab (home): the guided assistant's greeting, composer and summary. */
   work: (lang: Locale) => `/${lang}`,
+  /** One answer of the Work assistant, e.g. `/en/work/experience`. */
+  topic: (lang: Locale, topic: TopicId) => `/${lang}/work/${topic}`,
+  /**
+   * Target of the composer form without JavaScript. `src/proxy.ts` redirects
+   * `?q=` to the best-matching topic; the page itself is the "no answer" reply.
+   */
+  ask: (lang: Locale) => `/${lang}/ask`,
   /** Personal tab. */
   personal: (lang: Locale) => `/${lang}/personal`,
   /** Blog index lives inside the Personal tab. */

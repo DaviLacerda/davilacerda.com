@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { AgentDiscovery } from "@/components/agents/agent-discovery";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import { AlternateLinksProvider } from "@/components/providers/alternate-links";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { siteConfig } from "@/config/site";
@@ -104,20 +105,21 @@ export default async function RootLayout({ children, params }: LayoutProps) {
     >
       <body className="flex min-h-dvh flex-col text-foreground">
         <ThemeProvider>
-          <AlternateLinksProvider>
-            <a
-              href="#main"
-              className="sr-only z-50 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
-            >
-              {dict.a11y.skipToContent}
-            </a>
-            <div aria-hidden="true" className="site-backdrop" />
-            <SiteHeader lang={lang} />
-            <main id="main" tabIndex={-1} className="flex-1 outline-none">
-              {children}
-            </main>
-            <SiteFooter lang={lang} />
-          </AlternateLinksProvider>
+          <MotionProvider>
+            <AlternateLinksProvider>
+              <a
+                href="#main"
+                className="sr-only z-50 rounded-full bg-foreground px-4 py-2 text-small font-medium text-background focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+              >
+                {dict.a11y.skipToContent}
+              </a>
+              <SiteHeader lang={lang} />
+              <main id="main" tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </main>
+              <SiteFooter lang={lang} />
+            </AlternateLinksProvider>
+          </MotionProvider>
         </ThemeProvider>
         <AgentDiscovery />
         <Analytics />

@@ -65,9 +65,27 @@ export function formatPartialDate(date: PartialDate, lang: Locale): string {
 }
 
 /**
- * Formats a period. `end === null` means "Present"; `start` undefined means
- * unknown (only the end is shown, or nothing at all).
- * @example formatDateRange("2024-12", null, "en") // "Dec 2024 – Present"
+ * Formats a partial date with a long month name, for sentences.
+ * @example formatLongPartialDate("2024-08", "en") // "August 2024"
+ * @example formatLongPartialDate("2024-08", "pt-br") // "agosto de 2024"
+ */
+export function formatLongPartialDate(date: PartialDate, lang: Locale): string {
+  const { value, precision } = parse(date);
+  if (precision === "year") return String(value.getUTCFullYear());
+  if (precision === "day") return formatDate(date, lang);
+  return new Intl.DateTimeFormat(localeMeta[lang].intl, {
+    year: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(value);
+}
+
+/**
+ * Formats a period in words, never with a dash. `end === null` means
+ * ongoing ("Since Aug 2024"); `start` undefined means unknown (only the end is
+ * shown, or nothing at all).
+ * @example formatDateRange("2024-08", null, "en") // "Since Aug 2024"
+ * @example formatDateRange("2023-12", "2024-08", "en") // "Dec 2023 to Aug 2024"
  */
 export function formatDateRange(
   start: PartialDate | undefined,
@@ -75,8 +93,12 @@ export function formatDateRange(
   lang: Locale,
 ): string {
   const dict = getDictionary(lang);
-  const endLabel =
-    end === null ? dict.dates.present : end ? formatPartialDate(end, lang) : "";
+  if (end === null) {
+    return start
+      ? interpolate(dict.dates.since, { start: formatPartialDate(start, lang) })
+      : dict.dates.present;
+  }
+  const endLabel = end ? formatPartialDate(end, lang) : "";
   if (!start) return endLabel;
   const startLabel = formatPartialDate(start, lang);
   if (!endLabel || startLabel === endLabel) return startLabel;

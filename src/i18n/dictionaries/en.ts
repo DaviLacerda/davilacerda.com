@@ -3,10 +3,12 @@
  * other locale must implement exactly the same keys (enforced by the type).
  *
  * Conventions:
- * - Only UI copy lives here (labels, headings, buttons). Facts about Davi live
- *   in `src/content/profile.ts`.
+ * - Only UI copy lives here (labels, headings, buttons, the assistant's
+ *   framing). Facts about Davi live in `src/content/profile.ts`.
  * - Placeholders use `{name}` and are filled with `interpolate()` from
  *   `@/i18n`, e.g. `interpolate(dict.blog.readingTime, { minutes: 4 })`.
+ * - Visible copy uses no em or en dashes and no middle dots; date ranges are
+ *   written in words (see `dates`).
  */
 export const en = {
   meta: {
@@ -17,7 +19,7 @@ export const en = {
     work: {
       title: "AI Engineer",
       description:
-        "Experience, projects, Microsoft Expert certifications and awards of Davi Lacerda, AI Engineer at Algar and main developer of the award-winning Sales Copilot.",
+        "Ask about Davi Lacerda's work: experience at Algar, the award-winning Sales Copilot, Microsoft Expert certifications, skills, education and contact.",
     },
     personal: {
       title: "Personal",
@@ -28,6 +30,11 @@ export const en = {
       title: "Blog",
       description:
         "Notes on AI engineering, LLMs, agents and building software, by Davi Lacerda.",
+    },
+    ask: {
+      title: "No written answer",
+      description:
+        "The Work assistant has no written answer for that question. Pick one of the topics it can answer.",
     },
   },
 
@@ -59,56 +66,173 @@ export const en = {
     switchToDark: "Switch to dark theme",
   },
 
-  work: {
-    hero: {
-      eyebrow: "AI Engineer",
-      basedIn: "Based in",
-      availability: "Open to AI Engineer roles",
-      primaryCta: "Get in touch",
-      secondaryCta: "See experience",
+  /**
+   * The Work tab: a guided assistant over the profile. Every answer is
+   * written in advance and rendered statically; nothing calls a model.
+   */
+  chat: {
+    home: {
+      /** Line under the name. */
+      lead: "{role} at {company}, in {place}. He builds generative AI products and AI agents end to end.",
+      summaryTitle: "In short",
+      glanceTitle: "At a glance",
+      topicsTitle: "What you can ask",
     },
-    sections: {
-      about: { eyebrow: "TL;DR", title: "About" },
-      highlights: { eyebrow: "At a glance", title: "Highlights" },
+    composer: {
+      label: "Ask a question about Davi's work",
+      placeholder: "Ask about Davi's work",
+      submit: "Ask",
+      suggestions: "Suggested questions",
+      bestMatch: "Best match: {topic}",
+      noMatch: "No match yet. Try one of the suggestions.",
+      note: "A guided assistant over Davi's verified profile. Every answer is written in advance; no live model is involved.",
+      fallbackTitle: "I don't have a written answer for that yet.",
+      fallbackBody:
+        "I can answer questions about the topics below. For anything else, write to Davi at {email}.",
+      dismiss: "Dismiss",
+    },
+    turn: {
+      you: "You asked",
+      askNext: "Ask something else",
+    },
+    topics: {
       experience: {
-        eyebrow: "Career",
-        title: "Experience",
-        description: "Where I have been building, and what I shipped there.",
-      },
-      projects: {
-        eyebrow: "Portfolio",
-        title: "Selected projects",
+        chip: "Experience",
+        question: "Where has Davi worked?",
+        title: "Work experience",
+        metaTitle: "Davi Lacerda's work experience",
         description:
-          "Work and side projects, from AI products to developer tooling.",
+          "Davi Lacerda has been an AI Engineer at Algar since August 2024, after a research and development internship at Brain. Dates, scope and what he shipped.",
+        summary: "His role at Algar and the internship before it.",
       },
-      skills: {
-        eyebrow: "Toolbox",
-        title: "Skills",
-        description: "The stack I reach for, grouped by layer.",
+      "sales-copilot": {
+        chip: "Sales Copilot",
+        question: "What is the Sales Copilot?",
+        title: "Sales Copilot",
+        metaTitle: "Sales Copilot, Best AI Project in LATAM",
+        description:
+          "The AI copilot Davi Lacerda built end to end for Algar's sales teams, named Best AI Project in LATAM at the Conecta Latam awards.",
+        summary: "The award-winning copilot he built end to end.",
       },
       certifications: {
-        eyebrow: "Learning",
-        title: "Certifications and courses",
+        chip: "Certifications",
+        question: "Which certifications does Davi hold?",
+        title: "Certifications",
+        metaTitle: "Davi Lacerda's Microsoft Expert certifications",
+        description:
+          "Davi Lacerda holds two Expert-level Microsoft certifications, in multi-agent AI solutions and agentic AI architecture, plus React courses.",
+        summary: "Two Microsoft Expert credentials, and courses.",
       },
-      education: { eyebrow: "Academia", title: "Education" },
-      achievements: {
-        eyebrow: "Recognition",
-        title: "Awards and achievements",
+      skills: {
+        chip: "Skills",
+        question: "What's Davi's tech stack?",
+        title: "Skills and stack",
+        metaTitle: "Davi Lacerda's skills and tech stack",
+        description:
+          "What Davi Lacerda works with: LLMs and agents, RAG, machine learning, back end, front end, cloud and delivery.",
+        summary: "LLMs, agents, RAG and the full stack around them.",
+      },
+      education: {
+        chip: "Education",
+        question: "Where did Davi study?",
+        title: "Education",
+        metaTitle: "Davi Lacerda's education",
+        description:
+          "Davi Lacerda studied Computer Science at the Federal University of Uberlândia (UFU). Coursework, thesis and the languages he works in.",
+        summary: "Computer Science at UFU, and languages.",
       },
       faq: {
-        eyebrow: "FAQ",
-        title: "Frequently asked questions",
+        chip: "FAQ",
+        question: "What do people usually ask about Davi?",
+        title: "Common questions",
+        metaTitle: "Questions about Davi Lacerda",
         description:
-          "Quick answers for recruiters, collaborators and curious machines.",
+          "Short answers about Davi Lacerda: what he does, whether he is open to roles, his stack, the Sales Copilot, certifications, location and education.",
+        summary: "Short answers to what recruiters ask most.",
       },
       contact: {
-        eyebrow: "Contact",
-        title: "Let’s build something useful with AI",
+        chip: "Contact",
+        question: "How can I reach Davi?",
+        title: "Contact",
+        metaTitle: "Contact Davi Lacerda",
         description:
-          "Hiring for an AI Engineer, or have an LLM product that needs to work in the real world? I would love to hear about it.",
+          "Davi Lacerda is open to AI Engineer roles, on-site or hybrid in Uberlândia and remote. Email him or find him on LinkedIn.",
+        summary: "Email, LinkedIn and availability.",
+      },
+    },
+    answers: {
+      experience: {
+        /** `{prevCompany}` is Brain ("o Brain" in Portuguese). */
+        lead: "{name} has been an {role} at {company} since {since}. Before that, he was a {prevRole} at {prevCompany}.",
+        alsoAt: "Also at {company}",
+      },
+      salesCopilot: {
+        award: "Award",
+        builtBy: "Built end to end by its main developer",
+        layers: {
+          frontEnd: {
+            title: "Front end",
+            body: "The interface Algar's sales teams use.",
+          },
+          aiTools: {
+            title: "AI tools",
+            body: "The AI tools that power the copilot.",
+          },
+          backEnd: {
+            title: "Back end",
+            body: "The services the copilot runs on.",
+          },
+        },
+        company: "Company",
+        year: "Project year",
+        role: "Role",
+        access: "Access",
+      },
+      certifications: {
+        credentials: "Credentials",
+        issued: "Issued {date}",
+        courses: "Courses",
+        course: "Course",
+        issuer: "Issuer",
+        date: "Date",
+      },
+      education: {
+        degree: "Degree",
+        institution: "Institution",
+        location: "Location",
+      },
+      faq: {
+        lead: "Short answers to the questions recruiters and collaborators ask most.",
+      },
+      contact: {
         emailCta: "Send an email",
-        copyEmail: "Copy email address",
-        copied: "Copied to clipboard",
+        copyEmail: "Copy email",
+        copied: "Copied",
+        elsewhere: "Elsewhere",
+        timezone: "Time zone",
+      },
+    },
+  },
+
+  /** Section titles and labels shared by the Work answers and the agent layer. */
+  work: {
+    hero: {
+      availability: "Open to AI Engineer roles",
+    },
+    sections: {
+      about: { title: "About" },
+      highlights: { title: "Highlights" },
+      experience: { title: "Experience" },
+      projects: { title: "Selected projects" },
+      skills: { title: "Skills" },
+      certifications: { title: "Certifications and courses" },
+      education: { title: "Education" },
+      achievements: { title: "Awards and achievements" },
+      faq: { title: "Frequently asked questions" },
+      contact: {
+        title: "Contact",
+        description:
+          "Davi is open to AI Engineer roles. Email is the best way to reach him.",
       },
     },
     labels: {
@@ -132,129 +256,58 @@ export const en = {
       thesis: "Thesis",
       languagesSpoken: "Languages",
     },
-    /** Work page copy: hero, case study, timeline, credentials, education. */
-    page: {
-      /** Page-specific SEO keywords, merged with the site-wide list. */
-      keywords: [
-        "AI Engineer Brazil",
-        "AI Engineer Uberlândia",
-        "Hire an AI Engineer",
-        "Generative AI Engineer",
-        "LLM applications",
-        "AI agents developer",
-        "Multi-agent AI",
-        "Agentic AI",
-        "Azure AI",
-        "Full-stack AI Engineer",
-        "Microsoft Certified Expert",
-        "Multi-Agent AI Solutions Expert",
-        "Agentic AI Business Solutions Architect",
-        "Sales Copilot",
-        "Conecta Latam",
-        "Best AI Project in LATAM",
-      ],
-      hero: {
-        workModes: "Remote or hybrid",
-        emailCta: "Email me",
-        award: "Award",
-        awardCaption:
-          "Won by Algar's Sales Copilot, which I built end to end as main developer.",
-        awardCta: "Read the case study",
-      },
-      about: { title: "About Davi" },
-      featured: {
-        title: "Featured work",
-        description:
-          "The award-winning Sales Copilot, and other work shipped at Algar.",
-        caseStudy: "Case study",
-        company: "Company",
-        year: "Year",
-        ownership: "What I built",
-        /** Caption under the ownership stack, e.g. "Main developer, end to end". */
-        endToEnd: "{role}, end to end",
-        layers: {
-          frontEnd: {
-            title: "Front end",
-            body: "The interface Algar's sales teams use.",
-          },
-          aiTools: {
-            title: "AI tools",
-            body: "The AI tools that power the copilot.",
-          },
-          backEnd: {
-            title: "Back end",
-            body: "The services the copilot runs on.",
-          },
-        },
-        awardNote:
-          "Awarded at Conecta Latam, a recognition across Latin America.",
-        alsoAt: "Also at {company}",
-        side: {
-          title: "Side projects and open source",
-          description:
-            "Experiments and tools I build for fun, from a React Flow whiteboard to VS Code themes.",
-          cta: "See side projects",
-        },
-      },
-      experience: { current: "Current" },
-      certifications: {
-        description:
-          "Two Expert-level Microsoft credentials in multi-agent and agentic AI.",
-        credentials: "Credentials",
-        issuer: "Issuer",
-        issued: "Issued",
-      },
-      education: { title: "Education and languages" },
-    },
+    /** Page-specific SEO keywords, merged with the site-wide list. */
+    keywords: [
+      "AI Engineer Brazil",
+      "AI Engineer Uberlândia",
+      "Hire an AI Engineer",
+      "Generative AI Engineer",
+      "LLM applications",
+      "AI agents developer",
+      "Multi-agent AI",
+      "Agentic AI",
+      "Azure AI",
+      "Full-stack AI Engineer",
+      "Microsoft Certified Expert",
+      "Multi-Agent AI Solutions Expert",
+      "Agentic AI Business Solutions Architect",
+      "Sales Copilot",
+      "Conecta Latam",
+      "Best AI Project in LATAM",
+    ],
   },
 
   personal: {
     intro: {
-      eyebrow: "Personal",
       title: "Off the clock",
       description: "Writing, experiments and things I build for fun.",
-      /** The page's h1. Wrap a phrase in *asterisks* to set it in italics. */
-      headline: "Off the *clock*",
       /**
        * First-person intro. `{city}` comes from the profile.
        * TODO(davi): make these yours (hobbies and life away from the keyboard).
        */
       paragraphs: [
-        "Hi, I'm Davi. I live in {city}, in the Triângulo Mineiro region of Minas Gerais, where I studied Computer Science and where I now build AI products for a living. This is the other half of the site: less résumé, more of what I make and think about when nobody is asking.",
+        "Hi, I'm Davi. I live in {city}, in the Triângulo Mineiro region of Minas Gerais, where I studied Computer Science and where I now build AI products for a living. This is the other half of the site: less résumé, more of what I build and write in my own time.",
         "I like building in public. Most of my side projects started as small itches: a random-episode picker because I keep rewatching my favorite shows, my own VS Code themes because I spend my days in an editor, a FigJam-style whiteboard built on React Flow.",
-        "Lately I've been writing, too: notes on AI engineering from someone who ships it. Expect agents and multi-agent systems, RAG, the Model Context Protocol, Azure AI and the unglamorous work of taking Generative AI to production.",
+        "Lately I've been writing, too: notes on AI engineering. Expect agents and multi-agent systems, RAG, the Model Context Protocol, Azure AI and what it takes to run generative AI in production.",
       ],
-      jumpTo: "Jump to",
-      facts: {
-        label: "At a glance",
-        location: "Location",
-        dayJob: "Day job",
-        dayJobValue: "{role} at {company}",
-        writingAbout: "Writing about",
-        writingTopics: "AI engineering, agents, RAG and MCP",
-        languages: "Languages",
-      },
     },
     sections: {
       writing: {
-        eyebrow: "Writing",
-        title: "Blog",
+        title: "Writing",
         description: "Notes on AI engineering, LLMs and building software.",
-        latest: "Latest",
       },
       sideProjects: {
-        eyebrow: "Tinkering",
         title: "Side projects",
         description:
-          "Small things built for fun, learning or scratching an itch.",
+          "Small things built for fun, to learn or to scratch an itch.",
         source: "Source",
         live: "Live site",
+        stack: "Stack",
         stars: "{count} stars on GitHub",
         moreOnGitHub: "More on GitHub",
       },
       elsewhere: {
-        eyebrow: "Elsewhere",
-        title: "Find me online",
+        title: "Elsewhere",
         description: "Say hi wherever you prefer.",
         /** One line under each link: what you will find there. */
         notes: {
@@ -273,7 +326,7 @@ export const en = {
     description: "Notes on AI engineering, LLMs, agents and building software.",
     latest: "Latest posts",
     allPosts: "All posts",
-    backToBlog: "Back to all posts",
+    backToBlog: "All writing",
     readPost: "Read post",
     noPosts: "No posts yet. The first one is on its way.",
     readingTime: "{minutes} min read",
@@ -299,8 +352,10 @@ export const en = {
 
   dates: {
     present: "Present",
-    /** Joins a start and end date, e.g. "Dec 2024 – Present". */
-    range: "{start} – {end}",
+    /** An ongoing period, e.g. "Since Aug 2024". */
+    since: "Since {start}",
+    /** A closed period, e.g. "Dec 2023 to Aug 2024". */
+    range: "{start} to {end}",
   },
 
   socials: {
@@ -313,14 +368,14 @@ export const en = {
 
   footer: {
     rights: "All rights reserved.",
-    colophon: "Designed and built by Davi Lacerda.",
-    backToTop: "Back to top",
+    forAgents: "For agents",
   },
 
   notFound: {
     title: "Page not found",
-    description: "The page you are looking for does not exist or has moved.",
-    backHome: "Back to the homepage",
+    /** `{link}` is replaced by the `backHome` link. */
+    description: "This page doesn't exist or has moved. Ask below, or {link}.",
+    backHome: "go back to the start",
   },
 
   common: {

@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -7,15 +7,13 @@ import { AuthorCard } from "@/components/blog/author-card";
 import { PostHeader } from "@/components/blog/post-header";
 import { PostPager } from "@/components/blog/post-pager";
 import { RssLink } from "@/components/blog/rss-link";
-import {
-  TableOfContentsDisclosure,
-  TableOfContentsRail,
-} from "@/components/blog/table-of-contents";
+import { TableOfContents } from "@/components/blog/table-of-contents";
+import { Reveal } from "@/components/motion/reveal";
 import { LocaleAlternates } from "@/components/providers/alternate-links";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Prose } from "@/components/ui/prose";
-import { Tag } from "@/components/ui/tag";
+import { TagList } from "@/components/ui/tag";
 import { getDictionary, isLocale, otherLocales } from "@/i18n";
 import { formatDate, toIsoDate } from "@/i18n/format";
 import {
@@ -91,9 +89,11 @@ export default async function PostPage({ params }: PageProps) {
   // "Updated on {date}": render the date as a <time> inside the sentence.
   const [updatedBefore, updatedAfter = ""] =
     dict.blog.updatedOn.split("{date}");
+  const updated =
+    post.updated && post.updated !== post.date ? post.updated : undefined;
 
   return (
-    <>
+    <Container as="article" className="pt-8 sm:pt-14">
       <LocaleAlternates links={alternates} />
       <JsonLd
         data={[
@@ -112,80 +112,65 @@ export default async function PostPage({ params }: PageProps) {
         ]}
       />
 
-      <article className="pt-12 sm:pt-20">
-        <Container size="wide">
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,42rem)_minmax(0,1fr)] xl:gap-x-16">
-            <div className="mx-auto w-full max-w-content xl:col-start-2 xl:row-start-1">
-              <PostHeader post={post} translation={translation} />
-            </div>
+      <PostHeader post={post} translation={translation} />
 
-            <aside className="hidden xl:col-start-3 xl:row-span-2 xl:row-start-2 xl:block">
-              <TableOfContentsRail
-                headings={post.headings}
-                label={dict.blog.onThisPage}
-              />
-            </aside>
+      <TableOfContents
+        headings={post.headings}
+        label={dict.blog.onThisPage}
+        className="mt-10"
+        enter={3}
+      />
 
-            <div className="mx-auto w-full max-w-content xl:col-start-2 xl:row-start-2">
-              <TableOfContentsDisclosure
-                headings={post.headings}
-                label={dict.blog.onThisPage}
-                className="mt-10 xl:hidden"
-              />
-              <Prose
-                html={post.html}
-                className="mt-12 [&>p:first-child]:text-lead [&>p:first-child]:text-foreground"
-              />
-            </div>
+      <Prose html={post.html} className="mt-12 [&>p:first-child]:text-lead" />
 
-            <footer className="mx-auto mt-16 w-full max-w-content space-y-12 xl:col-start-2 xl:row-start-3">
-              <div className="flex flex-col gap-4 border-t border-border pt-8 sm:flex-row sm:items-start sm:justify-between">
-                {post.tags.length > 0 ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="mr-1 font-mono text-eyebrow text-muted-foreground uppercase">
-                      {dict.blog.tags}
-                    </span>
-                    <ul className="flex flex-wrap gap-1.5">
-                      {post.tags.map((tag) => (
-                        <li key={tag}>
-                          <Tag tone="accent">{tag}</Tag>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                {post.updated && post.updated !== post.date ? (
-                  <p className="text-sm text-muted-foreground">
-                    {updatedBefore}
-                    <time dateTime={toIsoDate(post.updated)}>
-                      {formatDate(post.updated, lang)}
-                    </time>
-                    {updatedAfter}
-                  </p>
-                ) : null}
-              </div>
+      <footer>
+        {post.tags.length > 0 || updated ? (
+          <Reveal
+            stagger
+            className="mt-14 flex flex-wrap items-center justify-between gap-4"
+          >
+            {post.tags.length > 0 ? (
+              <TagList items={post.tags} label={dict.blog.tags} />
+            ) : null}
+            {updated ? (
+              <p className="text-small text-muted-foreground">
+                {updatedBefore}
+                <time dateTime={toIsoDate(updated)}>
+                  {formatDate(updated, lang)}
+                </time>
+                {updatedAfter}
+              </p>
+            ) : null}
+          </Reveal>
+        ) : null}
 
-              <AuthorCard lang={lang} />
+        <Reveal className="mt-24 sm:mt-28">
+          <AuthorCard lang={lang} />
+        </Reveal>
 
-              <PostPager lang={lang} newer={newer} older={older} />
+        {newer || older ? (
+          <Reveal className="mt-20">
+            <PostPager lang={lang} newer={newer} older={older} />
+          </Reveal>
+        ) : null}
 
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <Link
-                  href={routes.blog(lang)}
-                  className="group inline-flex items-center gap-2 text-sm font-medium text-foreground"
-                >
-                  <ArrowLeft
-                    aria-hidden="true"
-                    className="size-4 transition-transform duration-300 ease-editorial group-hover:-translate-x-0.5"
-                  />
-                  <span className="link-underline">{dict.blog.backToBlog}</span>
-                </Link>
-                <RssLink lang={lang} label={dict.blog.subscribe} />
-              </div>
-            </footer>
-          </div>
-        </Container>
-      </article>
-    </>
+        <Reveal
+          stagger
+          className="mt-12 flex flex-wrap items-center justify-between gap-4"
+        >
+          <Link
+            href={routes.blog(lang)}
+            className="group inline-flex items-center gap-2 font-medium"
+          >
+            <ArrowLeftIcon
+              aria-hidden="true"
+              className="size-4 transition-transform duration-150 ease-out group-hover:-translate-x-0.5"
+            />
+            <span className="link-underline">{dict.blog.backToBlog}</span>
+          </Link>
+          <RssLink lang={lang} label={dict.blog.subscribe} />
+        </Reveal>
+      </footer>
+    </Container>
   );
 }

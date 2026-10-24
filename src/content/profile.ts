@@ -349,7 +349,7 @@ export const profile: Profile = {
     },
     {
       id: "brain",
-      company: "Brain – Centro de Inovação em Negócios Digitais",
+      company: "Brain (Centro de Inovação em Negócios Digitais)",
       role: {
         en: "Research & Development Intern",
         "pt-br": "Estagiário de Pesquisa e Desenvolvimento",
@@ -390,8 +390,8 @@ export const profile: Profile = {
       context: "Algar",
       role: { en: "Main developer", "pt-br": "Principal desenvolvedor" },
       award: {
-        en: "Best AI Project in LATAM · Conecta Latam",
-        "pt-br": "Melhor Projeto de IA da América Latina · Conecta Latam",
+        en: "Best AI Project in LATAM, Conecta Latam awards",
+        "pt-br": "Melhor Projeto de IA da América Latina, prêmio Conecta Latam",
       },
       isPrivate: true,
       year: "2025",

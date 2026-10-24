@@ -20,6 +20,8 @@ import { formatDate, formatDateRange, formatPartialDate } from "@/i18n/format";
 import { getPostTranslations } from "@/lib/blog";
 import { routes } from "@/lib/routes";
 import { absoluteUrl } from "@/lib/utils";
+import { topicCopy, topicLead } from "@/lib/work/answers";
+import { topicIds, type TopicId } from "@/lib/work/topics";
 
 import { latestPostDate, profileLastModified } from "./dates";
 import {
@@ -212,15 +214,9 @@ function certificationLine(cert: Certification, lang: Locale): string {
   return `- **${t(cert.name, lang)}** (${meta}).${description}${credential}`;
 }
 
-/** The Work page as a résumé-like Markdown document. */
-export function workMarkdown(lang: Locale): string {
-  const dict = getDictionary(lang);
-  const s = dict.work.sections;
-  const labels = dict.work.labels;
-  const page: PageRef = { kind: "work", lang };
-  const htmlPath = routes.work(lang);
-
-  const experience = profile.experience.map((job) =>
+function experienceSection(lang: Locale): string[] {
+  const labels = getDictionary(lang).work.labels;
+  return profile.experience.map((job) =>
     blocks(
       `### ${t(job.company, lang)} — ${t(job.role, lang)}`,
       `*${dot(
@@ -236,13 +232,37 @@ export function workMarkdown(lang: Locale): string {
       job.stack.length > 0 && `**${labels.stack}:** ${job.stack.join(", ")}`,
     ),
   );
+}
 
-  const projects = [
+function workProjects(): Project[] {
+  return [
     ...profile.projects.filter((p) => p.kind === "work"),
     ...profile.projects.filter((p) => p.kind === "side" && p.featured),
-  ].map((project) => projectBlock(project, lang));
+  ];
+}
 
-  const education = profile.education.map((edu) =>
+function skillsList(lang: Locale): string {
+  return profile.skills
+    .map((group) => `- **${t(group.title, lang)}:** ${group.skills.join(", ")}`)
+    .join("\n");
+}
+
+function certificationsSection(lang: Locale): string[] {
+  const labels = getDictionary(lang).work.labels;
+  return [
+    getCertifications("certification")
+      .map((cert) => certificationLine(cert, lang))
+      .join("\n"),
+    `### ${labels.courses}`,
+    getCertifications("course")
+      .map((cert) => certificationLine(cert, lang))
+      .join("\n"),
+  ];
+}
+
+function educationSection(lang: Locale): string[] {
+  const labels = getDictionary(lang).work.labels;
+  return profile.education.map((edu) =>
     blocks(
       `### ${t(edu.field, lang)} — ${t(edu.institution, lang)}${edu.shortName ? ` (${edu.shortName})` : ""}`,
       `*${dot(
@@ -263,8 +283,21 @@ export function workMarkdown(lang: Locale): string {
         .join("\n"),
     ),
   );
+}
 
-  const achievements = profile.achievements
+function languagesList(lang: Locale): string {
+  return profile.languages
+    .map((l) => `- **${t(l.name, lang)}:** ${t(l.level, lang)}`)
+    .join("\n");
+}
+
+function achievementsList(
+  lang: Locale,
+  filter: (id: string) => boolean = () => true,
+): string {
+  const dict = getDictionary(lang);
+  return profile.achievements
+    .filter((item) => filter(item.id))
     .map((item) => {
       const meta = dot(
         item.issuer,
@@ -274,8 +307,35 @@ export function workMarkdown(lang: Locale): string {
       return `- **${t(item.title, lang)}**${meta ? ` (${meta})` : ""}. ${t(item.description, lang)}${more}`;
     })
     .join("\n");
+}
 
+function faqSection(lang: Locale): string[] {
+  return profile.faq.map((item) =>
+    blocks(`### ${t(item.question, lang)}`, t(item.answer, lang)),
+  );
+}
+
+function contactList(lang: Locale): string {
+  const dict = getDictionary(lang);
   const linkedin = profile.socials.find((social) => social.id === "linkedin");
+  const github = profile.socials.find((social) => social.id === "github");
+  return [
+    `- **${dict.socials.email}:** [${profile.email}](mailto:${profile.email})`,
+    linkedin &&
+      `- **${dict.socials.linkedin}:** ${link(linkedin.handle, linkedin.url)}`,
+    github &&
+      `- **${dict.socials.github}:** ${link(github.handle, github.url)}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/** The Work page as a résumé-like Markdown document. */
+export function workMarkdown(lang: Locale): string {
+  const dict = getDictionary(lang);
+  const s = dict.work.sections;
+  const page: PageRef = { kind: "work", lang };
+  const htmlPath = routes.work(lang);
 
   return blocks(
     frontmatter({
@@ -300,40 +360,115 @@ export function workMarkdown(lang: Locale): string {
       .map((h) => `- **${t(h.value, lang)}**: ${t(h.label, lang)}`)
       .join("\n"),
     `## ${s.experience.title}`,
-    ...experience,
+    ...experienceSection(lang),
     `## ${s.projects.title}`,
-    ...projects,
+    ...workProjects().map((project) => projectBlock(project, lang)),
     `## ${s.skills.title}`,
-    profile.skills
-      .map(
-        (group) => `- **${t(group.title, lang)}:** ${group.skills.join(", ")}`,
-      )
-      .join("\n"),
+    skillsList(lang),
     `## ${s.certifications.title}`,
-    getCertifications("certification")
-      .map((cert) => certificationLine(cert, lang))
-      .join("\n"),
-    `### ${labels.courses}`,
-    getCertifications("course")
-      .map((cert) => certificationLine(cert, lang))
-      .join("\n"),
+    ...certificationsSection(lang),
     `## ${s.education.title}`,
-    ...education,
+    ...educationSection(lang),
     `## ${s.achievements.title}`,
-    achievements,
+    achievementsList(lang),
     `## ${s.faq.title}`,
-    ...profile.faq.map((item) =>
-      blocks(`### ${t(item.question, lang)}`, t(item.answer, lang)),
-    ),
+    ...faqSection(lang),
     `## ${s.contact.title}`,
     s.contact.description,
-    [
-      `- **${dict.socials.email}:** [${profile.email}](mailto:${profile.email})`,
-      linkedin &&
-        `- **${dict.socials.linkedin}:** ${link(linkedin.handle, linkedin.url)}`,
-    ]
-      .filter(Boolean)
-      .join("\n"),
+    contactList(lang),
+    `## ${getAgentLabels(lang).topic.otherTopics}`,
+    topicLinks(lang),
+    documentFooter(page, htmlPath),
+  );
+}
+
+/* ------------------------------------------------------------ Work topics */
+
+/** Links to every Work answer, as a Markdown list. */
+function topicLinks(lang: Locale, except?: TopicId): string {
+  return topicIds
+    .filter((id) => id !== except)
+    .map((id) => {
+      const copy = topicCopy(id, lang);
+      return `- ${link(copy.question, markdownPath({ kind: "topic", lang, topic: id }))}: ${copy.summary}`;
+    })
+    .join("\n");
+}
+
+function topicBody(topic: TopicId, lang: Locale): string[] {
+  const dict = getDictionary(lang);
+  const s = dict.work.sections;
+  const labels = dict.work.labels;
+  switch (topic) {
+    case "experience":
+      return [
+        ...experienceSection(lang),
+        ...profile.projects
+          .filter((p) => p.kind === "work" && p.id !== "sales-copilot")
+          .map((project) => projectBlock(project, lang)),
+      ];
+    case "sales-copilot": {
+      const project = profile.projects.find((p) => p.id === "sales-copilot");
+      const a = dict.chat.answers.salesCopilot;
+      return [
+        project ? projectBlock(project, lang) : "",
+        `### ${a.builtBy}`,
+        [a.layers.frontEnd, a.layers.aiTools, a.layers.backEnd]
+          .map((layer) => `- **${layer.title}:** ${layer.body}`)
+          .join("\n"),
+        `### ${s.achievements.title}`,
+        achievementsList(lang, (id) => id.startsWith("conecta-latam")),
+      ];
+    }
+    case "certifications":
+      return [
+        `### ${dict.chat.answers.certifications.credentials}`,
+        ...certificationsSection(lang),
+      ];
+    case "skills":
+      return [skillsList(lang)];
+    case "education":
+      return [
+        ...educationSection(lang),
+        `### ${labels.languagesSpoken}`,
+        languagesList(lang),
+      ];
+    case "faq":
+      return faqSection(lang);
+    case "contact":
+      return [
+        profile.availability.open
+          ? `**${dict.work.hero.availability}:** ${t(profile.availability.modes, lang)}`
+          : "",
+        contactList(lang),
+        `- **${getAgentLabels(lang).facts.timezone}:** ${profile.location.timezone} (${t(profile.location.label, lang)})`,
+      ];
+  }
+}
+
+/** One Work answer (`/en/work/<topic>`) as Markdown: the question, the answer and links to the others. */
+export function topicMarkdown(lang: Locale, topic: TopicId): string {
+  const dict = getDictionary(lang);
+  const labels = getAgentLabels(lang);
+  const copy = topicCopy(topic, lang);
+  const page: PageRef = { kind: "topic", lang, topic };
+  const htmlPath = routes.topic(lang, topic);
+
+  return blocks(
+    frontmatter({
+      title: `${copy.metaTitle} | ${dict.meta.siteName}`,
+      description: copy.description,
+      url: absoluteUrl(htmlPath),
+      lang: localeMeta[lang].htmlLang,
+      updated: profileLastModified(),
+      alternates: alternateMarkdownUrls(page),
+    }),
+    `# ${copy.title}`,
+    `**${labels.topic.question}:** ${copy.question}`,
+    topicLead(topic, lang),
+    ...topicBody(topic, lang),
+    `## ${labels.topic.otherTopics}`,
+    topicLinks(lang, topic),
     documentFooter(page, htmlPath),
   );
 }
@@ -467,6 +602,7 @@ export function postMarkdown(post: RawPost): string {
 /** Markdown for any page reference, or null when it does not exist. */
 export function pageMarkdown(page: PageRef): string | null {
   if (page.kind === "work") return workMarkdown(page.lang);
+  if (page.kind === "topic") return topicMarkdown(page.lang, page.topic);
   if (page.kind === "personal") return personalMarkdown(page.lang);
   const post = getRawPost(page.lang, page.slug);
   return post ? postMarkdown(post) : null;
@@ -500,6 +636,9 @@ export function llmsTxt(): string {
       `- ${link(labels.personalEn, markdownPath({ kind: "personal", lang: "en" }))}: ${labels.personalDesc}`,
       `- ${link(labels.personalPt, markdownPath({ kind: "personal", lang: "pt-br" }))}: ${getDictionary("pt-br").meta.personal.description}`,
     ].join("\n"),
+    `## ${labels.topics}`,
+    labels.topicsIntro,
+    topicLinks("en"),
     `## ${labels.blog}`,
     postLines.length ? postLines.join("\n") : labels.noPosts,
     `## ${labels.machine}`,

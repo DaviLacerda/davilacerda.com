@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 import { profile } from "@/content/profile";
-import { defaultLocale, getDictionary, interpolate, isLocale, t } from "@/i18n";
+import { defaultLocale, getDictionary, interpolate, isLocale } from "@/i18n";
 import { formatDate } from "@/i18n/format";
 import { getAllPostParams, getAllPosts } from "@/lib/blog";
 import {
@@ -9,6 +9,8 @@ import {
   OG_SIZE,
   OgFrame,
   OgLead,
+  clampText,
+  OgMeta,
   OgTitle,
   loadOgFonts,
 } from "@/lib/og/template";
@@ -32,25 +34,20 @@ export default async function Image({
   const dict = getDictionary(lang);
   const post = getAllPosts(lang).find((p) => p.slug === slug);
 
-  const title = post?.title ?? dict.blog.title;
-  const eyebrow = post
-    ? `${dict.nav.blog} · ${formatDate(post.date, lang, "short")}`
-    : dict.nav.blog;
-
   return new ImageResponse(
-    <OgFrame
-      eyebrow={eyebrow}
-      footer={[
-        profile.name,
-        t(profile.headline, lang),
-        ...(post
-          ? [interpolate(dict.blog.readingTime, { minutes: post.readingTime })]
-          : []),
-      ]}
-      footerStrong={1}
-    >
-      <OgTitle text={title} />
-      <OgLead>{post?.description ?? dict.blog.description}</OgLead>
+    <OgFrame>
+      <OgTitle text={post?.title ?? dict.blog.title} />
+      <OgLead>
+        {clampText(post?.description ?? dict.blog.description, 170)}
+      </OgLead>
+      {post ? (
+        <OgMeta
+          items={[
+            formatDate(post.date, lang),
+            interpolate(dict.blog.readingTime, { minutes: post.readingTime }),
+          ]}
+        />
+      ) : null}
     </OgFrame>,
     { ...size, fonts: await loadOgFonts() },
   );

@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
 import Link from "next/link";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -13,8 +13,9 @@ type TextLinkProps = Omit<ComponentPropsWithoutRef<"a">, "href"> & {
 };
 
 /**
- * Inline link with the editorial underline. External URLs open in a new tab,
- * get an arrow icon and (optionally) a screen-reader-only "opens in a new tab".
+ * Inline link with the ink underline that turns red on hover. External URLs
+ * open in a new tab, get a small arrow and (optionally) a screen-reader-only
+ * "opens in a new tab".
  */
 export function TextLink({
   href,
@@ -34,9 +35,9 @@ export function TextLink({
     <>
       {children}
       {showArrow ? (
-        <ArrowUpRight
+        <ArrowUpRightIcon
           aria-hidden="true"
-          className="size-[0.9em] translate-y-[0.1em] opacity-70"
+          className="size-[0.85em] translate-y-[0.08em] self-center text-muted-foreground"
         />
       ) : null}
       {external && newTabLabel ? (

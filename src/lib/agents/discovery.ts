@@ -15,6 +15,7 @@ import {
   type Locale,
 } from "@/i18n/config";
 import { routes } from "@/lib/routes";
+import { isTopicId, type TopicId } from "@/lib/work/topics";
 
 /** Every agent-facing path, so pages, headers, catalogs and docs never drift apart. */
 export const agentPaths = {
@@ -58,14 +59,16 @@ export const CONTENT_SIGNAL = "search=yes, ai-input=yes, ai-train=yes";
 
 export type PageRef =
   | { kind: "work"; lang: Locale }
+  | { kind: "topic"; lang: Locale; topic: TopicId }
   | { kind: "personal"; lang: Locale }
   | { kind: "post"; lang: Locale; slug: string };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /**
- * Recognizes the pages that have a Markdown rendition:
- * `/en`, `/en/personal`, `/en/personal/blog/<slug>` (a trailing slash is tolerated).
+ * Recognizes the pages that have a Markdown rendition: `/en`,
+ * `/en/work/<topic>`, `/en/personal`, `/en/personal/blog/<slug>` (a trailing
+ * slash is tolerated).
  */
 export function parsePagePath(pathname: string): PageRef | null {
   const [lang, ...rest] = pathname.replace(/\/+$/, "").split("/").slice(1);
@@ -73,6 +76,9 @@ export function parsePagePath(pathname: string): PageRef | null {
   if (rest.length === 0) return { kind: "work", lang };
   if (rest.length === 1 && rest[0] === "personal") {
     return { kind: "personal", lang };
+  }
+  if (rest.length === 2 && rest[0] === "work" && isTopicId(rest[1])) {
+    return { kind: "topic", lang, topic: rest[1] };
   }
   const [personal, blog, slug] = rest;
   if (
@@ -90,6 +96,7 @@ export function parsePagePath(pathname: string): PageRef | null {
 /** Canonical HTML path of a page. */
 export function pagePath(page: PageRef): string {
   if (page.kind === "work") return routes.work(page.lang);
+  if (page.kind === "topic") return routes.topic(page.lang, page.topic);
   if (page.kind === "personal") return routes.personal(page.lang);
   return routes.post(page.lang, page.slug);
 }
@@ -214,7 +221,7 @@ export function siteLinks(lang?: Locale): LinkTarget[] {
 /** Links specific to one page: canonical, hreflang alternates (same-path pages) and its Markdown rendition. */
 export function pageLinks(page: PageRef): LinkTarget[] {
   const links: LinkTarget[] = [{ href: pagePath(page), rel: "canonical" }];
-  // Work and Personal share their path across locales; post slugs differ per
+  // Work, topics and Personal share their path across locales; post slugs differ per
   // locale, so their hreflang alternates live in the HTML <head> and sitemap only.
   if (page.kind !== "post") {
     for (const lang of locales) {

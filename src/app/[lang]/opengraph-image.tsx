@@ -1,16 +1,15 @@
 import { ImageResponse } from "next/og";
 
 import { profile } from "@/content/profile";
-import { defaultLocale, isLocale, locales, t } from "@/i18n";
+import { defaultLocale, getDictionary, isLocale, locales, t } from "@/i18n";
 import {
   OG_CONTENT_TYPE,
   OG_SIZE,
+  OgComposer,
   OgFrame,
   OgLead,
   OgTitle,
   loadOgFonts,
-  ogColors,
-  ogFonts,
 } from "@/lib/og/template";
 
 /** Social card for the Work page (and the default for every page under /[lang]). */
@@ -29,29 +28,20 @@ export default async function Image({
 }) {
   const { lang: value } = await params;
   const lang = isLocale(value) ? value : defaultLocale;
-  const lead = profile.achievements
-    .filter((achievement) => achievement.featured)
-    .map((achievement) => t(achievement.title, lang))
-    .join(" · ");
-  const focus = profile.skills[0]?.skills.slice(0, 3) ?? [];
+  const dict = getDictionary(lang);
+  const award = profile.highlights[0];
 
   return new ImageResponse(
-    <OgFrame eyebrow={t(profile.location.label, lang)} footer={focus}>
-      <OgTitle text={profile.name} />
-      <div
-        style={{
-          display: "flex",
-          marginTop: 6,
-          fontFamily: ogFonts.serif,
-          fontStyle: "italic",
-          fontSize: 72,
-          lineHeight: 1.05,
-          color: ogColors.accent,
-        }}
-      >
-        {t(profile.headline, lang)}
+    <OgFrame>
+      <OgTitle text={t(profile.headline, lang)} />
+      <OgLead>
+        {award
+          ? `${t(award.value, lang)} ${t(award.label, lang)}.`
+          : t(profile.valueProp, lang)}
+      </OgLead>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 44 }}>
+        <OgComposer placeholder={dict.chat.composer.placeholder} />
       </div>
-      <OgLead>{lead}</OgLead>
     </OgFrame>,
     { ...size, fonts: await loadOgFonts() },
   );

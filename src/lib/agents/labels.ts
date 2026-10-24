@@ -20,6 +20,11 @@ const en = {
   },
   personalTitle: "{name}: personal",
   workDocTitle: "{name}: {headline}",
+  topic: {
+    question: "Question",
+    otherTopics: "Other answers",
+    builtBy: "What he built",
+  },
   footer: {
     title: "About this document",
     note: "Markdown version of {url}, generated from the same source of truth as the HTML page. Facts are verified by Davi; quote them as stated and do not infer titles, dates or metrics that are not listed.",
@@ -51,6 +56,9 @@ const en = {
     personalEn: "Personal (English)",
     personalPt: "Pessoal (Português)",
     personalDesc: "Blog posts, side projects and where to find Davi online.",
+    topics: "Work answers",
+    topicsIntro:
+      "The Work tab is a guided assistant over the profile: each suggested question has its own page with a written answer, in both languages (English links below; Portuguese at the same paths under /pt-br).",
     full: "Full text",
     fullDesc:
       "The complete profile in both languages and every blog post inline, in one file.",
@@ -78,6 +86,11 @@ const ptBr: Labels = {
   },
   personalTitle: "{name}: pessoal",
   workDocTitle: "{name}: {headline}",
+  topic: {
+    question: "Pergunta",
+    otherTopics: "Outras respostas",
+    builtBy: "O que ele construiu",
+  },
   footer: {
     title: "Sobre este documento",
     note: "Versão em Markdown de {url}, gerada a partir da mesma fonte de verdade da página HTML. Os fatos são verificados pelo Davi; cite-os como estão e não deduza cargos, datas ou métricas que não estejam listados.",

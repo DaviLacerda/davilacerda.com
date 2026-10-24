@@ -6,10 +6,11 @@ import { getAllPosts, getPostAlternates } from "@/lib/blog";
 import { routes } from "@/lib/routes";
 import { hreflangAlternates, localizedPaths } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/utils";
+import { topicIds } from "@/lib/work/topics";
 
 /**
- * Every HTML page in every locale, with hreflang alternates (`xhtml:link`,
- * including x-default) and `lastmod`. Markdown/JSON renditions are discovered
+ * Every HTML page in every locale (Work, its answers, Personal, posts), with
+ * hreflang alternates (`xhtml:link`, including x-default) and `lastmod`. Markdown/JSON renditions are discovered
  * through Link headers, llms.txt and the API catalog instead.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -36,6 +37,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]);
 
+  const topics: MetadataRoute.Sitemap = locales.flatMap((lang) =>
+    topicIds.map((topic) => ({
+      url: absoluteUrl(routes.topic(lang, topic)),
+      lastModified: profileUpdated,
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+      alternates: {
+        languages: hreflangAlternates(localizedPaths(`/work/${topic}`)),
+      },
+    })),
+  );
+
   const posts: MetadataRoute.Sitemap = locales.flatMap((lang) =>
     getAllPosts(lang).map((post) => ({
       url: absoluteUrl(post.url),
@@ -46,5 +59,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
   );
 
-  return [...pages, ...posts];
+  return [...pages, ...topics, ...posts];
 }

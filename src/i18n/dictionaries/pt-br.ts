@@ -10,7 +10,7 @@ export const ptBr: Dictionary = {
     work: {
       title: "Engenheiro de IA",
       description:
-        "Experiência, projetos, certificações Microsoft Expert e prêmios de Davi Lacerda, Engenheiro de IA na Algar e principal desenvolvedor do premiado Sales Copilot.",
+        "Pergunte sobre o trabalho de Davi Lacerda: experiência na Algar, o premiado Sales Copilot, certificações Microsoft Expert, habilidades, formação e contato.",
     },
     personal: {
       title: "Pessoal",
@@ -21,6 +21,11 @@ export const ptBr: Dictionary = {
       title: "Blog",
       description:
         "Notas sobre engenharia de IA, LLMs, agentes e construção de software, por Davi Lacerda.",
+    },
+    ask: {
+      title: "Sem resposta escrita",
+      description:
+        "O assistente da aba Trabalho não tem uma resposta escrita para essa pergunta. Escolha um dos temas que ele responde.",
     },
   },
 
@@ -51,116 +56,103 @@ export const ptBr: Dictionary = {
     switchToDark: "Mudar para o tema escuro",
   },
 
-  work: {
-    hero: {
-      eyebrow: "Engenheiro de IA",
-      basedIn: "Em",
-      availability: "Aberto a vagas de Engenheiro de IA",
-      primaryCta: "Entre em contato",
-      secondaryCta: "Ver experiência",
+  chat: {
+    home: {
+      lead: "{role} na {company}, em {place}. Constrói produtos de IA Generativa e agentes de IA de ponta a ponta.",
+      summaryTitle: "Em resumo",
+      glanceTitle: "Em destaque",
+      topicsTitle: "O que você pode perguntar",
     },
-    sections: {
-      about: { eyebrow: "Resumo", title: "Sobre" },
-      highlights: { eyebrow: "Em resumo", title: "Destaques" },
+    composer: {
+      label: "Faça uma pergunta sobre o trabalho do Davi",
+      placeholder: "Pergunte sobre o Davi",
+      submit: "Perguntar",
+      suggestions: "Sugestões de perguntas",
+      bestMatch: "Tema mais próximo: {topic}",
+      noMatch: "Nenhum tema ainda. Tente uma das sugestões.",
+      note: "Um assistente guiado sobre o perfil verificado do Davi. Todas as respostas são escritas com antecedência; nenhum modelo responde ao vivo.",
+      fallbackTitle: "Ainda não tenho uma resposta escrita para isso.",
+      fallbackBody:
+        "Posso responder sobre os temas abaixo. Para qualquer outra coisa, escreva para o Davi em {email}.",
+      dismiss: "Fechar",
+    },
+    turn: {
+      you: "Você perguntou",
+      askNext: "Pergunte outra coisa",
+    },
+    topics: {
       experience: {
-        eyebrow: "Carreira",
-        title: "Experiência",
-        description: "Onde tenho construído e o que entreguei por lá.",
-      },
-      projects: {
-        eyebrow: "Portfólio",
-        title: "Projetos selecionados",
+        chip: "Experiência",
+        question: "Onde o Davi já trabalhou?",
+        title: "Experiência profissional",
+        metaTitle: "Experiência profissional de Davi Lacerda",
         description:
-          "Projetos profissionais e pessoais, de produtos de IA a ferramentas para devs.",
+          "Davi Lacerda é Engenheiro de IA na Algar desde agosto de 2024, depois de um estágio de pesquisa e desenvolvimento no Brain. Datas, escopo e o que ele entregou.",
+        summary: "A função na Algar e o estágio antes dela.",
       },
-      skills: {
-        eyebrow: "Ferramentas",
-        title: "Habilidades",
-        description: "O stack que eu uso, agrupado por camada.",
+      "sales-copilot": {
+        chip: "Sales Copilot",
+        question: "O que é o Sales Copilot?",
+        title: "Sales Copilot",
+        metaTitle: "Sales Copilot, Melhor Projeto de IA da América Latina",
+        description:
+          "O copiloto de IA que Davi Lacerda construiu de ponta a ponta para os times de vendas da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+        summary: "O copiloto premiado que ele construiu de ponta a ponta.",
       },
       certifications: {
-        eyebrow: "Aprendizado",
-        title: "Certificações e cursos",
+        chip: "Certificações",
+        question: "Quais certificações o Davi tem?",
+        title: "Certificações",
+        metaTitle: "Certificações Microsoft Expert de Davi Lacerda",
+        description:
+          "Davi Lacerda tem duas certificações Microsoft de nível Expert, em soluções de IA multiagente e arquitetura de IA agêntica, além de cursos de React.",
+        summary: "Duas credenciais Microsoft Expert, e cursos.",
       },
-      education: { eyebrow: "Formação", title: "Educação" },
-      achievements: {
-        eyebrow: "Reconhecimento",
-        title: "Prêmios e conquistas",
+      skills: {
+        chip: "Habilidades",
+        question: "Qual é o stack do Davi?",
+        title: "Habilidades e stack",
+        metaTitle: "Habilidades e stack de Davi Lacerda",
+        description:
+          "Com o que Davi Lacerda trabalha: LLMs e agentes, RAG, machine learning, back-end, front-end, cloud e entrega.",
+        summary: "LLMs, agentes, RAG e todo o stack ao redor.",
+      },
+      education: {
+        chip: "Formação",
+        question: "Onde o Davi estudou?",
+        title: "Formação",
+        metaTitle: "Formação de Davi Lacerda",
+        description:
+          "Davi Lacerda estudou Ciência da Computação na Universidade Federal de Uberlândia (UFU). Disciplinas, TCC e os idiomas em que ele trabalha.",
+        summary: "Ciência da Computação na UFU, e idiomas.",
       },
       faq: {
-        eyebrow: "FAQ",
+        chip: "Perguntas",
+        question: "O que as pessoas costumam perguntar sobre o Davi?",
         title: "Perguntas frequentes",
+        metaTitle: "Perguntas sobre Davi Lacerda",
         description:
-          "Respostas rápidas para recrutadores, parceiros e máquinas curiosas.",
+          "Respostas curtas sobre Davi Lacerda: o que ele faz, se está aberto a vagas, o stack, o Sales Copilot, certificações, onde mora e formação.",
+        summary: "Respostas curtas para o que recrutadores mais perguntam.",
       },
       contact: {
-        eyebrow: "Contato",
-        title: "Vamos construir algo útil com IA",
+        chip: "Contato",
+        question: "Como falo com o Davi?",
+        title: "Contato",
+        metaTitle: "Fale com Davi Lacerda",
         description:
-          "Contratando um Engenheiro de IA, ou tem um produto com LLM que precisa funcionar no mundo real? Vou adorar conversar.",
-        emailCta: "Enviar um e-mail",
-        copyEmail: "Copiar endereço de e-mail",
-        copied: "Copiado para a área de transferência",
+          "Davi Lacerda está aberto a vagas de Engenheiro de IA, presenciais ou híbridas em Uberlândia e remotas. Mande um e-mail ou encontre ele no LinkedIn.",
+        summary: "E-mail, LinkedIn e disponibilidade.",
       },
     },
-    labels: {
-      award: "Prêmio",
-      mainDeveloper: "Principal desenvolvedor",
-      expertLevel: "Nível Expert",
-      courses: "Cursos",
-      stack: "Stack",
-      highlights: "Destaques",
-      role: "Cargo",
-      location: "Local",
-      viewProject: "Ver projeto",
-      sourceCode: "Código-fonte",
-      liveSite: "Site no ar",
-      privateProject: "Privado",
-      featured: "Destaque",
-      stars: "{count} estrelas",
-      issuedBy: "Emitido por {issuer}",
-      viewCredential: "Ver credencial",
-      coursework: "Disciplinas relevantes",
-      thesis: "TCC",
-      languagesSpoken: "Idiomas",
-    },
-    page: {
-      keywords: [
-        "Engenheiro de IA",
-        "Engenheiro de IA Uberlândia",
-        "Engenheiro de IA Brasil",
-        "Contratar Engenheiro de IA",
-        "Desenvolvedor de agentes de IA",
-        "Agentes de IA",
-        "IA multiagente",
-        "IA agêntica",
-        "Azure AI",
-        "Engenheiro de IA full-stack",
-        "Microsoft Certified Expert",
-        "Multi-Agent AI Solutions Expert",
-        "Agentic AI Business Solutions Architect",
-        "Sales Copilot",
-        "Conecta Latam",
-        "Melhor Projeto de IA da América Latina",
-      ],
-      hero: {
-        workModes: "Remoto ou híbrido",
-        emailCta: "Mande um e-mail",
+    answers: {
+      experience: {
+        lead: "{name} é {role} na {company} desde {since}. Antes, foi {prevRole} no {prevCompany}.",
+        alsoAt: "Também na {company}",
+      },
+      salesCopilot: {
         award: "Prêmio",
-        awardCaption:
-          "Conquistado pelo Sales Copilot da Algar, que construí de ponta a ponta como principal desenvolvedor.",
-        awardCta: "Conheça o projeto",
-      },
-      about: { title: "Sobre o Davi" },
-      featured: {
-        title: "Trabalhos em destaque",
-        description:
-          "O premiado Sales Copilot e outros projetos entregues na Algar.",
-        caseStudy: "Estudo de caso",
-        company: "Empresa",
-        year: "Ano",
-        ownership: "O que eu construí",
-        endToEnd: "{role}, de ponta a ponta",
+        builtBy: "Construído de ponta a ponta pelo principal desenvolvedor",
         layers: {
           frontEnd: {
             title: "Front-end",
@@ -175,73 +167,128 @@ export const ptBr: Dictionary = {
             body: "Os serviços que sustentam o copiloto.",
           },
         },
-        awardNote:
-          "Prêmio Conecta Latam, um reconhecimento em toda a América Latina.",
-        alsoAt: "Também na {company}",
-        side: {
-          title: "Projetos pessoais e open source",
-          description:
-            "Experimentos e ferramentas que construo por diversão, de um quadro branco com React Flow a temas para o VS Code.",
-          cta: "Ver projetos pessoais",
-        },
+        company: "Empresa",
+        year: "Ano do projeto",
+        role: "Função",
+        access: "Acesso",
       },
-      experience: { current: "Atual" },
       certifications: {
-        description:
-          "Duas credenciais Microsoft de nível Expert em IA multiagente e agêntica.",
         credentials: "Credenciais",
+        issued: "Emitida em {date}",
+        courses: "Cursos",
+        course: "Curso",
         issuer: "Emissor",
-        issued: "Emitida em",
+        date: "Data",
       },
-      education: { title: "Formação e idiomas" },
+      education: {
+        degree: "Grau",
+        institution: "Instituição",
+        location: "Local",
+      },
+      faq: {
+        lead: "Respostas curtas para o que recrutadores e colaboradores mais perguntam.",
+      },
+      contact: {
+        emailCta: "Mandar um e-mail",
+        copyEmail: "Copiar e-mail",
+        copied: "Copiado",
+        elsewhere: "Em outros lugares",
+        timezone: "Fuso horário",
+      },
     },
+  },
+
+  work: {
+    hero: {
+      availability: "Aberto a vagas de Engenheiro de IA",
+    },
+    sections: {
+      about: { title: "Sobre" },
+      highlights: { title: "Destaques" },
+      experience: { title: "Experiência" },
+      projects: { title: "Projetos selecionados" },
+      skills: { title: "Habilidades" },
+      certifications: { title: "Certificações e cursos" },
+      education: { title: "Formação" },
+      achievements: { title: "Prêmios e conquistas" },
+      faq: { title: "Perguntas frequentes" },
+      contact: {
+        title: "Contato",
+        description:
+          "Davi está aberto a vagas de Engenheiro de IA. O e-mail é a melhor forma de falar com ele.",
+      },
+    },
+    labels: {
+      award: "Prêmio",
+      mainDeveloper: "Principal desenvolvedor",
+      expertLevel: "Nível Expert",
+      courses: "Cursos",
+      stack: "Stack",
+      highlights: "Destaques",
+      role: "Função",
+      location: "Local",
+      viewProject: "Ver projeto",
+      sourceCode: "Código-fonte",
+      liveSite: "Site no ar",
+      privateProject: "Privado",
+      featured: "Destaque",
+      stars: "{count} estrelas",
+      issuedBy: "Emitido por {issuer}",
+      viewCredential: "Ver credencial",
+      coursework: "Disciplinas relevantes",
+      thesis: "TCC",
+      languagesSpoken: "Idiomas",
+    },
+    keywords: [
+      "Engenheiro de IA",
+      "Engenheiro de IA Uberlândia",
+      "Engenheiro de IA Brasil",
+      "Contratar Engenheiro de IA",
+      "Desenvolvedor de agentes de IA",
+      "Agentes de IA",
+      "IA multiagente",
+      "IA agêntica",
+      "Azure AI",
+      "Engenheiro de IA full-stack",
+      "Microsoft Certified Expert",
+      "Multi-Agent AI Solutions Expert",
+      "Agentic AI Business Solutions Architect",
+      "Sales Copilot",
+      "Conecta Latam",
+      "Melhor Projeto de IA da América Latina",
+    ],
   },
 
   personal: {
     intro: {
-      eyebrow: "Pessoal",
       title: "Fora do expediente",
       description:
         "Textos, experimentos e coisas que eu construo por diversão.",
-      headline: "Fora do *expediente*",
       // TODO(davi): deixe estes parágrafos com a sua cara (hobbies e a vida longe do teclado).
       paragraphs: [
-        "Oi, eu sou o Davi. Moro em {city}, no Triângulo Mineiro, onde estudei Ciência da Computação e onde hoje construo produtos de IA. Esta é a outra metade do site: menos currículo, mais o que eu faço e penso quando ninguém está pedindo.",
+        "Oi, eu sou o Davi. Moro em {city}, no Triângulo Mineiro, onde estudei Ciência da Computação e onde hoje construo produtos de IA. Esta é a outra metade do site: menos currículo, mais o que eu construo e escrevo no meu tempo livre.",
         "Gosto de construir em público. A maioria dos meus projetos pessoais nasceu de pequenas vontades: um sorteador de episódios porque vivo revendo minhas séries favoritas, meus próprios temas para o VS Code porque passo o dia num editor, um quadro branco no estilo FigJam feito com React Flow.",
-        "Ultimamente também tenho escrito: notas sobre engenharia de IA de quem coloca isso no ar. Espere agentes e sistemas multiagente, RAG, Model Context Protocol, Azure AI e o trabalho nada glamoroso de levar IA Generativa para produção.",
+        "Ultimamente também tenho escrito: notas sobre engenharia de IA. Espere agentes e sistemas multiagente, RAG, Model Context Protocol, Azure AI e o que é preciso para rodar IA Generativa em produção.",
       ],
-      jumpTo: "Ir para",
-      facts: {
-        label: "Em resumo",
-        location: "Localização",
-        dayJob: "Trabalho",
-        dayJobValue: "{role} na {company}",
-        writingAbout: "Escrevendo sobre",
-        writingTopics: "Engenharia de IA, agentes, RAG e MCP",
-        languages: "Idiomas",
-      },
     },
     sections: {
       writing: {
-        eyebrow: "Escrita",
-        title: "Blog",
+        title: "Textos",
         description:
           "Notas sobre engenharia de IA, LLMs e construção de software.",
-        latest: "Mais recente",
       },
       sideProjects: {
-        eyebrow: "Experimentos",
         title: "Projetos pessoais",
         description:
           "Coisas pequenas feitas por diversão, para aprender ou resolver uma vontade.",
         source: "Código",
         live: "Ver no ar",
+        stack: "Stack",
         stars: "{count} estrelas no GitHub",
         moreOnGitHub: "Mais no GitHub",
       },
       elsewhere: {
-        eyebrow: "Em outros lugares",
-        title: "Me encontre online",
+        title: "Em outros lugares",
         description: "Pode dar um oi onde preferir.",
         notes: {
           github: "Código, projetos pessoais e experimentos",
@@ -260,7 +307,7 @@ export const ptBr: Dictionary = {
       "Notas sobre engenharia de IA, LLMs, agentes e construção de software.",
     latest: "Posts recentes",
     allPosts: "Todos os posts",
-    backToBlog: "Voltar para todos os posts",
+    backToBlog: "Todos os textos",
     readPost: "Ler post",
     noPosts: "Nenhum post ainda. O primeiro está a caminho.",
     readingTime: "{minutes} min de leitura",
@@ -285,7 +332,8 @@ export const ptBr: Dictionary = {
 
   dates: {
     present: "Atual",
-    range: "{start} – {end}",
+    since: "Desde {start}",
+    range: "{start} a {end}",
   },
 
   socials: {
@@ -298,14 +346,14 @@ export const ptBr: Dictionary = {
 
   footer: {
     rights: "Todos os direitos reservados.",
-    colophon: "Projetado e desenvolvido por Davi Lacerda.",
-    backToTop: "Voltar ao topo",
+    forAgents: "Para agentes",
   },
 
   notFound: {
     title: "Página não encontrada",
-    description: "A página que você procura não existe ou mudou de endereço.",
-    backHome: "Voltar para a página inicial",
+    description:
+      "Esta página não existe ou mudou de endereço. Pergunte abaixo ou {link}.",
+    backHome: "volte ao início",
   },
 
   common: {

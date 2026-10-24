@@ -1,41 +1,29 @@
-import {
-  Geist_Mono,
-  Instrument_Sans,
-  Instrument_Serif,
-} from "next/font/google";
+import { Geist_Mono, Jost } from "next/font/google"; // taste-skill-ignore: Geist Mono is for literal code only
 
 /**
  * Typefaces (self-hosted at build time by next/font):
- * - Display: Instrument Serif, a condensed editorial serif for headlines.
- *   Only weight 400 exists; use italics (`italic`) for emphasis, never bold.
- * - Sans: Instrument Sans (variable 400–700), body copy and UI.
- * - Mono: Geist Mono, code, eyebrows, metadata.
+ * - Jost, a geometric sans (variable 400–600), for everything: display,
+ *   headings, body and UI. Display sizes use weight 500 and sentence case.
+ * - Geist Mono, for literal code inside `<pre>` and `<code>` only. Never for
+ *   labels, dates or metadata.
  *
- * The CSS variables are mapped to `font-display` / `font-sans` / `font-mono`
- * in `globals.css`. Apply `fontVariables` to `<html>`.
+ * The CSS variables are mapped to `font-sans` / `font-mono` in `globals.css`.
+ * Apply `fontVariables` to `<html>`. The OG images use static Jost TTFs from
+ * `src/lib/og/fonts` (satori cannot read the variable WOFF2).
  */
-const display = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+const sans = Jost({
+  subsets: ["latin", "latin-ext"],
+  weight: "variable",
   display: "swap",
-  variable: "--font-instrument-serif",
-});
-
-const sans = Instrument_Sans({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-instrument-sans",
+  variable: "--font-jost",
 });
 
 const mono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-geist-mono",
+  // Only blog code blocks use it; do not preload it on every page.
+  preload: false,
 });
 
-export const fontVariables = [
-  display.variable,
-  sans.variable,
-  mono.variable,
-].join(" ");
+export const fontVariables = [sans.variable, mono.variable].join(" ");
