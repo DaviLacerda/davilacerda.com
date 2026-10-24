@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { AgentDiscovery } from "@/components/agents/agent-discovery";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AlternateLinksProvider } from "@/components/providers/alternate-links";
@@ -118,6 +119,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
             <SiteFooter lang={lang} />
           </AlternateLinksProvider>
         </ThemeProvider>
+        <AgentDiscovery />
         <Analytics />
       </body>
     </html>
