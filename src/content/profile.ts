@@ -534,9 +534,8 @@ export const profile: Profile = {
       repoUrl: `${GITHUB}/davilacerda.com`,
       liveUrl: "https://davilacerda.com",
       description: {
-        en: "This site: bilingual, statically generated and structured for search and answer engines.",
-        "pt-br":
-          "Este site: bilíngue, gerado estaticamente e estruturado para buscadores e motores de resposta.",
+        en: "This site, in English and Portuguese.",
+        "pt-br": "Este site, em português e inglês.",
       },
       stack: ["Next.js", "TypeScript", "Tailwind CSS"],
     },

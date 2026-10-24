@@ -37,6 +37,8 @@ export const viewport: Viewport = {
     },
   ],
   colorScheme: "light dark",
+  // The docked composer reads env(safe-area-inset-bottom).
+  viewportFit: "cover",
 };
 
 /**
@@ -101,6 +103,8 @@ export default async function RootLayout({ children, params }: LayoutProps) {
     <html
       lang={localeMeta[lang].htmlLang}
       className={fontVariables}
+      // Next turns smooth scrolling off while it scrolls on a navigation.
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body className="flex min-h-dvh flex-col text-foreground">

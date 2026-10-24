@@ -3,36 +3,36 @@
 /*
  * Design system for davilacerda.com
  * ---------------------------------
- * One column, one typeface (Geist), white and near-black, one signal red.
+ * Monochrome: near-white and near-black, a short grey ramp, one typeface
+ * (Geist). Hierarchy comes from size, weight and space only. The one source
+ * of colour is the brand logos (Azure, Python...), which keep their own.
  *
  * 1. Tokens (CSS variables) for light and dark themes. next-themes toggles the
  *    `.dark` class on <html>; system preference is the default.
- * 2. Tailwind theme mapping: bg-background, bg-surface, text-foreground,
- *    text-muted-foreground, bg-accent, text-accent-text, text-display,
- *    max-w-column...
+ * 2. Tailwind theme mapping: bg-background, bg-surface, bg-ink, text-on-ink,
+ *    text-muted-foreground, text-display, text-figure, max-w-column...
  * 3. Base styles, focus rings, selection.
- * 4. Motion: the first-paint entrance (CSS, works without JavaScript), the
- *    press feedback shared by chips and buttons and the disclosure (details)
- *    expansion. Scroll reveals and the chat turn use Motion (see
- *    `src/components/motion`).
- * 5. `.markdown`: blog prose and code.
+ * 4. Motion: the first-paint entrance and the answer pieces (CSS, works
+ *    without JavaScript), the press feedback and the disclosure expansion.
+ *    The canvas swap and the chips use Motion (see `src/components/chat`).
+ * 5. The docked composer on phones and tablets.
+ * 6. `.markdown`: blog prose and code.
  *
  * Rules the components follow:
- * - Surfaces are a fill one tone step from the page (`bg-surface`), never a
- *   1px outline, never a shadow. Only form fields and real tables have lines.
- *   Few of them: the composer, the chips and tags, logo tiles, code. Lists and
- *   answers sit on the page.
- * - Three radii: controls are fully round (chips, buttons, tabs, the
- *   composer, the question bubble); panels use `rounded-surface` (20px); logo
- *   tiles use `rounded-tile` (12px), the same curve at a small size.
- * - Red is for the one action on a screen (send, email) and for hover
- *   underlines. Everything else is ink and grey. Brand logos keep their own
- *   colours (see `src/lib/logos`).
- * - Running text is 16–17px in full ink; secondary lines are 14–15px grey.
+ * - Fills, not lines: a surface is one tone step from the page (`bg-surface`),
+ *   the emphasis panel is the inverse (`bg-ink`, black in light mode, white
+ *   in dark). No 1px outlines, no shadows, no gradients. Only form fields and
+ *   real tables have lines.
+ * - The primary action is ink (black in light mode, white in dark). There is
+ *   no accent colour.
+ * - Radii: controls are fully round (chips, buttons, tabs, the composer, the
+ *   question bubble); panels use `rounded-panel` (28px); hovered rows use
+ *   `rounded-surface` (20px); logo tiles `rounded-tile` (14px).
+ * - Running text is 16 to 17px in full ink; secondary lines are 14 to 15px grey.
  *
- * Contrast (WCAG 2.2): foreground/background 19.8:1 light, 16.6:1 dark;
- * muted >= 5.1:1 on page and surface in both themes; white on accent 4.9:1;
- * accent-text >= 4.9:1 on page and surface.
+ * Contrast (WCAG 2.2): foreground/background 19.8:1 light, 17.4:1 dark;
+ * muted >= 5.2:1 on page and surface in both themes; on-ink-muted >= 5.5:1
+ * on the ink panel in both themes.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -44,35 +44,36 @@
 :root {
   --background: #ffffff;
   --foreground: #0a0a0a;
-  --surface: #f2f2f2; /* composer, chips, tags, logo tiles, code, the question bubble */
-  --surface-strong: #e8e8e8; /* hover on surface */
-  --muted-foreground: #666666; /* 5.7:1 on page, 5.1:1 on surface */
-  --border: #d4d4d4; /* form fields and table rules only */
+  --surface: #f4f4f4; /* panels, chips, the composer, logo tiles, code */
+  --surface-strong: #e8e8e8; /* hover on a surface */
+  --muted-foreground: #666666; /* 5.7:1 on page, 5.2:1 on surface */
+  --border: #dcdcdc; /* form fields and table rules only */
 
-  --accent: #d92b21; /* signal red: fills with white text (4.9:1) */
-  --accent-foreground: #ffffff;
-  --accent-text: #c4251c; /* red as text: 5.8:1 on page, 5.2:1 on surface */
+  /* The inverse panel: ink ground, page-coloured text. */
+  --ink: #0a0a0a;
+  --on-ink: #ffffff;
+  --on-ink-muted: #a3a3a3; /* 7.8:1 on ink */
 
   --ring: #0a0a0a;
-  --selection: color-mix(in srgb, #d92b21 20%, transparent);
+  --selection: color-mix(in srgb, #0a0a0a 14%, transparent);
 
   color-scheme: light;
 }
 
 .dark {
-  --background: #0d0d0d;
+  --background: #0a0a0a;
   --foreground: #ededed;
-  --surface: #1b1b1b;
-  --surface-strong: #262626;
-  --muted-foreground: #a3a3a3; /* 7.4:1 on page, 6.8:1 on surface */
-  --border: #3a3a3a;
+  --surface: #161616;
+  --surface-strong: #222222;
+  --muted-foreground: #a1a1a1; /* 7.6:1 on page, 7.0:1 on surface */
+  --border: #2e2e2e;
 
-  --accent: #d92b21;
-  --accent-foreground: #ffffff;
-  --accent-text: #ff5a50; /* 6.3:1 on page, 5.6:1 on surface */
+  --ink: #ededed;
+  --on-ink: #0a0a0a;
+  --on-ink-muted: #5c5c5c; /* 5.6:1 on ink */
 
   --ring: #ededed;
-  --selection: color-mix(in srgb, #ff5a50 30%, transparent);
+  --selection: color-mix(in srgb, #ededed 22%, transparent);
 
   color-scheme: dark;
 }
@@ -88,9 +89,9 @@
   --color-surface-strong: var(--surface-strong);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent-text: var(--accent-text);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-muted: var(--on-ink-muted);
   --color-ring: var(--ring);
 
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
@@ -100,58 +101,79 @@
 
 @theme static {
   /*
-   * Type scale (fluid, 360px -> 1440px). Five steps carry the site: display,
-   * title, heading, lead, body; `small` is for secondary lines. Geist has a
-   * large x-height, so the steps stay modest: body 16px to 17px, display
-   * 44px to 72px. Display and titles are set at weight 600 with tight
-   * tracking, headings at 600, everything else at 400 (500 for labels).
+   * Type scale (fluid, 360px -> 1440px). Geist has a large x-height, so the
+   * reading steps stay modest (body 16px to 17px) and the contrast comes from
+   * the top of the scale: `figure` for the one number an answer is about,
+   * `display` for page titles, `name` for Davi's name beside the canvas,
+   * `answer` for an answer's title. Titles are set at 600 with tight
+   * tracking, everything else at 400 (500 for labels).
    */
+  --text-figure: clamp(4.5rem, 3rem + 5vw, 8rem);
+  --text-figure--line-height: 0.9;
+  --text-figure--letter-spacing: -0.065em;
   --text-display: clamp(2.75rem, 2rem + 3.2vw, 4.5rem);
   --text-display--line-height: 1;
   --text-display--letter-spacing: -0.045em;
+  --text-name: clamp(2.5rem, 2.05rem + 1.25vw, 3.25rem);
+  --text-name--line-height: 1;
+  --text-name--letter-spacing: -0.045em;
   --text-title: clamp(2.125rem, 1.7rem + 1.9vw, 3.25rem);
   --text-title--line-height: 1.05;
   --text-title--letter-spacing: -0.04em;
+  --text-answer: clamp(2rem, 1.75rem + 1vw, 2.625rem);
+  --text-answer--line-height: 1.05;
+  --text-answer--letter-spacing: -0.04em;
   --text-heading: clamp(1.375rem, 1.2rem + 0.75vw, 1.75rem);
   --text-heading--line-height: 1.2;
   --text-heading--letter-spacing: -0.025em;
   --text-lead: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
-  --text-lead--line-height: 1.5;
+  --text-lead--line-height: 1.45;
   --text-lead--letter-spacing: -0.012em;
   --text-body: clamp(1rem, 0.96rem + 0.15vw, 1.0625rem);
   --text-body--line-height: 1.6;
   --text-small: clamp(0.875rem, 0.85rem + 0.1vw, 0.9375rem);
   --text-small--line-height: 1.5;
 
-  /* One column for everything: header, pages, footer. */
+  /* Reading column (Personal, posts) and the wide frame (header, Work, footer). */
   --container-column: 48rem;
+  --container-wide: 80rem;
 
+  --radius-panel: 1.75rem;
   --radius-surface: 1.25rem;
-  --radius-tile: 0.75rem;
+  --radius-tile: 0.875rem;
 
   /* Emil Kowalski's curves: ease-out for arrivals, ease-in-out for movement. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-/* The page column with its gutters (16px on a phone). Prefer <Container>. */
+/* The reading column with its gutters (16px on a phone). Prefer <Container>. */
 @utility container-column {
   width: 100%;
   margin-inline: auto;
   max-width: calc(var(--container-column) + 2 * var(--gutter));
   padding-inline: var(--gutter);
-  --gutter: clamp(1rem, 4vw, 2rem);
+  --gutter: clamp(1rem, 4vw, 2.5rem);
 }
 
-/* Ink underline that turns red on hover. */
+/* The wide frame: header, the Work split pane, footer. <Container wide>. */
+@utility container-wide {
+  width: 100%;
+  margin-inline: auto;
+  max-width: calc(var(--container-wide) + 2 * var(--gutter));
+  padding-inline: var(--gutter);
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+}
+
+/* Underline at 30% of the text colour that comes to full strength on hover. */
 @utility link-underline {
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.24em;
-  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
   transition: text-decoration-color 150ms ease;
   &:hover {
-    text-decoration-color: var(--accent);
+    text-decoration-color: currentColor;
   }
 }
 
@@ -166,6 +188,28 @@
       transition-duration: 120ms;
       transition-timing-function: var(--ease-out);
     }
+  }
+}
+
+/* A large linked panel: a 1% squeeze, so a whole tile answers the press without wobbling. */
+@utility pressable-panel {
+  transition-property: background-color, color, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+  @media (prefers-reduced-motion: no-preference) {
+    &:active {
+      transform: scale(0.99);
+      transition-duration: 160ms;
+      transition-timing-function: var(--ease-out);
+    }
+  }
+}
+
+/* A sideways scroller without a visible bar (the chips row in the dock). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -227,6 +271,12 @@
     outline-offset: 3px;
   }
 
+  /* On the ink panel the ring takes the panel's text colour. */
+  .bg-ink :focus-visible,
+  .bg-ink:focus-visible {
+    outline-color: var(--on-ink);
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     html {
       scroll-behavior: smooth;
@@ -238,12 +288,15 @@
  * 4. Motion
  *
  * First paint: the parts of the first screen marked `data-enter` rise 8px and
- * fade in, 50ms apart (`--i` sets the order), settled within ~1.2s. Pure CSS,
- * so it runs without JavaScript. It only plays on a full page load:
- * `data-nav` is set on <html> as soon as the visitor navigates inside the
- * site, and from then on arrivals are handled by the chat turn (Motion) or
- * not animated at all. The hidden starting state lives inside the
- * no-preference query, so with reduced motion the page is simply there.
+ * fade in, 50ms apart (`--i` sets the order). An answer's parts
+ * (`data-piece`, order in `--p`) arrive a little later and a little more
+ * decisively: 12px, a 4px blur that clears, 60ms apart, so the answer reads
+ * as composed in front of you. Pure CSS, so it runs without JavaScript, and
+ * settled within ~1.2s. It only plays on a full page load: `data-nav` is set
+ * on <html> as soon as the visitor navigates inside the site; from then on
+ * the canvas runs the same entrance with Motion on every swap. The hidden
+ * starting states live inside the no-preference query, so with reduced
+ * motion the page is simply there.
  * ------------------------------------------------------------------------- */
 
 @keyframes enter {
@@ -253,36 +306,39 @@
   }
 }
 
+@keyframes piece {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    filter: blur(4px);
+  }
+}
+
+/* A timeline block draws itself in from the left, every time it appears. */
+@keyframes bar {
+  from {
+    clip-path: inset(0 100% 0 0 round 1rem);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 1rem);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  [data-bar] {
+    animation: bar 640ms var(--ease-out) both;
+    animation-delay: calc(var(--b, 0) * 140ms + 320ms);
+  }
+
   :root:not([data-nav]) [data-enter] {
     animation: enter 450ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 50ms + 40ms);
   }
 
-  /*
-   * An answer's first block builds itself: its parts follow the block in,
-   * 60ms apart, every time an answer opens (first load or a chat turn).
-   */
-  [data-build] > * > * {
-    animation: enter 450ms var(--ease-out) both;
-    animation-delay: calc(var(--i, 0) * 50ms + 120ms + var(--n, 0) * 60ms);
+  :root:not([data-nav]) [data-piece] {
+    animation: piece 520ms var(--ease-out) both;
+    animation-delay: calc(var(--p, 0) * 60ms + 180ms);
   }
-}
-
-[data-build] > * > :nth-child(2) {
-  --n: 1;
-}
-[data-build] > * > :nth-child(3) {
-  --n: 2;
-}
-[data-build] > * > :nth-child(4) {
-  --n: 3;
-}
-[data-build] > * > :nth-child(5) {
-  --n: 4;
-}
-[data-build] > * > :nth-child(n + 6) {
-  --n: 5;
 }
 
 /*
@@ -325,7 +381,31 @@
 }
 
 /* ---------------------------------------------------------------------------
- * 5. Markdown prose (blog posts). Wrap rendered HTML in `.markdown`.
+ * 5. The docked composer (below 1024px)
+ *
+ * On phones and tablets the composer and its chips sit in a bar fixed to the
+ * bottom of the screen, like a chat app, and the answer scrolls above it.
+ * The page keeps room for the bar at its foot and keeps focused elements
+ * clear of it (WCAG 2.4.11). `--dock-h` is measured by the dock itself; the
+ * value here is the fallback without JavaScript.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  --dock-h: calc(7.75rem + env(safe-area-inset-bottom));
+}
+
+@media (width < 64rem) {
+  body:has([data-dock]) {
+    padding-bottom: var(--dock-h);
+  }
+
+  html:has([data-dock]) {
+    scroll-padding-bottom: calc(var(--dock-h) + 1rem);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. Markdown prose (blog posts). Wrap rendered HTML in `.markdown`.
  * ------------------------------------------------------------------------- */
 
 @layer components {
@@ -393,12 +473,12 @@
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.24em;
-    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
     transition: text-decoration-color 150ms ease;
   }
 
   .markdown a:not(.heading-anchor):hover {
-    text-decoration-color: var(--accent);
+    text-decoration-color: currentColor;
   }
 
   .markdown strong {
@@ -432,7 +512,7 @@
 
   .markdown .task-list-item input {
     margin-right: 0.5em;
-    accent-color: var(--accent);
+    accent-color: var(--foreground);
   }
 
   /* A quotation is set larger, not boxed or ruled. */
@@ -557,11 +637,13 @@
   .markdown code[data-theme] span {
     color: var(--shiki-light);
     font-weight: var(--shiki-light-font-weight, inherit);
+    font-style: var(--shiki-light-font-style, inherit);
   }
 
   .dark .markdown code[data-theme],
   .dark .markdown code[data-theme] span {
     color: var(--shiki-dark);
     font-weight: var(--shiki-dark-font-weight, inherit);
+    font-style: var(--shiki-dark-font-style, inherit);
   }
 }

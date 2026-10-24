@@ -7,8 +7,9 @@ const linkClass =
   "link-underline rounded-sm text-muted-foreground hover:text-foreground";
 
 /**
- * One quiet line on the page column: copyright, three ways to reach Davi and
- * the agent-readable entry points (llms.txt, the MCP server).
+ * One quiet line on the wide frame: copyright, three ways to reach Davi and
+ * llms.txt, the entry point for agents (the rest of the machine-readable
+ * layer is announced in the head and the HTTP Link header).
  */
 export function SiteFooter({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
@@ -18,7 +19,10 @@ export function SiteFooter({ lang }: { lang: Locale }) {
 
   return (
     <footer className="mt-28 sm:mt-36">
-      <Container className="flex flex-col gap-x-8 gap-y-3 pb-10 text-small sm:flex-row sm:items-baseline sm:justify-between sm:pb-14">
+      <Container
+        wide
+        className="flex flex-col gap-x-8 gap-y-3 pb-10 text-small sm:flex-row sm:items-baseline sm:justify-between sm:pb-14"
+      >
         <p className="text-muted-foreground">
           © {year} {profile.name}
         </p>
@@ -53,14 +57,9 @@ export function SiteFooter({ lang }: { lang: Locale }) {
             </li>
           </ul>
         </nav>
-        <p className="text-muted-foreground">
-          {dict.footer.forAgents}:{" "}
+        <p>
           <a href={agentPaths.llms} className={linkClass}>
             llms.txt
-          </a>
-          ,{" "}
-          <a href={agentPaths.mcpServerCard} className={linkClass}>
-            MCP
           </a>
         </p>
       </Container>

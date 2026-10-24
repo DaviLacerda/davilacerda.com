@@ -1,16 +1,17 @@
 import type { ThemeRegistrationRaw } from "shiki";
 
 /*
- * Code highlighting in the site's palette: ink for code, grey for comments
- * and punctuation, signal red for strings and literals, weight for keywords.
- * Every colour is a token from globals.css and passes WCAG AA on the code
- * block's surface (#f2f2f2 light, #1b1b1b dark).
+ * Code highlighting in the site's monochrome palette: ink for code, weight
+ * for keywords, a softer grey for strings and literals, the muted grey in
+ * italics for comments, and muted punctuation. Every colour passes WCAG AA on
+ * the code block's surface (#f4f4f4 light, #161616 dark).
  */
 
 type Palette = {
   ink: string;
+  /** Strings and literals: between ink and muted. */
+  soft: string;
   muted: string;
-  accent: string;
   surface: string;
 };
 
@@ -26,7 +27,7 @@ function inkTheme(name: string, type: "light" | "dark", c: Palette) {
       { settings: { foreground: c.ink } },
       {
         scope: ["comment", "punctuation.definition.comment"],
-        settings: { foreground: c.muted },
+        settings: { foreground: c.muted, fontStyle: "italic" },
       },
       {
         scope: [
@@ -58,7 +59,7 @@ function inkTheme(name: string, type: "light" | "dark", c: Palette) {
           "constant.character",
           "markup.inline.raw",
         ],
-        settings: { foreground: c.accent },
+        settings: { foreground: c.soft },
       },
       {
         scope: ["markup.heading", "markup.bold"],
@@ -66,7 +67,7 @@ function inkTheme(name: string, type: "light" | "dark", c: Palette) {
       },
       {
         scope: ["markup.deleted"],
-        settings: { foreground: c.accent },
+        settings: { foreground: c.muted },
       },
     ],
   } satisfies ThemeRegistrationRaw;
@@ -75,14 +76,14 @@ function inkTheme(name: string, type: "light" | "dark", c: Palette) {
 export const codeThemes = {
   light: inkTheme("davi-ink-light", "light", {
     ink: "#0a0a0a",
+    soft: "#454545",
     muted: "#666666",
-    accent: "#c4251c",
-    surface: "#f2f2f2",
+    surface: "#f4f4f4",
   }),
   dark: inkTheme("davi-ink-dark", "dark", {
     ink: "#ededed",
-    muted: "#a3a3a3",
-    accent: "#ff5a50",
-    surface: "#1b1b1b",
+    soft: "#c2c2c2",
+    muted: "#a1a1a1",
+    surface: "#161616",
   }),
 };

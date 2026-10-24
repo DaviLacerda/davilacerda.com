@@ -4,13 +4,14 @@ import { BrandLogo } from "@/components/ui/logo";
 import { techLogo, type LogoId } from "@/lib/logos";
 import { cn } from "@/lib/utils";
 
-type Tone = "page" | "surface";
+type Tone = "page" | "surface" | "ink";
 
 /**
  * A filled pill for stack items and post tags. Text face, sentence case.
  * `tone` is the ground it sits on: on the page it takes the surface fill, on
- * a surface it takes the page colour. With `logo`, the brand's mark sits
- * before the name (decorative: the name is right there).
+ * a surface the page colour, on the ink panel a translucent step of the
+ * panel's text colour. With `logo`, the brand's mark sits before the name
+ * (decorative: the name is right there).
  */
 export function Tag({
   className,
@@ -24,7 +25,11 @@ export function Tag({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-small leading-6 text-foreground",
         logo && "pl-2.5",
-        tone === "page" ? "bg-surface" : "bg-background",
+        tone === "page"
+          ? "bg-surface"
+          : tone === "surface"
+            ? "bg-background"
+            : "bg-on-ink/12 text-on-ink",
         className,
       )}
       {...props}

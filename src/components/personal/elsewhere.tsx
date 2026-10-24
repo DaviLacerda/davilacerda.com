@@ -26,6 +26,7 @@ export function SocialList({
   ids,
   className,
   enter,
+  reveal = true,
   children,
 }: {
   lang: Locale;
@@ -33,15 +34,16 @@ export function SocialList({
   className?: string;
   /** Place in the entrance; the rows then arrive one after another (see `Reveal`). */
   enter?: number;
+  /** Scroll entrance; off inside an answer, which arrives as a whole on the canvas. */
+  reveal?: boolean;
   children?: ReactNode;
 }) {
   const dict = getDictionary(lang);
+  const List = reveal ? Reveal : "ul";
 
   return (
-    <Reveal
-      as="ul"
-      stagger
-      enter={enter}
+    <List
+      {...(reveal ? { as: "ul", stagger: true, enter } : {})}
       className={cn("-mx-3 grid gap-1 sm:-mx-4 sm:grid-cols-2", className)}
     >
       {ids.map((id) => {
@@ -90,7 +92,7 @@ export function SocialList({
         );
       })}
       {children}
-    </Reveal>
+    </List>
   );
 }
 

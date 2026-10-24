@@ -3,21 +3,23 @@ import type { ComponentPropsWithoutRef } from "react";
 
 import { cn, isExternalUrl } from "@/lib/utils";
 
-type Variant = "primary" | "accent" | "quiet" | "raised";
+type Variant = "primary" | "quiet" | "raised" | "inverse" | "ghost-inverse";
 type Size = "md" | "lg";
 
 const base =
   "pressable inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0";
 
 const variants: Record<Variant, string> = {
-  /** Ink fill. */
+  /** Ink fill (black in light mode, white in dark): the one action on a screen. */
   primary: "bg-foreground text-background hover:bg-foreground/85",
-  /** Signal red: the one action on a screen. */
-  accent: "bg-accent text-accent-foreground hover:bg-accent/90",
   /** Surface fill, for secondary actions next to a primary one. */
   quiet: "bg-surface text-foreground hover:bg-surface-strong",
   /** Page fill, for a secondary action that sits on a surface. */
   raised: "bg-background text-foreground hover:bg-surface-strong",
+  /** The primary action on the ink panel: page-coloured. */
+  inverse: "bg-on-ink text-ink hover:bg-on-ink/85",
+  /** A secondary action on the ink panel. */
+  "ghost-inverse": "bg-on-ink/12 text-on-ink hover:bg-on-ink/20",
 };
 
 const sizes: Record<Size, string> = {

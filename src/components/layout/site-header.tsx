@@ -10,16 +10,20 @@ import { getDictionary, type Locale } from "@/i18n";
 import { routes } from "@/lib/routes";
 
 /**
- * A plain bar on the page column: Davi's mark and name (the name from 640px
- * up), the Work/Personal tabs, the locale link and the theme toggle. It
- * scrolls away with the page, so nothing ever sits on top of the text.
+ * A plain bar on the wide frame: Davi's mark and name (the name from 640px
+ * up), the Work/Personal tabs, the locale link and the theme toggle. Its
+ * edges line up with the Work split pane. It scrolls away with the page, so
+ * nothing ever sits on top of the text.
  */
 export function SiteHeader({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
 
   return (
     <header>
-      <Container className="flex h-16 items-center justify-between gap-3 sm:h-20">
+      <Container
+        wide
+        className="flex h-16 items-center justify-between gap-3 sm:h-20"
+      >
         <Link
           href={routes.work(lang)}
           aria-label={dict.a11y.home}

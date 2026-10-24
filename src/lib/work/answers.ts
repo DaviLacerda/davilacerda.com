@@ -1,8 +1,11 @@
 import "server-only";
 
-import { profile, type FaqItem } from "@/content/profile";
+import type { ComposerStrings } from "@/components/chat/composer";
+import type { ReplyStrings } from "@/components/chat/reply";
+import { allSkills, profile, type FaqItem } from "@/content/profile";
 import { getDictionary, interpolate, t, type Locale } from "@/i18n";
 import { formatLongPartialDate } from "@/i18n/format";
+import { techLogo, type LogoId } from "@/lib/logos";
 import { routes } from "@/lib/routes";
 
 import { topicIds, type TopicId } from "./topics";
@@ -108,7 +111,7 @@ export function composerTopics(lang: Locale) {
 }
 
 /** Composer strings for a locale (client components get plain strings). */
-export function composerStrings(lang: Locale) {
+export function composerStrings(lang: Locale): ComposerStrings {
   const c = getDictionary(lang).chat.composer;
   return {
     label: c.label,
@@ -117,10 +120,24 @@ export function composerStrings(lang: Locale) {
     suggestions: c.suggestions,
     bestMatch: c.bestMatch,
     noMatch: c.noMatch,
-    note: c.note,
-    fallbackTitle: c.fallbackTitle,
-    fallbackBody: c.fallbackBody,
+    noAnswer: c.fallbackTitle,
+  };
+}
+
+/** The canvas's reply to a question with no answer (see `Reply`). */
+export function replyStrings(lang: Locale): ReplyStrings {
+  const dict = getDictionary(lang);
+  const c = dict.chat.composer;
+  const contact = dict.chat.answers.contact;
+  return {
+    title: c.fallbackTitle,
+    body: c.fallbackBody,
+    emailCta: contact.emailCta,
+    copyEmail: contact.copyEmail,
+    copied: contact.copied,
+    you: dict.chat.turn.you,
     dismiss: c.dismiss,
+    email: profile.email,
   };
 }
 
@@ -131,4 +148,36 @@ export function timezoneOffset(lang: Locale): string {
     timeZoneName: "shortOffset",
   }).formatToParts(new Date());
   return parts.find((part) => part.type === "timeZoneName")?.value ?? "";
+}
+
+/** Logo wall order: the platform first, then languages, frameworks, data, tools. */
+const WALL_ORDER: LogoId[] = [
+  "azure",
+  "python",
+  "typescript",
+  "nextjs",
+  "react",
+  "nodejs",
+  "mcp",
+  "tailwind",
+  "postgresql",
+  "supabase",
+  "vercel",
+  "java",
+  "spring",
+  "figma",
+  "github",
+];
+
+/**
+ * The stack as logos, for the skills answer and its social card: only the
+ * technologies the profile lists, in `WALL_ORDER`.
+ */
+export function stackLogos(): LogoId[] {
+  const present = new Set(
+    allSkills()
+      .map((skill) => techLogo(skill))
+      .filter((id): id is LogoId => Boolean(id)),
+  );
+  return WALL_ORDER.filter((id) => present.has(id));
 }

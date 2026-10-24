@@ -14,8 +14,8 @@ type CopyEmailButtonProps = {
   label: string;
   /** Visible label after copying, e.g. "Copied". */
   copiedLabel: string;
-  /** `raised` when the button sits on a surface (inside an answer panel). */
-  variant?: "quiet" | "raised";
+  /** `raised` on a surface panel, `ghost-inverse` on the ink panel. */
+  variant?: "quiet" | "raised" | "ghost-inverse";
   size?: "md" | "lg";
 };
 

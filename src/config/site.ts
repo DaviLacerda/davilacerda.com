@@ -7,12 +7,10 @@ export const siteConfig = {
   name: "Davi Lacerda",
   /** Canonical origin, no trailing slash. */
   url: "https://davilacerda.com",
-  /** Signal red, the one accent (app icons, OG images). */
-  brandColor: "#d92b21",
   /** Page backgrounds, used for `theme-color` and the manifest. */
   themeColor: {
     light: "#ffffff",
-    dark: "#0d0d0d",
+    dark: "#0a0a0a",
   },
   /** Keywords shared by every page (pages may add their own). */
   keywords: [

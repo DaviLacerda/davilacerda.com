@@ -3,21 +3,23 @@ import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { BRAND_MARK } from "@/components/brand-mark";
 import { siteConfig } from "@/config/site";
 import { profile } from "@/content/profile";
+import { getLogoSvg, type LogoId } from "@/lib/logos";
 
 /*
  * Shared design for the generated Open Graph / Twitter images: the site's
- * light theme on a 1200x630 card. White ground, ink type in Geist (the site's
- * only face), surface-grey pills for questions and suggestions, signal red
- * only on the send button. No gradients, rules or shadows. Fonts are bundled
- * static TTFs (Satori cannot read woff2), see ./fonts. Their kerning and
- * ligature features are stripped: Satori draws kerned glyphs but spaces the
- * words by unkerned widths, which opened visible gaps after words like
- * "LATAM" or "Microsoft".
+ * light theme on a 1200x630 card, in black and white like the site. White
+ * ground, ink type in Geist (the site's only face), surface-grey and ink
+ * panels; the only colour is a brand's own logo. No gradients, rules or
+ * shadows. Each Work answer gets the same picture as its answer on the page
+ * (see ./answers.tsx). Fonts are bundled static TTFs (Satori cannot read
+ * woff2), see ./fonts. Their kerning and ligature features are stripped:
+ * Satori draws kerned glyphs but spaces the words by unkerned widths, which
+ * opened visible gaps after words like "LATAM" or "Microsoft".
  */
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
@@ -28,10 +30,10 @@ export const ogColors = {
   page: "#ffffff",
   ink: "#0a0a0a",
   muted: "#666666",
-  surface: "#f2f2f2",
-  border: "#d4d4d4",
-  accent: siteConfig.brandColor,
-  onAccent: "#ffffff",
+  surface: "#f4f4f4",
+  border: "#dcdcdc",
+  onInk: "#ffffff",
+  onInkMuted: "#a3a3a3",
 } as const;
 
 const FONT_DIR = path.join(process.cwd(), "src/lib/og/fonts");
@@ -202,68 +204,6 @@ export function OgQuestion({ children }: { children: ReactNode }) {
   );
 }
 
-/** A row of suggestion pills. */
-export function OgChips({ items }: { items: string[] }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-      {items.map((item) => (
-        <div
-          key={item}
-          style={{
-            display: "flex",
-            background: ogColors.surface,
-            borderRadius: 999,
-            padding: "10px 24px",
-            fontSize: 26,
-            fontWeight: 500,
-          }}
-        >
-          {item}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** The composer: a pill field with its placeholder and the red send button. */
-export function OgComposer({ placeholder }: { placeholder: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        height: 88,
-        borderRadius: 999,
-        border: `2px solid ${ogColors.border}`,
-        padding: "0 12px 0 36px",
-        fontSize: 30,
-        color: ogColors.muted,
-      }}
-    >
-      <span>{placeholder}</span>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 64,
-          height: 64,
-          borderRadius: 64,
-          background: ogColors.accent,
-        }}
-      >
-        <svg width="30" height="30" viewBox="0 0 256 256">
-          <path
-            fill={ogColors.onAccent}
-            d="M208.49,120.49a12,12,0,0,1-17,0L140,69V216a12,12,0,0,1-24,0V69L64.49,120.49a12,12,0,0,1-17-17l72-72a12,12,0,0,1,17,0l72,72A12,12,0,0,1,208.49,120.49Z"
-          />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
 /** A quiet line of facts under the content (spaced, never dotted). */
 export function OgMeta({ items }: { items: string[] }) {
   return (
@@ -279,6 +219,71 @@ export function OgMeta({ items }: { items: string[] }) {
       {items.map((item) => (
         <span key={item}>{item}</span>
       ))}
+    </div>
+  );
+}
+
+/**
+ * A bundled brand logo, in its own colours, as an image (Satori draws SVG
+ * through an <img>). Black-and-white marks take the ink colour.
+ */
+export function OgLogo({ id, size }: { id: LogoId; size: number }) {
+  const svg = getLogoSvg(id);
+  const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${svg.viewBox}" color="${ogColors.ink}">${svg.body}</svg>`;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- Satori, not the DOM.
+    <img
+      alt=""
+      width={size}
+      height={size}
+      src={`data:image/svg+xml;base64,${Buffer.from(markup).toString("base64")}`}
+      style={{ objectFit: "contain" }}
+    />
+  );
+}
+
+/** Phosphor's trophy (regular), as on the award panels. */
+export function OgTrophy({
+  size = 30,
+  color,
+}: {
+  size?: number;
+  color: string;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256">
+      <path
+        fill={color}
+        d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8Zm144-8.9c0,35.52-29,64.64-64,64.9a64,64,0,0,1-64-64V56H192ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"
+      />
+    </svg>
+  );
+}
+
+/** A rounded panel: ink (the headline fact) or surface grey. */
+export function OgPanel({
+  tone = "ink",
+  style,
+  children,
+}: {
+  tone?: "ink" | "surface";
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        borderRadius: 36,
+        padding: "36px 44px 40px",
+        background: tone === "ink" ? ogColors.ink : ogColors.surface,
+        color: tone === "ink" ? ogColors.onInk : ogColors.ink,
+        ...style,
+      }}
+    >
+      {children}
     </div>
   );
 }

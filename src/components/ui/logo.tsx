@@ -42,12 +42,44 @@ export function BrandLogo({ id, className, label }: BrandLogoProps) {
   );
 }
 
-type TileSize = "sm" | "md" | "lg";
+type TileSize = "sm" | "md" | "lg" | "xl";
+type TileTone = "page" | "surface" | "ink";
 
-const tileSizes: Record<TileSize, { box: string; logo: string; px: number }> = {
-  sm: { box: "size-8 text-small", logo: "size-[1.125rem]", px: 18 },
-  md: { box: "size-10 text-body", logo: "size-[1.375rem]", px: 22 },
-  lg: { box: "size-12 text-lead", logo: "size-7", px: 28 },
+const tileSizes: Record<
+  TileSize,
+  { box: string; logo: string; letters: string; px: number }
+> = {
+  sm: {
+    box: "size-8 rounded-[0.625rem]",
+    logo: "size-[1.125rem]",
+    letters: "text-small",
+    px: 18,
+  },
+  md: {
+    box: "size-10 rounded-tile",
+    logo: "size-[1.375rem]",
+    letters: "text-body",
+    px: 22,
+  },
+  lg: {
+    box: "size-12 rounded-tile",
+    logo: "size-7",
+    letters: "text-lead",
+    px: 28,
+  },
+  xl: {
+    box: "size-16 rounded-[1.125rem]",
+    logo: "size-9",
+    letters: "text-[1.625rem]",
+    px: 36,
+  },
+};
+
+/** The tile takes one step from the ground it sits on. */
+const tileTones: Record<TileTone, string> = {
+  page: "bg-surface text-muted-foreground",
+  surface: "bg-background text-muted-foreground",
+  ink: "bg-on-ink/12 text-on-ink",
 };
 
 type LogoTileProps = {
@@ -58,13 +90,15 @@ type LogoTileProps = {
   /** Letters for the placeholder, e.g. "UFU". Defaults to the name's first letter. */
   mark?: string;
   size?: TileSize;
+  /** The ground the tile sits on: the page (default), a surface panel or the ink panel. */
+  tone?: TileTone;
   /** Accessible name when no text beside the tile names it. */
   label?: string;
   className?: string;
 };
 
 /**
- * A logo on a small surface tile (12px corners), the picture beside a
+ * A logo on a small tile one tone step from its ground, the picture beside a
  * company, school or credential. Without a logo file it shows the name's
  * initial in the text face, so rows keep the same rhythm until the real logo
  * is added (`logo: "/logos/<name>.svg"` in the profile).
@@ -74,6 +108,7 @@ export function LogoTile({
   name,
   mark,
   size = "md",
+  tone = "page",
   label,
   className,
 }: LogoTileProps) {
@@ -86,8 +121,9 @@ export function LogoTile({
     <span
       {...a11y}
       className={cn(
-        "grid shrink-0 place-items-center overflow-hidden rounded-tile bg-surface",
+        "grid shrink-0 place-items-center overflow-hidden",
         s.box,
+        tileTones[tone],
         className,
       )}
     >
@@ -105,8 +141,10 @@ export function LogoTile({
       ) : (
         <span
           className={cn(
-            "leading-none font-semibold tracking-tight text-muted-foreground",
-            letters.length > 1 && "text-[0.8125rem]",
+            "leading-none font-semibold tracking-tight",
+            s.letters,
+            letters.length > 1 &&
+              (size === "xl" ? "text-[1.0625rem]" : "text-[0.8125rem]"),
           )}
         >
           {letters}

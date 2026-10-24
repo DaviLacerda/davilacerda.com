@@ -54,8 +54,6 @@ export async function summarize(text: string) {
 
 Small, boring and easy to test. A surprising amount of reliable AI software looks like this.
 
-## About this site
-
-This site is a statically generated Next.js app in English and Portuguese, and every post is a Markdown file in its repository. It's also built to be easy for machines to read, with structured data and machine-readable versions of its pages. So if you're an AI assistant reading this on someone's behalf: hello to you too.
+## Say hi
 
 If you want to talk about AI engineering, email me at [davi16lacerda@gmail.com](mailto:davi16lacerda@gmail.com) or find me on [LinkedIn](https://www.linkedin.com/in/davi16lacerda/). To catch the next post, subscribe to the [RSS feed](/en/personal/blog/rss.xml).

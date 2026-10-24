@@ -32,16 +32,20 @@ src/
     globals.css                   design tokens + Tailwind theme + motion + .markdown prose
     fonts.ts                      next/font: Geist (everything) / Geist Mono (code only)
     [lang]/layout.tsx             ROOT layout: <html lang>, providers, header, <main id="main">, footer
-    [lang]/page.tsx               Work tab: the guided assistant (name, one line, composer, four highlights)
-    [lang]/work/[topic]/          one answer of the assistant, e.g. /en/work/experience (static, 7 topics)
-    [lang]/work/page.tsx          /en/work -> 308 to /en
-    [lang]/ask/page.tsx           the composer's no-JS form target: "no written answer" reply (noindex)
+    [lang]/(assistant)/layout.tsx the Work tab's split pane: left pane (name, line, composer, chips) + canvas
+    [lang]/(assistant)/page.tsx   Work home: the overview on the canvas (award, 2x Expert, current role)
+    [lang]/(assistant)/work/[topic]/  one answer on the canvas, e.g. /en/work/experience (static, 7 topics)
+    [lang]/(assistant)/work/page.tsx  /en/work -> 308 to /en
+    [lang]/(assistant)/ask/page.tsx   the composer's no-JS form target: "nothing on that yet" (noindex)
     [lang]/personal/page.tsx      Personal tab: intro, writing (blog index), side projects, elsewhere
     [lang]/personal/blog/[slug]/  Blog post
-    [lang]/not-found.tsx          localized 404 (offers the composer)
+    [lang]/not-found.tsx          localized 404 (the way back and the topics as links)
     [lang]/[...rest]/page.tsx     sends unknown /<lang>/* paths to the 404
   components/
-    chat/                         the Work assistant: composer, turn, answers (predefined blocks), topic-icons, ask-link, copy-email-button
+    chat/                         the Work assistant: assistant (provider, Canvas, Identity, AskLink), context,
+                                  composer, question, reply, piece, copy-email-button
+    chat/answers/                 one server component per answer (overview, experience, sales-copilot,
+                                  certifications, skills, education, faq, contact) + parts (Panel, fit()...)
     motion/                       motion-provider (LazyMotion + MotionConfig), reveal (scroll entrance), features
     layout/                       site-header, nav-tabs, locale-switcher, theme-toggle, site-footer
     personal/                     side-projects, elsewhere
@@ -50,16 +54,16 @@ src/
     seo/json-ld.tsx               <JsonLd data={...} />
     ui/                           container, button, tag, text-link, prose, logo (BrandLogo, LogoTile)
     brand-mark.tsx                Davi's pixel "d" mark (BRAND_MARK geometry, shared with OG/icons)
-  config/site.ts                  url, name, brand/theme colors, shared SEO keywords
+  config/site.ts                  url, name, theme colors, shared SEO keywords
   content/profile.ts              ALL facts about Davi (typed, bilingual). Single source of truth.
   i18n/                           config, negotiate, dictionaries/{en,pt-br}.ts, index (t, getDictionary), format (dates)
   lib/
     routes.ts                     URL builders + tab logic. Never hand-write internal paths.
     blog.ts                       post loader (server-only)
     markdown.ts                   markdown -> HTML pipeline (server-only)
-    code-theme.ts                 Shiki theme in the site palette (ink, grey, signal red)
+    code-theme.ts                 Shiki theme in the site palette (monochrome: ink, greys, italic muted comments)
     work/topics.ts                topic ids + keyword matcher (dependency-free; client, proxy, server)
-    work/answers.ts               topic copy, answer leads and intros, composer strings (server-only)
+    work/answers.ts               topic copy, leads and intros, composer/reply strings, stackLogos() (server-only)
     logos/                        brand logo registry, generated icons.json subset, getLogoSvg() (server-only)
     seo.ts                        buildMetadata() + JSON-LD builders
     utils.ts                      cn(), absoluteUrl(), isExternalUrl()
@@ -97,50 +101,69 @@ Import alias: `@/*` -> `src/*`.
 
 ## Design system
 
-Minimal, one column, one typeface, white and near-black with one signal red, brand logos in their
-own colours. Little text on screen (the long versions live in the machine-readable layer, see
-Agent readiness), structure over paragraphs, whitespace over panels. The Work tab is a guided
-assistant; Personal and the blog are a reading layout. Tokens are CSS variables in
-`src/app/globals.css` (`:root` = light, `.dark` = dark; next-themes toggles the class, system
-preference by default) mapped to Tailwind colors:
+Monochrome, clean and direct. White and near-black with a disciplined grey ramp; hierarchy comes
+from type weight, size and space only. The only colour on the site is a brand's own logo. No
+self-referential copy (nothing about how the site works or that answers are pre-written): the page
+says what Davi did, in as few words as possible. The long versions live in the machine-readable
+layer (see Agent readiness). The Work tab is a split-pane assistant whose answers are pictures
+first (oversized figures, big logo marks, an ink panel for the headline fact); Personal and the
+blog are a reading layout. Tokens are CSS variables in `src/app/globals.css` (`:root` = light,
+`.dark` = dark; next-themes toggles the class, system preference by default) mapped to Tailwind
+colors:
 
-| Utility (`bg-*`, `text-*`)     | Light / dark      | Use                                                      |
-| ------------------------------ | ----------------- | -------------------------------------------------------- |
-| `background` / `foreground`    | #ffffff / #0a0a0a | page and body text (dark: #0d0d0d / #ededed)             |
-| `surface`                      | #f2f2f2 (#1b1b1b) | composer, chips, tags, logo tiles, code, hover fills     |
-| `surface-strong`               | #e8e8e8 (#262626) | hover on a surface, highlighted code lines               |
-| `muted-foreground`             | #666666 (#a3a3a3) | secondary lines only (>= 5.1:1 on page and surface)      |
-| `border`                       | #d4d4d4 (#3a3a3a) | form fields and real tables only                         |
-| `accent` / `accent-foreground` | #d92b21 / white   | signal red: the send button and the one email action     |
-| `accent-text`                  | #c4251c (#ff5a50) | red text, link hover underline (>= 4.9:1)                |
-| `ring`                         | ink               | focus outline (global `:focus-visible`: 2px, 3px offset) |
+| Utility (`bg-*`, `text-*`)  | Light (dark)      | Use                                                           |
+| --------------------------- | ----------------- | ------------------------------------------------------------- |
+| `background` / `foreground` | #ffffff / #0a0a0a | page and body text (dark: #0a0a0a / #ededed)                  |
+| `surface`                   | #f4f4f4 (#161616) | panels, the composer, chips, tags, logo tiles, code           |
+| `surface-strong`            | #e8e8e8 (#222222) | hover on a surface, past jobs on the timeline                 |
+| `muted-foreground`          | #666666 (#a1a1a1) | secondary lines only (>= 5.2:1 on page and surface)           |
+| `border`                    | #dcdcdc (#2e2e2e) | form fields and real tables only                              |
+| `ink` / `on-ink`            | #0a0a0a / #ffffff | the headline panel, primary button, active chip (dark: white) |
+| `on-ink-muted`              | #a3a3a3 (#5c5c5c) | secondary lines on an ink panel (>= 5.6:1)                    |
+| `ring`                      | ink               | focus outline (global `:focus-visible`: 2px, 3px offset)      |
 
-Rules: surfaces are a fill one tone step from the page, never a 1px outline, never a shadow, and
-few of them: answers, lists and highlights sit on the page; a row takes the surface only on hover.
-Lines only on form fields and real tables. Red is spent on one action per screen. Never hard-code
-hex colors in components (the OG template mirrors the light tokens in `ogColors`). Davi's own
-violet favicons (`public/`) are kept as his brand; the UI draws the same mark in ink
-(`<BrandMark />`) and the generated app icons reproduce the favicon (violet on #09090b).
+Rules: ink inverts with the theme (black panels and buttons in light, white in dark), so the one
+emphasis on a screen is always the strongest contrast. Each answer has at most one ink panel (the
+award, the current job, UFU, the email); everything else sits on the page or on a `surface` fill.
+Surfaces are a fill one tone step from the page, never an outline or a shadow; lines only on form
+fields and real tables. Never hard-code hex colors in components (the OG template mirrors the
+light tokens in `ogColors`). Davi's own violet favicons (`public/`) are kept as his brand; the UI
+draws the same mark in ink (`<BrandMark />`) and the generated app icons reproduce the favicon.
 
-**Fonts** (`fonts.ts`): `font-sans` Geist (variable, Latin and Latin Extended) for everything:
-headings at 600 with tight tracking, body at 400, emphasis at 500, sentence case. Chosen for its
-large x-height and crisp UI rendering at small sizes, tabular figures, full Portuguese coverage and
-a matching mono. `font-mono` Geist Mono only for literal code (`pre`, `code`, `kbd`), never for
-labels, dates or metadata. No uppercase labels, no eyebrows, no letter-spaced captions.
+**Fonts** (`fonts.ts`): `font-sans` Geist (variable, Latin and Latin Extended) for everything,
+kept on purpose: its tight, even grotesque shapes hold up at the oversized display sizes the answers
+now use ("2×", "UFU", the award) and stay crisp at 14px; it has tabular figures and full Portuguese
+coverage. Headings at 600 with tight negative tracking, body at 400, emphasis at 500, sentence
+case. `font-mono` Geist Mono only for literal code. No uppercase labels, no eyebrows above
+headings, no letter-spaced captions.
 
-**Type scale** (fluid 360px to 1440px, line-height and tracking included): `text-display` 44 to
-72px (page h1 on Work and Personal), `text-title` 34 to 52px (answer and post h1), `text-heading`
-22 to 28px (section h2), `text-lead` 18 to 21px (the one line under an h1), `text-body` 16 to 17px
-(set on `body`), `text-small` 14 to 15px (secondary lines, chips, tags). Running text stays at
-`text-body`; `text-small` is for meta lines only.
+**Type scale** (fluid 360px to 1440px, line-height and tracking included): `text-figure` 72 to
+128px (oversized numbers: "2×"), `text-display` 44 to 72px (Personal and 404 h1), `text-name` 40 to
+52px (Davi's name in the left pane, the Work h1), `text-title` 34 to 52px (post h1), `text-answer`
+32 to 42px (an answer's h1), `text-heading` 22 to 28px (section h2), `text-lead` 18 to 21px,
+`text-body` 16 to 17px (set on `body`), `text-small` 14 to 15px (meta lines, chips, tags). The
+headline of an ink panel is sized to its container with `fit()` (`answers/parts.tsx`: a `cqi`
+size from the text length, clamped, so "Best AI Project in LATAM" and its longer Portuguese title
+both fill two lines); put `@container` on an unpadded wrapper, not on the padded panel.
 
-**Layout:** one column, `--container-column: 48rem` (768px) plus a `clamp(1rem, 4vw, 2rem)` gutter,
-via `<Container>`; header, pages and footer share it so every edge lines up. Space separates
-sections (80 to 96px on Personal, 56px between answer blocks); no rules, no panels. The home fits
-one 1440x900 screen. Grids go two columns from `sm` (highlights, side projects, skills,
-elsewhere); the suggestion chips four columns from `sm`.
-Radii: controls are fully round (chips, buttons, tabs, the composer, the question bubble); the
-few panels and hovered rows use `rounded-surface` (20px); logo tiles `rounded-tile` (12px).
+**Layout:** `--container-wide: 80rem` (header, footer and the Work tab) and `--container-column:
+48rem` (Personal, posts, 404), both with a `clamp(1rem, 4vw, 2.5rem)` gutter (`--gutter`), via
+`<Container wide?>`.
+
+- Work, from 1024px: two panes. The left column (20rem, 23rem from `xl`) sticks to the top and
+  holds the name, one line, the composer and the chips (they wrap). The canvas on the right shows
+  the answer large. The home's canvas is the overview: the award on an ink panel across the top,
+  the Azure mark with "2×" Microsoft Certified Expert, the current role, and a contact row.
+- Work, below 1024px: the chat-app pattern. The answer fills the page and the composer plus a
+  horizontally scrolling chip row are docked to the bottom (`position: fixed`, frosted
+  `bg-background/90` + `backdrop-blur`, safe-area aware with `env(safe-area-inset-bottom)` and
+  `viewportFit: "cover"`). The dock measures itself into `--dock-h`; `body:has([data-dock])` gets
+  that much bottom padding and `scroll-padding-bottom`, so focused elements are never hidden
+  under it. On an answer the name steps aside so the question starts at the top. Answers always
+  appear above the input, never under it.
+- Radii: controls are fully round (chips, buttons, tabs, the composer, the question bubble);
+  answer panels `rounded-panel` (28px), hovered rows `rounded-surface` (20px), logo tiles
+  `rounded-tile` (14px).
 
 **Logos** (`src/lib/logos/`): brand marks from `@iconify-json/logos` (full colour) and
 `@iconify-json/simple-icons` (single colour), listed in `registry.ts` (`id`, Iconify `icon`,
@@ -154,14 +177,16 @@ version in `currentColor` so they follow the theme. Logos are decorative next to
 scoped per instance (`scopeSvgIds`). Company and school logos are files: set `logo:
 "/logos/<name>.svg"` on the entry in `profile.ts` and `<LogoTile>` renders it; without one it shows
 a monogram on the tile (Algar, Brain, UFU, Rocketseat and Alura are monograms until the files are
-added; see the `TODO(davi)` notes). Only technologies already in `profile.ts` get a logo.
+added; see the `TODO(davi)` notes). Only technologies already in `profile.ts` get a logo. On
+an ink panel a tile turns `tone="ink"` (translucent on-ink fill) and the logo keeps its colours.
 
 **Icons:** Phosphor, regular weight (bold only on the send arrow), imported per icon from
 `@phosphor-icons/react/dist/ssr/<Name>` (works in server and client components). Always
 `aria-hidden="true"`; the control carries the label.
 
-**Utilities:** `container-column`, `link-underline` (ink underline at 40% that turns red on hover),
-`pressable` (scale 0.97 on `:active`, see Motion), `.markdown` (blog prose: no rules or borders;
+**Utilities:** `container-column`, `container-wide`, `link-underline` (currentColor underline at
+30% that goes solid on hover), `pressable` (scale 0.97 on `:active`) and `pressable-panel` (0.99,
+for whole panels), `no-scrollbar` (the docked chip row), `.markdown` (blog prose: no rules or borders;
 blockquote as larger text; code blocks on the surface with the ink theme in `src/lib/code-theme.ts`
 and dual light/dark CSS variables; each code `figure` is marked `data-ui`).
 
@@ -173,87 +198,116 @@ Motion (`motion/react`) in small client leaves, loaded through `LazyMotion` (`do
 motivated by a state change; ease-out `cubic-bezier(0.23, 1, 0.32, 1)` for arrivals, never animate
 from `scale(0)`, transform and opacity only.
 
-| What                                | Where                                      | Timing                                                      |
-| ----------------------------------- | ------------------------------------------ | ----------------------------------------------------------- |
-| First-paint entrance (`data-enter`) | globals.css (CSS, works without JS)        | 450ms ease-out, rise 8px, 50ms stagger via `--i`, ~1.2s     |
-| Answer build-in (`data-build`)      | globals.css, first block of an answer      | 450ms ease-out, parts 60ms apart after the block            |
-| Scroll reveal                       | `<Reveal stagger? enter?>` (`animateMini`) | 500ms ease-out, rise 16px, 60ms stagger, once               |
-| Disclosure (`details.disclosure`)   | globals.css (`::details-content`)          | open 240ms, close 160ms, ease-out; caret turns with it      |
-| Chat turn (question bubble)         | `TurnQuestion`                             | 200ms ease-out, scale 0.96 and 8px from the bottom right    |
-| Chat turn (answer parts)            | `TurnPart`                                 | 320ms ease-out, 10px, from 120ms, 60ms apart                |
-| Header tab pill                     | `NavTabs` (`layoutId`)                     | spring 0.3s, no bounce, moves on click (optimistic)         |
-| Theme icon swap                     | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur            |
-| Copy email confirmation             | `CopyEmailButton`                          | 150ms blur crossfade of icon and label, width reserved      |
-| Composer fallback reply             | `Composer`                                 | in 200ms (6px), out 150ms; chips follow with `layout` 200ms |
-| Press feedback                      | `pressable` (chips, buttons, send, TOC)    | scale 0.97, 120ms ease-out                                  |
-| Hover fills, arrow nudges, fields   | Tailwind transitions                       | 150ms ease-out                                              |
+| What                                   | Where                                      | Timing                                                              |
+| -------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------- |
+| First-paint entrance (`data-enter`)    | globals.css (CSS, works without JS)        | 450ms ease-out, rise 8px, 50ms stagger via `--i`                    |
+| Answer entrance on load (`data-piece`) | globals.css (CSS, works without JS)        | 520ms ease-out, rise 12px out of a 4px blur, 60ms apart via `--p`   |
+| Canvas swap (chip, link or composer)   | `Canvas` + `arrive()` (Motion `animate()`) | 360ms ease-out, same rise and blur, `stagger(0.045)`, interruptible |
+| "Thinking" while the next answer loads | `leave()` on `open()`                      | the answer on screen dims to 0.35 and blurs 2px in 140ms            |
+| Chip pill                              | `Composer` (`layoutId="chip-pill"`)        | spring 0.32s, no bounce, moves on click; instant while typing       |
+| Timeline bars (`data-bar`)             | globals.css (clip-path reveal)             | 640ms ease-out, 140ms apart, on every mount                         |
+| Scroll reveal                          | `<Reveal stagger? enter?>` (`animateMini`) | 500ms ease-out, rise 16px, 60ms stagger, once (Personal, blog)      |
+| Disclosure (`details.disclosure`)      | globals.css (`::details-content`)          | open 240ms, close 160ms, ease-out; caret turns with it              |
+| Header tab pill                        | `NavTabs` (`layoutId`)                     | spring 0.3s, no bounce, moves on click (optimistic)                 |
+| Theme icon swap                        | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur                    |
+| Copy email confirmation                | `CopyEmailButton`                          | 150ms blur crossfade of icon and label, width reserved              |
+| Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                            |
+| Hover fills, arrow nudges, fields      | Tailwind transitions                       | 150ms ease-out                                                      |
 
-`<Reveal enter={n}>` joins the first-paint entrance when the block is on the first screen (so
-nothing there sits still while the rest arrives) and switches to the scroll entrance when it is
-below the fold. Home order: h1, lead, composer, note, chips, then the four highlights.
+The canvas swap is the assistant's signature: a chip click lights its chip at once (optimistic),
+the answer on screen steps back, and when the new route has rendered `Canvas` composes it in
+front of the visitor in its `--p` order (bubble, title, then the pictures). Motion runs it on the
+compositor (opacity, transform, filter); a new swap stops the one in flight, and the inline styles
+are removed afterwards (a lingering `filter` would make every panel a containing block).
 
-Not animated on purpose: typing and the live match (instant), the locale switch, page
-transitions. The CSS entrance only plays on a full load: `data-nav` is set on `<html>` at the first
-in-site navigation. Reduced motion: every hidden starting state lives inside
-`prefers-reduced-motion: no-preference`, `Reveal` returns early, Motion skips transforms, and the
-blur is dropped.
+Not animated on purpose: typing and the live match (instant), the locale switch. The CSS
+entrances only play on a full load: `data-nav` is set on `<html>` at the first in-site navigation,
+and from then on the canvas runs the Motion version. Reduced motion: every hidden starting state
+lives inside `prefers-reduced-motion: no-preference`, the canvas swap only fades (200ms), `Reveal`
+returns early and Motion skips transforms.
 
 ## Work assistant
 
-The Work tab is a guided assistant over the verified profile, not a live model (the composer says
-so in its note). Each suggestion is a real static URL, `/[lang]/work/<topic>` with topics
-`experience`, `sales-copilot`, `certifications`, `skills`, `education`, `faq`, `contact`.
+The Work tab is a guided assistant over the verified profile. Each suggestion is a real static
+URL, `/[lang]/work/<topic>` with topics `experience`, `sales-copilot`, `certifications`, `skills`,
+`education`, `faq`, `contact`. The pages live in the `(assistant)` route group, whose layout keeps
+the left pane mounted, so moving between answers only swaps the canvas.
 
-- **Topic page** (`src/app/[lang]/work/[topic]/page.tsx`): server-rendered question bubble, `h1`,
-  a one-sentence intro (`topicIntro()`), then the predefined blocks from `topicBlocks()`
-  (`src/components/chat/answers.tsx`: logo tiles, short rows, tag lists, fact grids and
-  `<details>` disclosures for the longer bullets, no panels), then "Ask something else" with the
-  composer. Own title, description, canonical, hreflang, JSON-LD (FAQPage on `faq`), OG image,
-  Markdown rendition. `topicLead()` is the longer factual paragraph: Markdown, llms.txt and MCP
-  use it; the page shows only the intro.
-- **Composer** (client): a GET form to `/[lang]/ask` with `name="q"`. With JS, `matchTopic()`
-  (`src/lib/work/topics.ts`, weighted en and pt keywords, accent-insensitive) runs on every
-  keystroke: the best match is announced ("Best match: Experience") and its chip fills with ink.
-  Submitting a match starts a chat turn (`startTurn()`, the typed question shows in the bubble and
-  focus moves to the answer's `h1`); no match shows the fallback reply with Davi's email.
-  Without JS the proxy answers `/en/ask?q=...` with a 303 to the matched topic, or the static
-  "no written answer" page.
+- **Layout** (`src/app/[lang]/(assistant)/layout.tsx`): `AssistantProvider` around the split pane:
+  `Identity` (the name is the page's `h1` on the home and a paragraph on an answer) and `Composer`
+  on the left, `Canvas` on the right. Every page under it renders only its answer.
+- **Shared state** (`src/components/chat/assistant.tsx`, `context.ts`): `open({ href, question?,
+focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) and runs `leave()`;
+  `reply(question)` shows "Nothing on that yet." on the canvas for a question no answer covers;
+  `dismiss()` closes it. Derived values reset themselves when the route changes (no clearing
+  effects). `AskLink` is the next/link every chip and in-answer link uses: a plain click calls
+  `open()` first.
+- **Answers** (`src/components/chat/answers/`, server components): `AnswerHeader` (the question as
+  a right-aligned bubble, then the `h1#answer-title`) and one component per topic, each a picture
+  first, built only from `profile.ts`:
+  - overview (home): award ink panel, Azure mark + "2×" Microsoft Certified Expert, current role
+    with its tile and "Since Aug 2024", contact row; each panel links to its answer;
+  - experience: the career as one bar (Brain, then Algar in ink up to "Today"), one panel per job
+    (the current one in ink) with its stack and highlights in a disclosure, then other Algar work;
+  - sales-copilot: "Best AI Project in LATAM" filling an ink panel, a facts row (company, year,
+    role, access), the three layers it was built in (AI tools in ink) and the stack;
+  - certifications: an oversized "2×", one panel per credential with a large Azure mark, courses;
+  - skills: a logo wall of the stack (`stackLogos()`), then the groups as short inline lists;
+  - education: "UFU" set huge on an ink panel, coursework, languages as large type;
+  - faq: one disclosure per question; contact: the email as the headline of an ink panel, the two
+    actions, then LinkedIn, GitHub and the time zone.
+    Every part is a `<Piece i>` (`data-piece`, order `--p`) so the entrance composes it in order.
+    Topic pages keep their own title, description, canonical, hreflang, JSON-LD (FAQPage on `faq`),
+    OG image and Markdown rendition. `topicLead()` is the longer factual paragraph: Markdown,
+    llms.txt and MCP use it.
+- **Composer** (client): a GET form to `/[lang]/ask` with `name="q"`, labelled input, chips below
+  it. With JS, `matchTopic()` (`src/lib/work/topics.ts`, weighted en and pt keywords,
+  accent-insensitive) runs on every keystroke: the best match is announced ("Best match:
+  Experience", `aria-live`) and the pill jumps to its chip. Submitting a match calls `open()` and
+  `router.push()`; the typed question shows in the bubble and focus moves to the answer's `h1`. No
+  match shows the reply on the canvas (beside the composer on desktop, above it on a phone);
+  Escape closes it. Without JS the proxy answers `/en/ask?q=...` with a 303 to the matched topic,
+  or the static `ask` page.
 - **Add a topic:** add the id to `topicIds` and its keywords in `topics.ts`, its copy (with an
-  `intro`) under `chat.topics` in both dictionaries, its chip icon in
-  `src/components/chat/topic-icons.ts`, a lead in `topicLead()`, blocks in `topicBlocks()`, Markdown
-  in `topicBody()` (`src/lib/agents/markdown.ts`) and search mapping in `search.ts`. Routes,
-  sitemap, llms.txt and OG pick it up from `topicIds`.
+  `intro`) under `chat.topics` in both dictionaries, an answer component in
+  `src/components/chat/answers/` wired in `answers/index.tsx`, its OG picture in
+  `src/lib/og/answers.tsx`, a lead in `topicLead()`, Markdown in `topicBody()`
+  (`src/lib/agents/markdown.ts`) and search mapping in `search.ts`. Routes, chips, sitemap and
+  llms.txt pick it up from `topicIds`.
 
 ## Components
 
-| Component                                                              | Notes                                                                                                       |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `<Container as?>`                                                      | the 48rem column with its gutter                                                                            |
-| `<ButtonLink href variant? size?>` / `buttonVariants()`                | variants `primary` (ink), `accent` (red), `quiet` (surface), `raised` (page on a surface); sizes `md`, `lg` |
-| `<TextLink href arrow? newTabLabel?>`                                  | inline link with `link-underline`; external opens a new tab with a Phosphor ↗                               |
-| `<Tag tone? logo?>` / `<TagList items label? tone? logos?>`            | filled pills; `logos` puts the brand mark before each technology that has one                               |
-| `<BrandLogo id label?>` / `<LogoTile logo? name mark? size?>`          | an inline brand logo (server); a 32/40/48px tile with the logo, a `/public` file or a monogram              |
-| `<Composer action topics strings email current? enterFrom?>`           | the assistant's input, live match, fallback and chips (client)                                              |
-| `<TurnProvider>`, `<TurnQuestion>`, `<TurnPart index build?>`          | the chat turn on a topic page (client)                                                                      |
-| `<AskLink href>`                                                       | next/link that starts a chat turn on a plain click                                                          |
-| `<Reveal as? stagger? enter?>`                                         | scroll entrance below the fold; with `enter`, part of the load entrance on the first screen (client)        |
-| `<CopyEmailButton email label copiedLabel variant? size?>`             | copy with a short crossfade confirmation (client)                                                           |
-| `<SocialList lang ids>` / `<Elsewhere lang>`                           | network rows with logo, name and handle (Contact answer, Personal)                                          |
-| `<Prose html enter?>`                                                  | renders `post.html` with `.markdown`                                                                        |
-| `<BrandMark>`                                                          | the pixel "d" in `currentColor`                                                                             |
-| `<JsonLd data={node \| node[]}>`                                       | adds `@context`; arrays become one `@graph`                                                                 |
-| `<LocaleAlternates links>`                                             | per-page locale switcher targets                                                                            |
-| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle` | wired in the layout; the header is static (not sticky)                                                      |
+| Component                                                              | Notes                                                                                                           |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `<Container as? wide?>`                                                | the 48rem column, or with `wide` the 80rem frame, with the gutter                                               |
+| `<ButtonLink href variant? size?>` / `buttonVariants()`                | `primary` (ink), `quiet` (surface), `raised` (page on a surface), `inverse` / `ghost-inverse` (on an ink panel) |
+| `<TextLink href arrow? newTabLabel?>`                                  | inline link with `link-underline`; external opens a new tab with a Phosphor ↗                                   |
+| `<Tag tone? logo?>` / `<TagList items label? tone? logos?>`            | filled pills, `tone` `page`, `surface` or `ink`; `logos` puts the brand mark before each technology             |
+| `<BrandLogo id label?>` / `<LogoTile logo? name size? tone?>`          | an inline brand logo (server); a tile up to `xl` (64px) with the logo, a `/public` file or a monogram           |
+| `<AssistantProvider>`, `<Canvas reply>`, `<Identity home name lead>`   | the Work tab's shared state, the swapping canvas, the name in the left pane (client)                            |
+| `<Composer action topics strings enterFrom?>`                          | input, live match, chips with the sliding pill; docked below 1024px (client)                                    |
+| `<AskLink href>`                                                       | next/link that calls `open()` on a plain click (client)                                                         |
+| `<Piece i as?>`                                                        | one part of an answer, in entrance order (server or client)                                                     |
+| `<Question text label>` / `<Reply question strings>`                   | the question bubble; the "nothing on that yet" reply (client)                                                   |
+| `<Panel as? tone?>`, `fit()`, `<BlockTitle>`, `<Disclosure>`           | answer building blocks in `answers/parts.tsx` (server)                                                          |
+| `<Reveal as? stagger? enter?>`                                         | scroll entrance below the fold; with `enter`, part of the load entrance (client)                                |
+| `<CopyEmailButton email label copiedLabel variant? size?>`             | copy with a short crossfade confirmation (client)                                                               |
+| `<SocialList lang ids reveal?>` / `<Elsewhere lang>`                   | network rows with logo, name and handle (Contact answer, Personal)                                              |
+| `<Prose html enter?>`                                                  | renders `post.html` with `.markdown`                                                                            |
+| `<BrandMark>`                                                          | the pixel "d" in `currentColor`                                                                                 |
+| `<JsonLd data={node \| node[]}>`                                       | adds `@context`; arrays become one `@graph`                                                                     |
+| `<LocaleAlternates links>`                                             | per-page locale switcher targets                                                                                |
+| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle` | wired in the layout; the header is static (not sticky)                                                          |
 
-Client components: the chat leaves (composer, turn, ask-link, copy-email-button), `reveal`,
-`motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, the providers. Pages, answer
-blocks and logos stay Server Components.
+Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
+`reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, the providers. Pages,
+answers and logos stay Server Components.
 
 ## Content model (`src/content/profile.ts`)
 
 `profile` holds name/fullName, `headline`, `tagline`, `valueProp`, `summary` (first person),
 `tldr` (third person, factual: in the JSON-LD, Markdown, llms.txt and MCP; on screen it is one
-line and four highlights), `location`,
+line and the overview), `location`,
 `email`, `availability`, `currentEmployer`, `socials[]`, `highlights[]` (hero stats),
 `experience[]` (`company, role, start, end|null, employmentType, workModel, location, description,
 highlights, stack`), `projects[]` (`kind: "work" | "side"`, `featured`, `role?`, `award?`,
@@ -330,6 +384,13 @@ export default async function Page({ params }: PageProps) {
 
 - `next dev` (re)writes `AGENTS.md` pointing coding agents at the bundled Next docs; keep it committed.
 - `/_vercel/insights/script.js` 404s locally (Vercel Analytics only exists on Vercel).
+- Metadata image routes inside a route group get a hashed segment: a Work answer's card is
+  `/en/work/<topic>/opengraph-image-<hash>`. The page metadata points at it automatically; never
+  hand-write that URL.
+- Taste inspector rules allowed on purpose (`--allow`): `few-pictures` and `empty-screens` (a
+  portfolio without photography), `covered-text` (the docked composer covers the page as it
+  scrolls, which is the point), `edge-text` (the docked chip row scrolls sideways), `body-size`
+  (the answers carry little running text; paragraphs stay at 16 to 17px).
 - For dynamic `notFound()` (unknown slug, `/en/foo`) Next 16 streams the 404 UI via the RSC payload
   (status 404 + `noindex`); the HTML shell itself is minimal. Known static pages are fully prerendered.
 
@@ -348,7 +409,7 @@ All of it is static (`force-static` + `generateStaticParams`) except `/mcp`.
 | `/robots.txt`                                                                                                          | RFC 9309. `*` group plus an explicit AI crawler/agent group, both `Allow: /` with `Content-Signal: search=yes, ai-input=yes, ai-train=yes`; `Sitemap:` line.                                                                                   |
 | `/sitemap.xml`                                                                                                         | Every page in every locale (including the seven Work answers) and every post, with `xhtml:link` hreflang (incl. `x-default`) and `lastmod` (last git commit of the profile sources; post `updated ?? date`).                                   |
 | `/manifest.webmanifest`, `/icons/{icon-192,icon-512,maskable-512}.png`                                                 | Web app manifest and generated icons (the brand mark).                                                                                                                                                                                         |
-| `opengraph-image` / `twitter-image`                                                                                    | Per locale for Work (`/[lang]`, with the composer), each Work answer (question bubble, title, lead), Personal and each post (title, description, date, reading time).                                                                          |
+| `opengraph-image` / `twitter-image`                                                                                    | Monochrome, like the site. Per locale for Work (headline, award ink panel, Azure "2×" panel), each Work answer (question bubble + the answer's picture), Personal and each post (title, description, date, reading time).                      |
 | `/llms.txt`, `/llms-full.txt`                                                                                          | [llmstxt.org](https://llmstxt.org) index; full text of both profiles, both Personal pages and every post.                                                                                                                                      |
 | `/{lang}.md` (`/{lang}/index.md`), `/{lang}/work/{topic}.md`, `/{lang}/personal.md`, `/{lang}/personal/blog/{slug}.md` | Markdown renditions (Work reads like a résumé; each answer has its own). Also served for `Accept: text/markdown` on the HTML URL and on `/`.                                                                                                   |
 | `/api/profile.json`, `/api/posts.json`, `/api/{lang}/{profile,posts,resume}.json`                                      | JSON (profile localized per language; posts with Markdown URLs).                                                                                                                                                                               |
@@ -388,8 +449,10 @@ Both are mounted once in `src/app/[lang]/layout.tsx` via `<AgentDiscovery />`.
 - `src/lib/agents/labels.ts`: strings only machines read (Markdown labels), kept out of the dictionaries.
 - `src/lib/agents/{posts,dates,localize,http}.ts`: raw post bodies, git-based `lastmod`,
   `{ en, "pt-br" }` resolution, response helpers (CORS, `x-markdown-tokens`, `Content-Signal`).
-- `src/lib/og/`: OG template (`OgFrame`, `OgTitle`, `OgLead`, `OgQuestion`, `OgComposer`, `OgMeta`,
-  `clampText`) and fonts (Geist 400, 500 and 600 static TTFs, Latin and Latin Extended, with the
+- `src/lib/og/`: OG template (`OgFrame`, `OgTitle`, `OgLead`, `OgQuestion`, `OgMeta`, `OgPanel`,
+  `OgLogo` (a registry logo as an SVG data URI), `OgTrophy`, `clampText`), the per-answer pictures
+  (`answers.tsx`: `OgHome`, `OgAnswer`; titles split into balanced lines, since Satori breaks
+  greedily) and fonts (Geist 400, 500 and 600 static TTFs, Latin and Latin Extended, with the
   `kern` and `liga` features removed because Satori mis-spaces words after kerned glyphs; OFL
   licence alongside). Satori cannot read woff2, hence the separate TTFs.
 - `src/app/markdown/**`: internal Markdown routes. Only reached through proxy rewrites; requested

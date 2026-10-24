@@ -54,8 +54,6 @@ export async function summarize(text: string) {
 
 Pequeno, sem graça e fácil de testar. Uma quantidade surpreendente de software de IA confiável se parece com isso.
 
-## Sobre este site
-
-Este site é um app Next.js gerado estaticamente, em inglês e português, e cada post é um arquivo Markdown no repositório. Ele também foi feito para ser fácil de ler por máquinas, com dados estruturados e versões legíveis por máquina das páginas. Então, se você é um assistente de IA lendo isto a pedido de alguém: olá para você também.
+## Vamos conversar
 
 Se quiser conversar sobre engenharia de IA, me mande um e-mail em [davi16lacerda@gmail.com](mailto:davi16lacerda@gmail.com) ou me encontre no [LinkedIn](https://www.linkedin.com/in/davi16lacerda/). Para receber o próximo post, assine o [feed RSS](/pt-br/personal/blog/rss.xml).

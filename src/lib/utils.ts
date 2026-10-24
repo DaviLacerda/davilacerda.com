@@ -11,9 +11,19 @@ import { siteConfig } from "@/config/site";
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
-      text: ["display", "title", "heading", "lead", "body", "small"],
-      container: ["column"],
-      radius: ["surface"],
+      text: [
+        "figure",
+        "display",
+        "name",
+        "title",
+        "answer",
+        "heading",
+        "lead",
+        "body",
+        "small",
+      ],
+      container: ["column", "wide"],
+      radius: ["panel", "surface", "tile"],
       ease: ["out", "in-out"],
     },
   },

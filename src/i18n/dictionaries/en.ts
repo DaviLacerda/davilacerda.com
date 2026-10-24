@@ -32,9 +32,9 @@ export const en = {
         "Notes on AI engineering, LLMs, agents and building software, by Davi Lacerda.",
     },
     ask: {
-      title: "No written answer",
+      title: "Nothing on that yet",
       description:
-        "The Work assistant has no written answer for that question. Pick one of the topics it can answer.",
+        "Pick a topic about Davi Lacerda's work, or write to him directly.",
     },
   },
 
@@ -68,18 +68,17 @@ export const en = {
 
   /**
    * The Work tab: a guided assistant over the profile. Every answer is
-   * written in advance and rendered statically; nothing calls a model.
+   * written in advance and rendered statically. The copy on screen stays
+   * simple and direct, and never talks about how the site works.
    */
   chat: {
     home: {
       /** Line under the name. */
-      lead: "{role} at {company} in {place}, building generative AI products and agents.",
-      /** Screen-reader heading of the three highlight rows. */
+      lead: "{role} at {company}, building generative AI products and agents.",
+      /** Screen-reader heading of the overview panels. */
       highlightsTitle: "Highlights",
-      role: "{role} at {company}",
-      /** Under the award: who gave it and for what. */
-      award: "{issuer}, for the {project}",
-      experts: "{count}× Microsoft Certified Expert",
+      /** Under the oversized "2×". */
+      expertsTitle: "Microsoft Certified Expert",
       expertsDetail: "Multi-agent and agentic AI",
     },
     composer: {
@@ -88,15 +87,13 @@ export const en = {
       submit: "Ask",
       suggestions: "Suggested questions",
       bestMatch: "Best match: {topic}",
-      noMatch: "No match yet. Try a suggestion.",
-      note: "Pre-written answers from his verified profile, no live model.",
-      fallbackTitle: "No written answer for that yet.",
-      fallbackBody: "Try a suggestion below, or write to Davi at {email}.",
-      dismiss: "Dismiss",
+      noMatch: "No match yet.",
+      fallbackTitle: "Nothing on that yet.",
+      fallbackBody: "Pick a topic, or write to Davi.",
+      dismiss: "Close",
     },
     turn: {
       you: "You asked",
-      askNext: "Ask something else",
     },
     topics: {
       experience: {
@@ -269,6 +266,8 @@ export const en = {
       coursework: "Relevant coursework",
       thesis: "Thesis",
       languagesSpoken: "Languages",
+      /** End of the experience timeline. */
+      today: "Today",
     },
     /** Page-specific SEO keywords, merged with the site-wide list. */
     keywords: [
@@ -370,14 +369,14 @@ export const en = {
 
   footer: {
     rights: "All rights reserved.",
-    forAgents: "For agents",
   },
 
   notFound: {
     title: "Page not found",
-    /** `{link}` is replaced by the `backHome` link. */
-    description: "This page doesn't exist or has moved. Ask below, or {link}.",
-    backHome: "go back to the start",
+    description: "This page doesn't exist or has moved.",
+    backHome: "Back to the start",
+    /** Heading of the topic links under it. */
+    topics: "Or ask about",
   },
 
   common: {

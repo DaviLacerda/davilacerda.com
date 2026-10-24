@@ -23,9 +23,9 @@ export const ptBr: Dictionary = {
         "Notas sobre engenharia de IA, LLMs, agentes e construção de software, por Davi Lacerda.",
     },
     ask: {
-      title: "Sem resposta escrita",
+      title: "Nada sobre isso ainda",
       description:
-        "O assistente da aba Trabalho não tem uma resposta escrita para essa pergunta. Escolha um dos temas que ele responde.",
+        "Escolha um tema sobre o trabalho de Davi Lacerda ou escreva direto para ele.",
     },
   },
 
@@ -58,11 +58,9 @@ export const ptBr: Dictionary = {
 
   chat: {
     home: {
-      lead: "{role} na {company}, em {place}, construindo produtos de IA generativa e agentes.",
+      lead: "{role} na {company}, construindo produtos de IA generativa e agentes.",
       highlightsTitle: "Destaques",
-      role: "{role} na {company}",
-      award: "{issuer}, com o {project}",
-      experts: "{count}× Microsoft Certified Expert",
+      expertsTitle: "Microsoft Certified Expert",
       expertsDetail: "IA multiagente e agêntica",
     },
     composer: {
@@ -71,16 +69,13 @@ export const ptBr: Dictionary = {
       submit: "Perguntar",
       suggestions: "Sugestões de perguntas",
       bestMatch: "Tema mais próximo: {topic}",
-      noMatch: "Nenhum tema ainda. Tente uma sugestão.",
-      note: "Respostas pré-escritas a partir do perfil verificado, sem modelo ao vivo.",
-      fallbackTitle: "Ainda não há resposta escrita para isso.",
-      fallbackBody:
-        "Tente uma sugestão abaixo ou escreva para o Davi em {email}.",
+      noMatch: "Nenhum tema ainda.",
+      fallbackTitle: "Nada sobre isso ainda.",
+      fallbackBody: "Escolha um tema ou escreva para o Davi.",
       dismiss: "Fechar",
     },
     turn: {
       you: "Você perguntou",
-      askNext: "Pergunte outra coisa",
     },
     topics: {
       experience: {
@@ -250,6 +245,7 @@ export const ptBr: Dictionary = {
       coursework: "Disciplinas relevantes",
       thesis: "TCC",
       languagesSpoken: "Idiomas",
+      today: "Hoje",
     },
     keywords: [
       "Engenheiro de IA",
@@ -347,14 +343,13 @@ export const ptBr: Dictionary = {
 
   footer: {
     rights: "Todos os direitos reservados.",
-    forAgents: "Para agentes",
   },
 
   notFound: {
     title: "Página não encontrada",
-    description:
-      "Esta página não existe ou mudou de endereço. Pergunte abaixo ou {link}.",
-    backHome: "volte ao início",
+    description: "Esta página não existe ou mudou de endereço.",
+    backHome: "Voltar ao início",
+    topics: "Ou pergunte sobre",
   },
 
   common: {
