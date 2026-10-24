@@ -103,7 +103,7 @@ export const en = {
       },
       contact: {
         eyebrow: "Contact",
-        title: "Let's build something useful with AI",
+        title: "Let’s build something useful with AI",
         description:
           "Hiring for an AI Engineer, or have an LLM product that needs to work in the real world? I would love to hear about it.",
         emailCta: "Send an email",
@@ -131,6 +131,80 @@ export const en = {
       coursework: "Relevant coursework",
       thesis: "Thesis",
       languagesSpoken: "Languages",
+    },
+    /** Work page copy: hero, case study, timeline, credentials, education. */
+    page: {
+      /** Page-specific SEO keywords, merged with the site-wide list. */
+      keywords: [
+        "AI Engineer Brazil",
+        "AI Engineer Uberlândia",
+        "Hire an AI Engineer",
+        "Generative AI Engineer",
+        "LLM applications",
+        "AI agents developer",
+        "Multi-agent AI",
+        "Agentic AI",
+        "Azure AI",
+        "Full-stack AI Engineer",
+        "Microsoft Certified Expert",
+        "Multi-Agent AI Solutions Expert",
+        "Agentic AI Business Solutions Architect",
+        "Sales Copilot",
+        "Conecta Latam",
+        "Best AI Project in LATAM",
+      ],
+      hero: {
+        workModes: "Remote or hybrid",
+        emailCta: "Email me",
+        award: "Award",
+        awardCaption:
+          "Won by Algar's Sales Copilot, which I built end to end as main developer.",
+        awardCta: "Read the case study",
+      },
+      about: { title: "About Davi" },
+      featured: {
+        title: "Featured work",
+        description:
+          "The award-winning Sales Copilot, and other work shipped at Algar.",
+        caseStudy: "Case study",
+        company: "Company",
+        year: "Year",
+        ownership: "What I built",
+        /** Caption under the ownership stack, e.g. "Main developer, end to end". */
+        endToEnd: "{role}, end to end",
+        layers: {
+          frontEnd: {
+            title: "Front end",
+            body: "The interface Algar's sales teams use.",
+          },
+          aiTools: {
+            title: "AI tools",
+            body: "The AI tools that power the copilot.",
+          },
+          backEnd: {
+            title: "Back end",
+            body: "The services the copilot runs on.",
+          },
+        },
+        awardNote:
+          "Awarded at Conecta Latam, a recognition across Latin America.",
+        alsoAt: "Also at {company}",
+        side: {
+          title: "Side projects and open source",
+          description:
+            "Experiments and tools I build for fun, from a React Flow whiteboard to VS Code themes.",
+          cta: "See side projects",
+        },
+      },
+      experience: { current: "Current" },
+      certifications: {
+        description:
+          "Two Expert-level Microsoft credentials in multi-agent and agentic AI.",
+        credentials: "Credentials",
+        issuer: "Issuer",
+        issued: "Issued",
+      },
+      education: { title: "Education and languages" },
     },
   },
 

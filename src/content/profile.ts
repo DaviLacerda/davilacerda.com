@@ -316,9 +316,9 @@ export const profile: Profile = {
         "pt-br": "Uberlândia, MG, Brasil",
       },
       description: {
-        en: "I design, build and ship Generative AI products and AI agents at Algar, owning them from architecture to production. I was the main developer behind the Sales Copilot, recognized as Best AI Project in LATAM.",
+        en: "I design, build and ship Generative AI products and AI agents at Algar, owning them from architecture to production.",
         "pt-br":
-          "Projeto, construo e coloco em produção produtos de IA Generativa e agentes de IA na Algar, sendo responsável por eles da arquitetura à produção. Fui o principal desenvolvedor do Sales Copilot, reconhecido como Melhor Projeto de IA da América Latina.",
+          "Projeto, construo e coloco em produção produtos de IA Generativa e agentes de IA na Algar, sendo responsável por eles da arquitetura à produção.",
       },
       highlights: {
         en: [
@@ -363,9 +363,9 @@ export const profile: Profile = {
         "pt-br": "Uberlândia, MG, Brasil",
       },
       description: {
-        en: "Researched telecommunications, technology and AI topics, and strategically supported the Center of Excellence for Automations.",
+        en: "Research and development internship at an innovation center for digital business.",
         "pt-br":
-          "Pesquisei temas de telecomunicações, tecnologia e IA, e apoiei estrategicamente o Centro de Excelência em Automações.",
+          "Estágio de pesquisa e desenvolvimento em um centro de inovação em negócios digitais.",
       },
       highlights: {
         en: [

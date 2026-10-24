@@ -124,6 +124,77 @@ export const ptBr: Dictionary = {
       thesis: "TCC",
       languagesSpoken: "Idiomas",
     },
+    page: {
+      keywords: [
+        "Engenheiro de IA",
+        "Engenheiro de IA Uberlândia",
+        "Engenheiro de IA Brasil",
+        "Contratar Engenheiro de IA",
+        "Desenvolvedor de agentes de IA",
+        "Agentes de IA",
+        "IA multiagente",
+        "IA agêntica",
+        "Azure AI",
+        "Engenheiro de IA full-stack",
+        "Microsoft Certified Expert",
+        "Multi-Agent AI Solutions Expert",
+        "Agentic AI Business Solutions Architect",
+        "Sales Copilot",
+        "Conecta Latam",
+        "Melhor Projeto de IA da América Latina",
+      ],
+      hero: {
+        workModes: "Remoto ou híbrido",
+        emailCta: "Mande um e-mail",
+        award: "Prêmio",
+        awardCaption:
+          "Conquistado pelo Sales Copilot da Algar, que construí de ponta a ponta como principal desenvolvedor.",
+        awardCta: "Conheça o projeto",
+      },
+      about: { title: "Sobre o Davi" },
+      featured: {
+        title: "Trabalhos em destaque",
+        description:
+          "O premiado Sales Copilot e outros projetos entregues na Algar.",
+        caseStudy: "Estudo de caso",
+        company: "Empresa",
+        year: "Ano",
+        ownership: "O que eu construí",
+        endToEnd: "{role}, de ponta a ponta",
+        layers: {
+          frontEnd: {
+            title: "Front-end",
+            body: "A interface usada pelos times de vendas da Algar.",
+          },
+          aiTools: {
+            title: "Ferramentas de IA",
+            body: "As ferramentas de IA que fazem o copiloto funcionar.",
+          },
+          backEnd: {
+            title: "Back-end",
+            body: "Os serviços que sustentam o copiloto.",
+          },
+        },
+        awardNote:
+          "Prêmio Conecta Latam, um reconhecimento em toda a América Latina.",
+        alsoAt: "Também na {company}",
+        side: {
+          title: "Projetos pessoais e open source",
+          description:
+            "Experimentos e ferramentas que construo por diversão, de um quadro branco com React Flow a temas para o VS Code.",
+          cta: "Ver projetos pessoais",
+        },
+      },
+      experience: { current: "Atual" },
+      certifications: {
+        description:
+          "Duas credenciais Microsoft de nível Expert em IA multiagente e agêntica.",
+        credentials: "Credenciais",
+        issuer: "Emissor",
+        issued: "Emitida em",
+      },
+      education: { title: "Formação e idiomas" },
+    },
   },
 
   personal: {
