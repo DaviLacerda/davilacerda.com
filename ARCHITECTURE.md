@@ -215,3 +215,125 @@ export default async function Page({ params }: PageProps) {
 - `/_vercel/insights/script.js` 404s locally (Vercel Analytics only exists on Vercel).
 - For dynamic `notFound()` (unknown slug, `/en/foo`) Next 16 streams the 404 UI via the RSC payload
   (status 404 + `noindex`); the HTML shell itself is minimal. Known static pages are fully prerendered.
+
+## Agent readiness (SEO, AEO, agents)
+
+Goal: search engines, answer engines and AI agents get the same verified facts as people, in the
+format they prefer, and can discover every machine-readable surface from any page (target: a top
+score on [isitagentready.com](https://isitagentready.com)). Everything below is generated from
+`src/content/profile.ts`, the dictionaries and `content/blog`, so nothing needs editing by hand.
+All of it is static (`force-static` + `generateStaticParams`) except `/mcp`.
+
+### Public surface
+
+| Path                                                                                        | What                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/robots.txt`                                                                               | RFC 9309. `*` group plus an explicit AI crawler/agent group, both `Allow: /` with `Content-Signal: search=yes, ai-input=yes, ai-train=yes`; `Sitemap:` line.                                                                                   |
+| `/sitemap.xml`                                                                              | Every page in every locale and every post, with `xhtml:link` hreflang (incl. `x-default`) and `lastmod` (last git commit of the profile sources; post `updated ?? date`).                                                                      |
+| `/manifest.webmanifest`, `/icons/{icon-192,icon-512,maskable-512}.png`                      | Web app manifest and generated monogram icons.                                                                                                                                                                                                 |
+| `opengraph-image` / `twitter-image`                                                         | Per locale for Work (`/[lang]`), Personal and each post (post title, description, date, reading time).                                                                                                                                         |
+| `/llms.txt`, `/llms-full.txt`                                                               | [llmstxt.org](https://llmstxt.org) index; full text of both profiles, both Personal pages and every post.                                                                                                                                      |
+| `/{lang}.md` (`/{lang}/index.md`), `/{lang}/personal.md`, `/{lang}/personal/blog/{slug}.md` | Markdown renditions (Work reads like a résumé). Also served for `Accept: text/markdown` on the HTML URL and on `/`.                                                                                                                            |
+| `/api/profile.json`, `/api/posts.json`, `/api/{lang}/{profile,posts,resume}.json`           | JSON (profile localized per language; posts with Markdown URLs).                                                                                                                                                                               |
+| `/resume.json`                                                                              | [JSON Resume](https://jsonresume.org) v1.0.0 (English; Portuguese at `/api/pt-br/resume.json`).                                                                                                                                                |
+| `/api/openapi.json`, `/api/status.json`                                                     | OpenAPI 3.1 description of the read-only HTTP API; status document for the API catalog.                                                                                                                                                        |
+| `/mcp`                                                                                      | MCP server, Streamable HTTP, stateless, read-only, no auth. Tools `get_profile`, `list_posts`, `get_post`, `search`; resources (both profiles, both Personal pages, llms.txt, every post via a `{lang}/{slug}` template); prompt `assess_fit`. |
+| `/.well-known/api-catalog`                                                                  | RFC 9727 linkset (`application/linkset+json`), each API with `service-desc`, `service-doc`, `status`.                                                                                                                                          |
+| `/.well-known/mcp/server-card.json`, `/.well-known/mcp.json`                                | MCP server card (SEP-1649 draft): transport, capabilities, tools with JSON Schemas, resources, prompts.                                                                                                                                        |
+| `/.well-known/agent-skills/index.json`, `.../about-davi-lacerda/SKILL.md`                   | Agent Skills discovery index (v0.2.0, with `sha256` digest) and the skill itself.                                                                                                                                                              |
+| `/.well-known/ai-catalog.json` (`ard.json` alias), `/.well-known/poppy.json`                | Agent Resource Discovery catalog; Poppy manifest.                                                                                                                                                                                              |
+
+Every HTML page also carries:
+
+- an RFC 8288 `Link` header (set in the proxy): canonical, hreflang alternates, the Markdown
+  alternate, `api-catalog`, `service-desc` (OpenAPI), `service-doc` (SKILL.md), `describedby`
+  (llms.txt and the MCP server card), `sitemap` and RSS. Non-ASCII titles use RFC 8187 `title*`
+  (header values must be ByteStrings, so a raw "–" throws in the proxy);
+- the same discovery `<link>`s in `<head>` (`src/components/agents/agent-discovery.tsx`) plus
+  `<link rel="alternate" type="text/markdown">` from `buildMetadata` (`markdownAlternate()` in `seo.ts`);
+- WebMCP (`src/components/agents/web-mcp.tsx`): a tiny inline script that, only when the browser
+  exposes `document.modelContext` (or the older `navigator.modelContext`), registers read-only
+  `get_profile`, `list_posts` and `get_post` tools backed by the same-origin JSON/Markdown.
+
+Both are mounted once in `src/app/[lang]/layout.tsx` via `<AgentDiscovery />`.
+
+### Code map
+
+- `src/lib/agents/discovery.ts`: paths, page parsing (`parsePagePath`, `pagePath`, `markdownPath`),
+  `prefersMarkdown(accept)`, Link header builders. Dependency-free (imported by the proxy).
+- `src/lib/agents/markdown.ts`: Work/Personal/post Markdown, `llms.txt`, `llms-full.txt`.
+- `src/lib/agents/json.ts`: profile/posts JSON, JSON Resume, status, OpenAPI document.
+- `src/lib/agents/search.ts`: keyword search over profile sections and post sections (MCP `search`).
+- `src/lib/agents/mcp.ts`: the MCP server factory; `well-known.ts`: API catalog, server card,
+  SKILL.md + index, ARD and Poppy documents.
+- `src/lib/agents/labels.ts`: strings only machines read (Markdown labels), kept out of the dictionaries.
+- `src/lib/agents/{posts,dates,localize,http}.ts`: raw post bodies, git-based `lastmod`,
+  `{ en, "pt-br" }` resolution, response helpers (CORS, `x-markdown-tokens`, `Content-Signal`).
+- `src/lib/og/`: OG template and fonts (Instrument Serif, Geist Mono; TTF subset to Latin and
+  Latin-1, OFL licences alongside). Satori cannot read woff2, hence the separate TTFs. A title with
+  characters outside that range would need the fonts re-subset with `pyftsubset`.
+- `src/app/markdown/**`: internal Markdown routes. Only reached through proxy rewrites; requested
+  directly they get a locale prefix and 404.
+
+### Proxy (`src/proxy.ts`)
+
+1. `*.md` -> rewrite to `/markdown/...` (unknown page: 404).
+2. `/{lang}/...`: if `Accept` explicitly prefers `text/markdown` (q above zero and at least the
+   HTML q; `*/*` never counts) and the path is a known page, rewrite to its Markdown with
+   `Vary: Accept`. Otherwise pass through with the `Link` header.
+3. Wrong-cased prefix -> 308 to the canonical one.
+4. Anything else -> 307 to the negotiated locale (cookie, then `Accept-Language`) with
+   `Vary: Accept, Accept-Language, Cookie`. `/` asking for Markdown gets the negotiated Work
+   Markdown directly (plus `Content-Location`), and the `/` redirect carries the site-level `Link`s.
+
+The matcher skips `_next`, `api`, `mcp`, paths with a dot (except `.md`) and metadata image routes.
+
+### Changing things
+
+- Facts: edit `profile.ts`; Markdown, JSON, JSON Resume, llms files, MCP, search and OG update.
+- Posts: add the Markdown file; sitemap, llms, `posts.json`, MCP (`list_posts`, resources),
+  search and the post OG image pick it up at build time.
+- A new page: add it to `PageRef`/`parsePagePath`/`pagePath` in `discovery.ts`, a renderer in
+  `markdown.ts`, a route under `src/app/markdown/`, and an entry in `sitemap.ts`.
+- The skill: edit `skillMarkdown()` in `well-known.ts`; the index digest is computed from it.
+- MCP: tools are declared in `mcp.ts` (`toolInputs`, `toolMeta`); the server card reads the same
+  declarations. The route serves 2026-07-28 clients through `createMcpHandler` and 2025-era
+  clients (`initialize` handshake) through a stateless transport with JSON responses, so plain
+  JSON-RPC POSTs work.
+
+### Checking
+
+```bash
+curl -s https://davilacerda.com/llms.txt
+curl -s -H 'Accept: text/markdown' https://davilacerda.com/en | head
+curl -sI https://davilacerda.com/en | grep -i '^link'
+curl -s https://davilacerda.com/mcp -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+# Scanner (also an MCP server at https://isitagentready.com/mcp, tool `scan_site`):
+curl -s -X POST https://isitagentready.com/api/scan -H 'content-type: application/json' \
+  -d '{"url":"https://davilacerda.com","format":"agent"}'
+```
+
+### Checks that do not apply (on purpose)
+
+- **OAuth / OIDC discovery, OAuth Protected Resource (RFC 9728), Auth.md**: everything is public
+  and read-only with no authentication. Publishing these would advertise auth that does not exist.
+- **Web Bot Auth** (`/.well-known/http-message-signatures-directory`): for operators of bots that
+  sign their requests. This site sends no bot traffic (the scanner marks it informational).
+- **A2A agent card** (`/.well-known/agent-card.json`): there is no conversational agent to
+  delegate to; MCP, OpenAPI and the skill cover tool and data access.
+- **Commerce** (x402, MPP, UCP, ACP): nothing is for sale; the scanner scores these only for shops.
+- **DNS-AID**: SVCB records under `_agents.davilacerda.com`, signed with DNSSEC. This is DNS
+  configuration, not code; add it at the DNS provider if wanted.
+
+### Known limitations
+
+- `next start` replaces the `Vary` header of prerendered HTML (both from the proxy and from
+  `next.config` `headers()`), so the HTML variant does not show `Vary: Accept` locally; the
+  Markdown variant does. On Vercel the proxy runs before the CDN cache and each variant is cached
+  under its own rewritten route, so they never mix there. A third-party cache in front of the
+  site could still serve cached HTML to a Markdown request; the `.md` URLs avoid that entirely.
+- `.md` and JSON renditions are not `noindex`; they send `Link: <html>; rel="canonical"` instead.
+- The RSS URLs advertised in Link headers and llms.txt (`/{lang}/personal/blog/rss.xml`) come
+  from the blog work.

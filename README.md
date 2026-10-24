@@ -24,6 +24,13 @@ yarn typecheck  # TypeScript
 
 See [content/blog/README.md](content/blog/README.md).
 
+## For agents
+
+Every page has a Markdown version (append `.md`, or send `Accept: text/markdown`). The site also
+publishes `/llms.txt`, `/llms-full.txt`, JSON and JSON Resume under `/api` and `/resume.json`, a
+read-only MCP server at `/mcp`, and discovery documents under `/.well-known` (API catalog, MCP
+server card, agent skill). See "Agent readiness" in [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Project structure
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for folders, design tokens, components and conventions.

@@ -14,6 +14,7 @@ import { siteConfig } from "@/config/site";
 import { allSkills, profile, type FaqItem } from "@/content/profile";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { toIsoDate } from "@/i18n/format";
+import { markdownPathFor } from "@/lib/agents/discovery";
 import type { PostMeta } from "@/lib/blog";
 import { routes } from "@/lib/routes";
 import { absoluteUrl } from "@/lib/utils";
@@ -53,6 +54,18 @@ export function hreflangAlternates(
   const fallback = paths.en ?? locales.map((l) => paths[l]).find(Boolean);
   if (fallback) languages["x-default"] = absoluteUrl(fallback);
   return languages;
+}
+
+/**
+ * `<link rel="alternate" type="text/markdown">` for pages that have a Markdown
+ * rendition (Work, Personal, posts; see `@/lib/agents/discovery`).
+ */
+export function markdownAlternate(
+  path: string,
+  noIndex?: boolean,
+): Record<string, string> {
+  const markdown = noIndex ? null : markdownPathFor(path);
+  return markdown ? { "text/markdown": absoluteUrl(markdown) } : {};
 }
 
 export type OgImage = {
@@ -161,7 +174,10 @@ export function buildMetadata(input: PageMetadataInput): Metadata {
     alternates: {
       canonical: url,
       languages: hreflangAlternates(paths),
-      types: { "application/rss+xml": absoluteUrl(routes.rss(lang)) },
+      types: {
+        "application/rss+xml": absoluteUrl(routes.rss(lang)),
+        ...markdownAlternate(selfPath, noIndex),
+      },
     },
     openGraph,
     twitter: {

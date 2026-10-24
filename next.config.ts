@@ -3,10 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Markdown posts are read from disk at build/request time; make sure they are
-  // traced into any server function (route handlers such as RSS or llms.txt).
+  // Files read from disk at build/request time must be traced into any server
+  // function: Markdown posts (RSS, llms.txt, MCP, Markdown renditions) and the
+  // TTF fonts used by the generated OG images and icons.
   outputFileTracingIncludes: {
-    "/**": ["./content/**/*"],
+    "/**": ["./content/**/*", "./src/lib/og/fonts/*.ttf"],
   },
 };
 
