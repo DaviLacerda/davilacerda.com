@@ -260,44 +260,22 @@ function certificationBlocks(lang: Locale): Blocks {
     </Widget>,
     <Widget key="courses">
       <h2 className="text-lead font-medium">{a.courses}</h2>
-      <div className="-mx-2 mt-4 overflow-x-auto">
-        <table className="w-full min-w-[28rem] border-collapse text-left">
-          <thead>
-            <tr className="text-small text-muted-foreground">
-              <th scope="col" className="px-2 pb-2 font-normal">
-                {a.course}
-              </th>
-              <th scope="col" className="px-2 pb-2 font-normal">
-                {a.issuer}
-              </th>
-              <th scope="col" className="px-2 pb-2 text-right font-normal">
-                {a.date}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses.map((course) => (
-              <tr
-                key={course.id}
-                className="border-t border-border align-top" // taste-skill-ignore: rows of a real table
-              >
-                <td className="px-2 py-3">
-                  <span className="font-medium">{t(course.name, lang)}</span>
-                  {course.description ? (
-                    <span className="mt-0.5 block text-small text-muted-foreground">
-                      {t(course.description, lang)}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="px-2 py-3">{course.issuer}</td>
-                <td className="px-2 py-3 text-right whitespace-nowrap tabular-nums">
-                  {course.date ? formatPartialDate(course.date, lang) : ""}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="mt-4 grid gap-5">
+        {courses.map((course) => (
+          <li key={course.id}>
+            <p className="font-medium">{t(course.name, lang)}</p>
+            <p className="mt-0.5 text-small text-muted-foreground">
+              {course.issuer}
+              {course.date ? `, ${formatPartialDate(course.date, lang)}` : ""}
+            </p>
+            {course.description ? (
+              <p className="mt-1 text-small text-muted-foreground">
+                {t(course.description, lang)}
+              </p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
     </Widget>,
   ];
 }
