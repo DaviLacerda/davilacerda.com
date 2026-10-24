@@ -667,9 +667,9 @@ export const profile: Profile = {
     // TODO(davi): a third certification was announced in June 2026; add its name, issuer and credential URL.
     {
       id: "rocketseat-ignite-react",
-      // TODO(davi): add /public/logos/rocketseat.svg and set logo on the Rocketseat entries.
       name: "Ignite: React",
       issuer: "Rocketseat",
+      logo: "/logos/rocketseat.png",
       issuerUrl: "https://www.rocketseat.com.br",
       kind: "course",
       date: "2022-03",
@@ -681,7 +681,7 @@ export const profile: Profile = {
     },
     {
       id: "alura-imersao-react",
-      // TODO(davi): add /public/logos/alura.svg and set logo: "/logos/alura.svg".
+      logo: "/logos/alura.png",
       name: "Imersão React",
       issuer: "Alura",
       issuerUrl: "https://www.alura.com.br",
@@ -699,6 +699,7 @@ export const profile: Profile = {
         "pt-br": "Eventos Next Level Week (NLW)",
       },
       issuer: "Rocketseat",
+      logo: "/logos/rocketseat.png",
       issuerUrl: "https://www.rocketseat.com.br",
       kind: "course",
       // TODO(davi): confirm which NLW editions and dates (the nlw-journey repo suggests NLW Journey).
