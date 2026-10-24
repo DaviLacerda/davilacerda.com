@@ -139,23 +139,57 @@ export const en = {
       eyebrow: "Personal",
       title: "Off the clock",
       description: "Writing, experiments and things I build for fun.",
+      /** The page's h1. Wrap a phrase in *asterisks* to set it in italics. */
+      headline: "Off the *clock*",
+      /**
+       * First-person intro. `{city}` comes from the profile.
+       * TODO(davi): make these yours (hobbies and life away from the keyboard).
+       */
+      paragraphs: [
+        "Hi, I'm Davi. I live in {city}, in the Triângulo Mineiro region of Minas Gerais, where I studied Computer Science and where I now build AI products for a living. This is the other half of the site: less résumé, more of what I make and think about when nobody is asking.",
+        "I like building in public. Most of my side projects started as small itches: a random-episode picker because I keep rewatching my favorite shows, my own VS Code themes because I spend my days in an editor, a FigJam-style whiteboard built on React Flow.",
+        "Lately I've been writing, too: notes on AI engineering from someone who ships it. Expect agents and multi-agent systems, RAG, the Model Context Protocol, Azure AI and the unglamorous work of taking Generative AI to production.",
+      ],
+      jumpTo: "Jump to",
+      facts: {
+        label: "At a glance",
+        location: "Location",
+        dayJob: "Day job",
+        dayJobValue: "{role} at {company}",
+        writingAbout: "Writing about",
+        writingTopics: "AI engineering, agents, RAG and MCP",
+        languages: "Languages",
+      },
     },
     sections: {
       writing: {
         eyebrow: "Writing",
         title: "Blog",
         description: "Notes on AI engineering, LLMs and building software.",
+        latest: "Latest",
       },
       sideProjects: {
         eyebrow: "Tinkering",
         title: "Side projects",
         description:
           "Small things built for fun, learning or scratching an itch.",
+        source: "Source",
+        live: "Live site",
+        stars: "{count} stars on GitHub",
+        moreOnGitHub: "More on GitHub",
       },
       elsewhere: {
         eyebrow: "Elsewhere",
         title: "Find me online",
         description: "Say hi wherever you prefer.",
+        /** One line under each link: what you will find there. */
+        notes: {
+          github: "Code, side projects and experiments",
+          linkedin: "Career updates and professional network",
+          instagram: "Life outside the editor",
+          discord: "Chat about AI, code or anything else",
+          email: "The best way to reach me, for anything",
+        },
       },
     },
   },
@@ -177,6 +211,16 @@ export const en = {
     translationAvailable: "Also available in Portuguese",
     previousPost: "Previous post",
     nextPost: "Next post",
+    minutes: "{minutes} min",
+    subscribe: "Subscribe via RSS",
+    emptyHint:
+      "Subscribe to the RSS feed and it will reach you as soon as it ships.",
+    writtenBy: "Written by",
+    aboutAuthor: "About the author",
+    moreAboutMe: "More about me",
+    morePosts: "More posts",
+    /** RSS channel title, e.g. "Davi Lacerda | Blog". */
+    feedTitle: "{name} | Blog",
   },
 
   dates: {

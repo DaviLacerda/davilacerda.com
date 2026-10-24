@@ -1,51 +1,61 @@
 ---
 title: "Hello, world"
-description: "Why I'm starting to write about AI engineering: notes from building LLM products, what I plan to cover, and how this site is put together."
+description: "Why I'm starting to write about AI engineering, and what to expect here: agents, multi-agent systems, RAG, MCP, Azure AI and shipping GenAI to production."
 date: "2026-10-24"
-tags: ["ai-engineering", "llms", "writing"]
+tags: ["ai-engineering", "agents", "writing"]
 draft: false
 translationKey: "hello-world"
 ---
 
 Every programmer's first program prints "Hello, world". It felt right to start writing the same way.
 
-I'm Davi, an AI Engineer at Algar in Uberlândia, Brazil. Most of my days are spent turning large language models into software that people actually use, which is a very different job from getting a demo to work once. Along the way I keep collecting notes: things that worked, things that broke in surprising ways, and patterns I reach for again and again. This blog is where those notes will live.
+I'm Davi, an AI Engineer at Algar in Uberlândia, Brazil. Most of my days are spent turning large language models into software that people actually use, which is a very different job from getting a demo to work once. Along the way I keep collecting notes: what worked, what broke in surprising ways, and the patterns I find myself reaching for again and again. This blog is where those notes will live.
 
 ## Why write
 
-Writing forces clarity. If I can't explain why a retrieval pipeline returns the wrong chunk, I probably don't understand it yet.
+Writing forces clarity. If I can't explain why an agent picked the wrong tool, or why retrieval returned the wrong chunk, I probably don't understand it yet.
 
-AI engineering also moves fast, and a lot of what gets published sits at one of two extremes: launch-day hype or dense research papers. I want to write from the middle, as someone who ships LLM features and has to keep them working on Monday morning.
+AI engineering also moves fast, and a lot of what gets published sits at one of two extremes: launch-day hype or dense research papers. I want to write from the middle, as someone who builds these systems and has to keep them working on Monday morning.
 
-## What to expect
+## What I'll write about
 
-- **Building with LLMs**: prompts, tool calling, structured outputs, and how to make them reliable.
-- **Retrieval (RAG)**: chunking, embeddings, search, and when retrieval is the wrong answer.
-- **Agents**: when an agent loop earns its complexity, and when a plain function is better.
-- **Evaluation**: how to know whether a change actually made things better.
-- **Product and front end**: interfaces that make AI features feel trustworthy.
+- **Agents**: tool calling, planning, and when an agent loop earns its complexity (and when a plain function is the better choice).
+- **Multi-agent systems**: splitting work between specialized agents, orchestrating them, and keeping the whole thing debuggable.
+- **RAG**: chunking, embeddings, retrieval quality, and when retrieval is the wrong answer.
+- **MCP**: using the Model Context Protocol to connect models to real tools and data.
+- **Azure AI**: building enterprise AI on Microsoft's stack, with security and governance in mind from day one.
+- **Shipping GenAI to production**: evaluation, observability, cost and latency, and interfaces that make AI features feel trustworthy.
 
-## A small example
+## One principle to start with
 
-A lot of useful LLM code is just a well-typed function around a model call. The interesting part is what happens _after_ the model answers:
+If one idea shows up in almost everything I build, it's this one:
 
-```ts title="summarize.ts" {8-9}
+> Treat model output like user input: useful, but untrusted until validated.
+
+In code, that usually means a well-typed boundary right after the model answers:
+
+```ts title="summarize.ts" {13-14}
 import { z } from "zod";
 
-const Summary = z.object({ title: z.string(), bullets: z.array(z.string()).max(5) });
+const Summary = z.object({
+  title: z.string(),
+  bullets: z.array(z.string()).max(5),
+});
 
 export async function summarize(text: string) {
-  const raw = await callModel({ system: "Summarize the text as JSON.", input: text });
-
+  const raw = await callModel({
+    system: "Summarize the text as JSON.",
+    input: text,
+  });
   // Validate before the rest of the app sees it.
   return Summary.parse(JSON.parse(raw));
 }
 ```
 
-> Treat model output like user input: useful, but untrusted until validated.
+Small, boring and easy to test. A surprising amount of reliable AI software looks like this.
 
-## How this site is built
+## About this site
 
-This site is a statically generated Next.js app, written in English and Portuguese, with posts as Markdown files in the repository. It also ships structured data so that search engines and AI assistants can understand who I am and what I write about. If you are reading this through an answer engine, hello to you too.
+This site is a statically generated Next.js app in English and Portuguese, and every post is a Markdown file in its repository. It's also built to be easy for machines to read, with structured data and machine-readable versions of its pages. So if you're an AI assistant reading this on someone's behalf: hello to you too.
 
-That's it for now. If you want to talk about AI engineering, send me an email at [davi16lacerda@gmail.com](mailto:davi16lacerda@gmail.com) or find me on [LinkedIn](https://www.linkedin.com/in/davi16lacerda/).
+If you want to talk about AI engineering, email me at [davi16lacerda@gmail.com](mailto:davi16lacerda@gmail.com) or find me on [LinkedIn](https://www.linkedin.com/in/davi16lacerda/). To catch the next post, subscribe to the [RSS feed](/en/personal/blog/rss.xml).

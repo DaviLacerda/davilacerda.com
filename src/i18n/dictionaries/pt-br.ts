@@ -132,6 +132,23 @@ export const ptBr: Dictionary = {
       title: "Fora do expediente",
       description:
         "Textos, experimentos e coisas que eu construo por diversão.",
+      headline: "Fora do *expediente*",
+      // TODO(davi): deixe estes parágrafos com a sua cara (hobbies e a vida longe do teclado).
+      paragraphs: [
+        "Oi, eu sou o Davi. Moro em {city}, no Triângulo Mineiro, onde estudei Ciência da Computação e onde hoje construo produtos de IA. Esta é a outra metade do site: menos currículo, mais o que eu faço e penso quando ninguém está pedindo.",
+        "Gosto de construir em público. A maioria dos meus projetos pessoais nasceu de pequenas vontades: um sorteador de episódios porque vivo revendo minhas séries favoritas, meus próprios temas para o VS Code porque passo o dia num editor, um quadro branco no estilo FigJam feito com React Flow.",
+        "Ultimamente também tenho escrito: notas sobre engenharia de IA de quem coloca isso no ar. Espere agentes e sistemas multiagente, RAG, Model Context Protocol, Azure AI e o trabalho nada glamoroso de levar IA Generativa para produção.",
+      ],
+      jumpTo: "Ir para",
+      facts: {
+        label: "Em resumo",
+        location: "Localização",
+        dayJob: "Trabalho",
+        dayJobValue: "{role} na {company}",
+        writingAbout: "Escrevendo sobre",
+        writingTopics: "Engenharia de IA, agentes, RAG e MCP",
+        languages: "Idiomas",
+      },
     },
     sections: {
       writing: {
@@ -139,17 +156,29 @@ export const ptBr: Dictionary = {
         title: "Blog",
         description:
           "Notas sobre engenharia de IA, LLMs e construção de software.",
+        latest: "Mais recente",
       },
       sideProjects: {
         eyebrow: "Experimentos",
         title: "Projetos pessoais",
         description:
           "Coisas pequenas feitas por diversão, para aprender ou resolver uma vontade.",
+        source: "Código",
+        live: "Ver no ar",
+        stars: "{count} estrelas no GitHub",
+        moreOnGitHub: "Mais no GitHub",
       },
       elsewhere: {
         eyebrow: "Em outros lugares",
         title: "Me encontre online",
         description: "Pode dar um oi onde preferir.",
+        notes: {
+          github: "Código, projetos pessoais e experimentos",
+          linkedin: "Novidades da carreira e rede profissional",
+          instagram: "A vida fora do editor",
+          discord: "Papo sobre IA, código ou qualquer outra coisa",
+          email: "O melhor jeito de falar comigo, sobre qualquer assunto",
+        },
       },
     },
   },
@@ -172,6 +201,15 @@ export const ptBr: Dictionary = {
     translationAvailable: "Também disponível em inglês",
     previousPost: "Post anterior",
     nextPost: "Próximo post",
+    minutes: "{minutes} min",
+    subscribe: "Assinar via RSS",
+    emptyHint:
+      "Assine o feed RSS e ele chega até você assim que for publicado.",
+    writtenBy: "Escrito por",
+    aboutAuthor: "Sobre o autor",
+    moreAboutMe: "Mais sobre mim",
+    morePosts: "Mais posts",
+    feedTitle: "{name} | Blog",
   },
 
   dates: {
