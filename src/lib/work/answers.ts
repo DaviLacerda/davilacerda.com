@@ -52,10 +52,45 @@ export function topicLead(topic: TopicId, lang: Locale): string {
     case "education":
       return faqAnswer("education", lang);
     case "faq":
-      return dict.chat.answers.faq.lead;
+      return dict.chat.topics.faq.intro;
     case "contact":
       return faqAnswer("open-to-roles", lang);
   }
+}
+
+/**
+ * "Brain (Centro de Inovação em Negócios Digitais)" -> { short: "Brain",
+ * long: "Centro de Inovação em Negócios Digitais" }. Names without a
+ * parenthesis come back as they are.
+ */
+export function splitCompanyName(name: string): {
+  short: string;
+  long?: string;
+} {
+  const match = /^(.+?) \((.+)\)$/.exec(name);
+  return match?.[1] && match[2]
+    ? { short: match[1], long: match[2] }
+    : { short: name };
+}
+
+/**
+ * The one sentence under an answer's title on its page (and on its OG
+ * image). Shorter than `topicLead()`, which stays the full, quotable reply
+ * in the Markdown and agent renditions; the panels below carry the rest.
+ */
+export function topicIntro(topic: TopicId, lang: Locale): string {
+  const copy = getDictionary(lang).chat.topics[topic];
+  if (topic !== "experience") return copy.intro;
+  const [current, previous] = profile.experience;
+  if (!current) return copy.description;
+  return interpolate(copy.intro, {
+    role: t(current.role, lang),
+    company: t(current.company, lang),
+    since: current.start ? formatLongPartialDate(current.start, lang) : "",
+    prevCompany: previous
+      ? splitCompanyName(t(previous.company, lang)).short
+      : "",
+  });
 }
 
 /** FAQ items shown on the FAQ topic (and in its FAQPage JSON-LD). */

@@ -16,6 +16,7 @@ type CopyEmailButtonProps = {
   copiedLabel: string;
   /** `raised` when the button sits on a surface (inside an answer panel). */
   variant?: "quiet" | "raised";
+  size?: "md" | "lg";
 };
 
 /**
@@ -29,6 +30,7 @@ export function CopyEmailButton({
   label,
   copiedLabel,
   variant = "quiet",
+  size = "lg",
 }: CopyEmailButtonProps) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
@@ -47,6 +49,7 @@ export function CopyEmailButton({
     }
   }
 
+  const iconSize = size === "lg" ? "size-5" : "size-4";
   const hidden = reduce ? { opacity: 0 } : { opacity: 0, filter: "blur(2px)" };
   const shown = reduce ? { opacity: 1 } : { opacity: 1, filter: "blur(0px)" };
 
@@ -55,7 +58,7 @@ export function CopyEmailButton({
       <button
         type="button"
         onClick={copy}
-        className={buttonVariants({ variant, size: "lg" })}
+        className={buttonVariants({ variant, size })}
       >
         <span className="grid [&>*]:col-start-1 [&>*]:row-start-1">
           <AnimatePresence initial={false}>
@@ -68,16 +71,16 @@ export function CopyEmailButton({
               className="inline-flex items-center justify-center gap-2"
             >
               {copied ? (
-                <CheckIcon aria-hidden="true" className="size-5" />
+                <CheckIcon aria-hidden="true" className={iconSize} />
               ) : (
-                <CopyIcon aria-hidden="true" className="size-5" />
+                <CopyIcon aria-hidden="true" className={iconSize} />
               )}
               {copied ? copiedLabel : label}
             </m.span>
           </AnimatePresence>
           {/* Reserves the width of the longer label. */}
           <span aria-hidden="true" className="invisible inline-flex gap-2">
-            <span className="size-5" />
+            <span className={iconSize} />
             {copiedLabel.length > label.length ? copiedLabel : label}
           </span>
         </span>

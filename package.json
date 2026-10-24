@@ -13,9 +13,11 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "logos": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/logos.mjs"
   },
   "dependencies": {
+    "@iconify/utils": "^3.1.7",
     "@modelcontextprotocol/server": "2.3.1",
     "@phosphor-icons/react": "^2.1.10",
     "@vercel/analytics": "^2.0.1",
@@ -41,6 +43,9 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@iconify-json/logos": "^1.2.17",
+    "@iconify-json/simple-icons": "^1.2.100",
+    "@iconify/types": "^2.0.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/hast": "^3.0.4",
     "@types/node": "^22",

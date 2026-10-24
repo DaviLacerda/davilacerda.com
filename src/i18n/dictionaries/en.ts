@@ -73,10 +73,14 @@ export const en = {
   chat: {
     home: {
       /** Line under the name. */
-      lead: "{role} at {company}, in {place}. He builds generative AI products and AI agents end to end.",
-      summaryTitle: "In short",
-      glanceTitle: "At a glance",
-      topicsTitle: "What you can ask",
+      lead: "{role} at {company} in {place}, building generative AI products and agents.",
+      /** Screen-reader heading of the three highlight rows. */
+      highlightsTitle: "Highlights",
+      role: "{role} at {company}",
+      /** Under the award: who gave it and for what. */
+      award: "{issuer}, for the {project}",
+      experts: "{count}× Microsoft Certified Expert",
+      expertsDetail: "Multi-agent and agentic AI",
     },
     composer: {
       label: "Ask a question about Davi's work",
@@ -84,11 +88,10 @@ export const en = {
       submit: "Ask",
       suggestions: "Suggested questions",
       bestMatch: "Best match: {topic}",
-      noMatch: "No match yet. Try one of the suggestions.",
-      note: "A guided assistant over Davi's verified profile. Every answer is written in advance; no live model is involved.",
-      fallbackTitle: "I don't have a written answer for that yet.",
-      fallbackBody:
-        "I can answer questions about the topics below. For anything else, write to Davi at {email}.",
+      noMatch: "No match yet. Try a suggestion.",
+      note: "Pre-written answers from his verified profile, no live model.",
+      fallbackTitle: "No written answer for that yet.",
+      fallbackBody: "Try a suggestion below, or write to Davi at {email}.",
       dismiss: "Dismiss",
     },
     turn: {
@@ -104,6 +107,9 @@ export const en = {
         description:
           "Davi Lacerda has been an AI Engineer at Algar since August 2024, after a research and development internship at Brain. Dates, scope and what he shipped.",
         summary: "His role at Algar and the internship before it.",
+        /** One sentence under the answer's title. `{prevCompany}` is the short name. */
+        intro:
+          "{role} at {company} since {since}, after an internship at {prevCompany}.",
       },
       "sales-copilot": {
         chip: "Sales Copilot",
@@ -113,6 +119,8 @@ export const en = {
         description:
           "The AI copilot Davi Lacerda built end to end for Algar's sales teams, named Best AI Project in LATAM at the Conecta Latam awards.",
         summary: "The award-winning copilot he built end to end.",
+        intro:
+          "An AI copilot for Algar's sales teams, built end to end by Davi as main developer.",
       },
       certifications: {
         chip: "Certifications",
@@ -122,6 +130,8 @@ export const en = {
         description:
           "Davi Lacerda holds two Expert-level Microsoft certifications, in multi-agent AI solutions and agentic AI architecture, plus React courses.",
         summary: "Two Microsoft Expert credentials, and courses.",
+        intro:
+          "Two Expert-level Microsoft certifications, in multi-agent and agentic AI.",
       },
       skills: {
         chip: "Skills",
@@ -131,6 +141,8 @@ export const en = {
         description:
           "What Davi Lacerda works with: LLMs and agents, RAG, machine learning, back end, front end, cloud and delivery.",
         summary: "LLMs, agents, RAG and the full stack around them.",
+        intro:
+          "Generative AI and agents on Azure, in TypeScript and Python, with the full stack around them.",
       },
       education: {
         chip: "Education",
@@ -140,6 +152,8 @@ export const en = {
         description:
           "Davi Lacerda studied Computer Science at the Federal University of Uberlândia (UFU). Coursework, thesis and the languages he works in.",
         summary: "Computer Science at UFU, and languages.",
+        intro:
+          "Computer Science at the Federal University of Uberlândia (UFU).",
       },
       faq: {
         chip: "FAQ",
@@ -149,6 +163,7 @@ export const en = {
         description:
           "Short answers about Davi Lacerda: what he does, whether he is open to roles, his stack, the Sales Copilot, certifications, location and education.",
         summary: "Short answers to what recruiters ask most.",
+        intro: "Short answers to what recruiters ask most.",
       },
       contact: {
         chip: "Contact",
@@ -158,6 +173,8 @@ export const en = {
         description:
           "Davi Lacerda is open to AI Engineer roles, on-site or hybrid in Uberlândia and remote. Email him or find him on LinkedIn.",
         summary: "Email, LinkedIn and availability.",
+        intro:
+          "Open to AI Engineer roles. Email is the fastest way to reach him.",
       },
     },
     answers: {
@@ -168,7 +185,7 @@ export const en = {
       },
       salesCopilot: {
         award: "Award",
-        builtBy: "Built end to end by its main developer",
+        builtBy: "Built end to end",
         layers: {
           frontEnd: {
             title: "Front end",
@@ -200,9 +217,6 @@ export const en = {
         degree: "Degree",
         institution: "Institution",
         location: "Location",
-      },
-      faq: {
-        lead: "Short answers to the questions recruiters and collaborators ask most.",
       },
       contact: {
         emailCta: "Send an email",
@@ -282,14 +296,10 @@ export const en = {
       title: "Off the clock",
       description: "Writing, experiments and things I build for fun.",
       /**
-       * First-person intro. `{city}` comes from the profile.
-       * TODO(davi): make these yours (hobbies and life away from the keyboard).
+       * First-person line under the title. `{city}` comes from the profile.
+       * TODO(davi): make it yours (hobbies and life away from the keyboard).
        */
-      paragraphs: [
-        "Hi, I'm Davi. I live in {city}, in the Triângulo Mineiro region of Minas Gerais, where I studied Computer Science and where I now build AI products for a living. This is the other half of the site: less résumé, more of what I build and write in my own time.",
-        "I like building in public. Most of my side projects started as small itches: a random-episode picker because I keep rewatching my favorite shows, my own VS Code themes because I spend my days in an editor, a FigJam-style whiteboard built on React Flow.",
-        "Lately I've been writing, too: notes on AI engineering. Expect agents and multi-agent systems, RAG, the Model Context Protocol, Azure AI and what it takes to run generative AI in production.",
-      ],
+      lead: "Hi, I'm Davi. What I build and write in my own time, from {city}.",
     },
     sections: {
       writing: {
@@ -309,14 +319,6 @@ export const en = {
       elsewhere: {
         title: "Elsewhere",
         description: "Say hi wherever you prefer.",
-        /** One line under each link: what you will find there. */
-        notes: {
-          github: "Code, side projects and experiments",
-          linkedin: "Career updates and professional network",
-          instagram: "Life outside the editor",
-          discord: "Chat about AI, code or anything else",
-          email: "The best way to reach me, for anything",
-        },
       },
     },
   },

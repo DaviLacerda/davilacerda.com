@@ -1,19 +1,20 @@
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/ssr/EnvelopeSimple";
+import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { AskLink } from "@/components/chat/ask-link";
 import { Composer } from "@/components/chat/composer";
-import { CopyEmailButton } from "@/components/chat/copy-email-button";
-import { Widget } from "@/components/chat/widget";
-import { Reveal } from "@/components/motion/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
-import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { profile } from "@/content/profile";
-import { getDictionary, interpolate, isLocale, t } from "@/i18n";
+import { LogoTile } from "@/components/ui/logo";
+import { getCertifications, profile } from "@/content/profile";
+import { getDictionary, interpolate, isLocale, t, type Locale } from "@/i18n";
+import { formatDateRange } from "@/i18n/format";
 import { routes } from "@/lib/routes";
+import { cn } from "@/lib/utils";
 import {
   breadcrumbJsonLd,
   buildMetadata,
@@ -21,8 +22,8 @@ import {
   profilePageJsonLd,
   websiteJsonLd,
 } from "@/lib/seo";
-import { composerStrings, composerTopics, topicCopy } from "@/lib/work/answers";
-import { topicIds } from "@/lib/work/topics";
+import { composerStrings, composerTopics } from "@/lib/work/answers";
+import type { TopicId } from "@/lib/work/topics";
 
 type PageProps = { params: Promise<{ lang: string }> };
 
@@ -42,10 +43,11 @@ export async function generateMetadata({
 }
 
 /**
- * Work tab (home): the guided assistant. The first screen is the name, one
- * line on who Davi is and the composer with its suggestions. Below it, the
- * server-rendered substance for readers and crawlers: the TL;DR, the
- * highlights (with the award), a link to every answer and how to reach him.
+ * Work tab (home): the guided assistant, readable in one glance (it fits
+ * one 1440x900 screen). The name, one line on who Davi is and the composer
+ * with its suggestions; under it, four highlights (each a link to the answer
+ * that tells the whole story), the last one the email. The long factual TL;DR lives in the JSON-LD, the
+ * Markdown rendition, llms.txt and the MCP server, not on screen.
  */
 export default async function WorkPage({ params }: PageProps) {
   const { lang } = await params;
@@ -60,7 +62,7 @@ export default async function WorkPage({ params }: PageProps) {
   });
 
   return (
-    <Container className="pt-10 sm:pt-20">
+    <Container className="pt-12 sm:pt-20">
       <JsonLd
         data={[
           personJsonLd(lang),
@@ -86,12 +88,12 @@ export default async function WorkPage({ params }: PageProps) {
         <p
           data-enter=""
           style={{ "--i": 1 } as CSSProperties}
-          className="mt-5 max-w-[34ch] text-lead"
+          className="mt-4 max-w-[40ch] text-lead text-muted-foreground"
         >
           {lead}
         </p>
         <Composer
-          className="mt-10 sm:mt-12"
+          className="mt-10"
           action={routes.ask(lang)}
           topics={composerTopics(lang)}
           strings={composerStrings(lang)}
@@ -100,106 +102,126 @@ export default async function WorkPage({ params }: PageProps) {
         />
       </section>
 
-      <Reveal
-        as="section"
-        aria-labelledby="summary-title"
-        className="mt-26 pt-2 sm:mt-34"
-      >
-        <h2 id="summary-title" className="text-heading">
-          {home.summaryTitle}
-        </h2>
-        <p className="mt-4 max-w-[66ch]">{t(profile.tldr, lang)}</p>
-      </Reveal>
-
-      <Reveal className="mt-10">
-        <Widget>
-          <h2 className="text-lead font-medium">{home.glanceTitle}</h2>
-          <ul className="mt-6 grid gap-x-10 gap-y-7 sm:grid-cols-2">
-            {profile.highlights.map((item) => (
-              <li key={t(item.value, "en")}>
-                <p className="text-heading">{t(item.value, lang)}</p>
-                <p className="mt-1 text-muted-foreground">
-                  {t(item.label, lang)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </Widget>
-      </Reveal>
-
-      <section aria-labelledby="topics-title" className="mt-26 pt-2 sm:mt-34">
-        <h2 id="topics-title" className="text-heading">
-          {home.topicsTitle}
-        </h2>
-        <Reveal
-          as="ul"
-          stagger
-          className="-mx-4 mt-6 grid gap-x-2 sm:-mx-5 lg:grid-cols-2"
-        >
-          {topicIds.map((id) => {
-            const copy = topicCopy(id, lang);
-            return (
-              <li key={id}>
-                <AskLink
-                  href={routes.topic(lang, id)}
-                  className="group flex h-full items-center justify-between gap-6 rounded-surface px-4 py-4 transition-colors duration-150 ease-out hover:bg-surface sm:px-5"
-                >
-                  <span className="min-w-0">
-                    <span className="block text-lead font-medium">
-                      {copy.question}
-                    </span>
-                    <span className="mt-0.5 block text-muted-foreground">
-                      {copy.summary}
-                    </span>
-                  </span>
-                  <ArrowRightIcon
-                    aria-hidden="true"
-                    className="size-5 shrink-0 text-muted-foreground transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:text-foreground"
-                  />
-                </AskLink>
-              </li>
-            );
-          })}
-        </Reveal>
-      </section>
-
-      <Reveal
-        as="section"
-        aria-labelledby="contact-title"
-        className="mt-28 sm:mt-36"
-      >
-        <Widget className="sm:p-10">
-          <h2 id="contact-title" className="text-heading">
-            {dict.work.sections.contact.title}
-          </h2>
-          <p className="mt-3 max-w-[52ch] text-muted-foreground">
-            {dict.work.sections.contact.description}
-            {profile.availability.open
-              ? ` ${t(profile.availability.modes, lang)}.`
-              : null}
-          </p>
-          <p className="mt-8 text-heading break-all sm:break-normal">
-            <a href={`mailto:${profile.email}`} className="link-underline">
-              {profile.email}
-            </a>
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <ButtonLink
-              href={`mailto:${profile.email}`}
-              variant="accent"
-              size="lg"
-            >
-              {dict.chat.answers.contact.emailCta}
-            </ButtonLink>
-            <CopyEmailButton
-              email={profile.email}
-              label={dict.chat.answers.contact.copyEmail}
-              copiedLabel={dict.chat.answers.contact.copied}
-              variant="raised"
-            />
-          </div>
-        </Widget>
-      </Reveal>
+      <Highlights lang={lang} />
     </Container>
+  );
+}
+
+/**
+ * Four facts with a picture each (the employer's logo, the award, the
+ * Microsoft credential, the email), two by two from 640px, each a link that
+ * opens the matching answer. They carry the TL;DR on screen and give
+ * crawlers descriptive links to the answers.
+ */
+function Highlights({ lang }: { lang: Locale }) {
+  const dict = getDictionary(lang);
+  const home = dict.chat.home;
+  const current = profile.experience.find((job) => job.end === null);
+  const award = profile.achievements.find((item) =>
+    item.id.startsWith("conecta-latam"),
+  );
+  const copilot = profile.projects.find((p) => p.id === "sales-copilot");
+  const experts = getCertifications("certification").filter(
+    (cert) => cert.level === "Expert",
+  );
+
+  // On a hovered row (surface fill) the tile steps back to the page colour.
+  const tileHover =
+    "transition-colors duration-150 ease-out group-hover:bg-background";
+  const iconTile = cn(
+    "grid size-10 shrink-0 place-items-center rounded-tile bg-surface",
+    tileHover,
+  );
+  const rows: {
+    topic: TopicId;
+    picture: ReactNode;
+    title: string;
+    detail: string;
+  }[] = [];
+  if (current) {
+    const company = t(current.company, lang);
+    rows.push({
+      topic: "experience",
+      picture: (
+        <LogoTile logo={current.logo} name={company} className={tileHover} />
+      ),
+      title: interpolate(home.role, { role: t(current.role, lang), company }),
+      detail: formatDateRange(current.start, current.end, lang),
+    });
+  }
+  if (award) {
+    rows.push({
+      topic: "sales-copilot",
+      picture: (
+        <span className={iconTile}>
+          <TrophyIcon aria-hidden="true" className="size-5" />
+        </span>
+      ),
+      title: t(award.title, lang),
+      detail: interpolate(home.award, {
+        issuer: award.issuer ?? "",
+        project: copilot ? t(copilot.name, lang) : "",
+      }),
+    });
+  }
+  if (experts.length) {
+    rows.push({
+      topic: "certifications",
+      picture: (
+        <LogoTile
+          logo={experts[0]?.logo}
+          name={experts[0]?.issuer ?? ""}
+          className={tileHover}
+        />
+      ),
+      title: interpolate(home.experts, { count: experts.length }),
+      detail: home.expertsDetail,
+    });
+  }
+  rows.push({
+    topic: "contact",
+    picture: (
+      <span className={iconTile}>
+        <EnvelopeSimpleIcon aria-hidden="true" className="size-5" />
+      </span>
+    ),
+    title: dict.work.hero.availability,
+    detail: profile.email,
+  });
+
+  return (
+    <section aria-labelledby="highlights-title" className="mt-14 sm:mt-16">
+      <h2 id="highlights-title" className="sr-only">
+        {home.highlightsTitle}
+      </h2>
+      <ul className="-mx-3 grid gap-1 sm:-mx-4 sm:grid-cols-2 sm:gap-x-4">
+        {rows.map((row, index) => (
+          <li
+            key={row.topic}
+            data-enter=""
+            style={{ "--i": 11 + index } as CSSProperties}
+          >
+            <AskLink
+              href={routes.topic(lang, row.topic)}
+              className="group flex h-full items-center gap-4 rounded-surface px-3 py-3 transition-colors duration-150 ease-out hover:bg-surface sm:px-4"
+            >
+              {row.picture}
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-balance">
+                  {row.title}
+                </span>
+                <span className="block text-small break-words text-muted-foreground">
+                  {row.detail}
+                </span>
+              </span>
+              <ArrowRightIcon
+                aria-hidden="true"
+                className="size-4 shrink-0 text-muted-foreground transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:text-foreground"
+              />
+            </AskLink>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

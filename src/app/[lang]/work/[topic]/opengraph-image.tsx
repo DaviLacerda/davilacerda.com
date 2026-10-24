@@ -12,7 +12,7 @@ import {
   clampText,
   loadOgFonts,
 } from "@/lib/og/template";
-import { topicCopy, topicLead } from "@/lib/work/answers";
+import { topicCopy, topicIntro } from "@/lib/work/answers";
 import { isTopicId, topicIds } from "@/lib/work/topics";
 
 /** Social card for one Work answer: the question, the answer's title and its first line. */
@@ -39,7 +39,7 @@ export default async function Image({
       <OgQuestion>{copy.question}</OgQuestion>
       <div style={{ display: "flex", flexDirection: "column", marginTop: 40 }}>
         <OgTitle text={copy.title} max={92} />
-        <OgLead>{clampText(topicLead(topic, lang), 110)}</OgLead>
+        <OgLead>{clampText(topicIntro(topic, lang), 110)}</OgLead>
       </div>
     </OgFrame>,
     { ...size, fonts: await loadOgFonts() },

@@ -9,23 +9,22 @@ import { isExternalUrl } from "@/lib/utils";
 
 const AUTHOR_LINKS: SocialId[] = ["linkedin", "github", "email"];
 
-/** "Written by" at the end of a post: who Davi is and where to reach him. No card. */
+/** "Written by" at the end of a post: who Davi is and where to reach him, in two lines. No card. */
 export function AuthorCard({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
 
   return (
-    <section aria-labelledby="author-title" className="pt-2">
+    <section aria-labelledby="author-title">
       <h2 id="author-title" className="text-heading">
         {dict.blog.writtenBy}{" "}
         <Link href={routes.work(lang)} rel="author" className="link-underline">
           {profile.name}
         </Link>
       </h2>
-      <p className="mt-2 text-muted-foreground">
+      <p className="mt-1 text-muted-foreground">
         {t(profile.headline, lang)}, {t(profile.location.label, lang)}
       </p>
-      <p className="mt-4 max-w-[62ch]">{t(profile.valueProp, lang)}</p>
-      <ul className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <ul className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
         <li>
           <Link
             href={routes.work(lang)}

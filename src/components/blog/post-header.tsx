@@ -15,11 +15,10 @@ type PostHeaderProps = {
   translation?: PostMeta;
 };
 
-/** Short titles take the display size; long ones step down so they stay in a few lines. */
+/** Titles take the title size; long ones step down so they stay in two or three lines. */
 function titleClass(title: string) {
-  if (title.length <= 16) return "text-display";
   if (title.length <= 44) return "text-title";
-  return "text-[clamp(2rem,1.4rem+2.4vw,3rem)] leading-[1.08] font-medium tracking-[-0.02em]";
+  return "text-[clamp(1.75rem,1.4rem+1.6vw,2.5rem)] leading-[1.1] font-semibold tracking-[-0.03em]";
 }
 
 /** Way back to the writing, title, description and byline of an article. */
@@ -48,14 +47,14 @@ export function PostHeader({ post, translation }: PostHeaderProps) {
       <h1
         data-enter=""
         style={{ "--i": 0 } as CSSProperties}
-        className={cn("mt-10 sm:mt-14", titleClass(post.title))}
+        className={cn("mt-8 sm:mt-10", titleClass(post.title))}
       >
         {post.title}
       </h1>
       <p
         data-enter=""
         style={{ "--i": 1 } as CSSProperties}
-        className="mt-6 max-w-[56ch] text-lead text-muted-foreground"
+        className="mt-4 max-w-[56ch] text-lead text-muted-foreground"
       >
         {post.description}
       </p>
@@ -63,10 +62,10 @@ export function PostHeader({ post, translation }: PostHeaderProps) {
       <div
         data-enter=""
         style={{ "--i": 2 } as CSSProperties}
-        className="mt-8 flex flex-wrap items-baseline gap-x-6 gap-y-2 text-small text-muted-foreground"
+        className="mt-6 flex flex-wrap items-baseline gap-x-5 gap-y-2 text-small text-muted-foreground"
       >
         <p>
-          {dict.blog.writtenBy}{" "}
+          <span className="sr-only">{dict.blog.writtenBy} </span>
           <Link
             href={routes.work(lang)}
             rel="author"

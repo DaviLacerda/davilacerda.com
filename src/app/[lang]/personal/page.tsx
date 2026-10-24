@@ -4,10 +4,10 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { PostList } from "@/components/blog/post-list";
 import { RssLink } from "@/components/blog/rss-link";
-import { Widget } from "@/components/chat/widget";
 import { Elsewhere } from "@/components/personal/elsewhere";
 import { SideProjects } from "@/components/personal/side-projects";
 import { JsonLd } from "@/components/seo/json-ld";
+import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/container";
 import { profile } from "@/content/profile";
 import { getDictionary, interpolate, isLocale, t } from "@/i18n";
@@ -21,7 +21,6 @@ import {
   profilePageJsonLd,
   websiteJsonLd,
 } from "@/lib/seo";
-import { cn } from "@/lib/utils";
 
 type PageProps = { params: Promise<{ lang: string }> };
 
@@ -41,9 +40,9 @@ export async function generateMetadata({
 }
 
 /**
- * Personal tab: a reading layout. A first-person intro, then the writing
- * and the side projects, one column throughout; it closes on a panel with
- * where to find Davi online, like the Work tab closes on contact.
+ * Personal tab: a reading layout. The title and one first-person line, then
+ * the writing, the side projects (with their stacks' logos) and where to find
+ * Davi online, one column throughout and no panels.
  */
 export default async function PersonalPage({ params }: PageProps) {
   const { lang } = await params;
@@ -54,7 +53,7 @@ export default async function PersonalPage({ params }: PageProps) {
   const city = t(profile.location.city, lang);
 
   return (
-    <Container className="pt-10 sm:pt-20">
+    <Container className="pt-12 sm:pt-20">
       <JsonLd
         data={[
           personJsonLd(lang),
@@ -81,79 +80,77 @@ export default async function PersonalPage({ params }: PageProps) {
         >
           {intro.title}
         </h1>
-        <div className="mt-8 max-w-[62ch] space-y-5">
-          {intro.paragraphs.map((paragraph, index) => (
-            <p
-              key={index}
-              data-enter=""
-              style={{ "--i": index + 1 } as CSSProperties}
-              className={cn(index === 0 && "text-lead")}
-            >
-              {interpolate(paragraph, { city })}
-            </p>
-          ))}
-        </div>
+        <p
+          data-enter=""
+          style={{ "--i": 1 } as CSSProperties}
+          className="mt-4 max-w-[44ch] text-lead text-muted-foreground"
+        >
+          {interpolate(intro.lead, { city })}
+        </p>
       </section>
 
       <PersonalSection
         id="blog"
+        enter={2}
         title={sections.writing.title}
-        description={sections.writing.description}
+        aside={
+          posts.length > 0 ? (
+            <RssLink lang={lang} label={dict.blog.rss} className="text-small" />
+          ) : null
+        }
       >
-        <PostList posts={posts} lang={lang} />
-        {posts.length > 0 ? (
-          <RssLink lang={lang} label={dict.blog.rss} className="mt-8" />
-        ) : null}
+        <PostList posts={posts} lang={lang} enter={3} />
       </PersonalSection>
 
       <PersonalSection
         id="side-projects"
+        enter={4}
         title={sections.sideProjects.title}
-        description={sections.sideProjects.description}
       >
-        <SideProjects lang={lang} />
+        <SideProjects lang={lang} enter={5} />
       </PersonalSection>
 
-      <section
+      <PersonalSection
         id="elsewhere"
-        aria-labelledby="elsewhere-title"
-        className="mt-28 scroll-mt-8 sm:mt-36"
+        enter={6}
+        title={sections.elsewhere.title}
       >
-        <Widget className="sm:p-10">
-          <h2 id="elsewhere-title" className="text-heading">
-            {sections.elsewhere.title}
-          </h2>
-          <p className="mt-2 text-muted-foreground">
-            {sections.elsewhere.description}
-          </p>
-          <Elsewhere lang={lang} />
-        </Widget>
-      </section>
+        <Elsewhere lang={lang} enter={7} />
+      </PersonalSection>
     </Container>
   );
 }
 
 function PersonalSection({
   id,
+  enter,
   title,
-  description,
+  aside,
   children,
 }: {
   id: string;
+  /** Place of the heading row in the entrance (see `Reveal`). */
+  enter: number;
   title: string;
-  description: string;
+  /** A small action on the heading's line (the RSS link). */
+  aside?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className="mt-26 scroll-mt-8 pt-2 sm:mt-34"
+      className="mt-20 scroll-mt-8 sm:mt-24"
     >
-      <h2 id={`${id}-title`} className="text-heading">
-        {title}
-      </h2>
-      <p className="mt-2 text-muted-foreground">{description}</p>
+      <Reveal
+        enter={enter}
+        className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2"
+      >
+        <h2 id={`${id}-title`} className="text-heading">
+          {title}
+        </h2>
+        {aside}
+      </Reveal>
       {children}
     </section>
   );

@@ -11,10 +11,13 @@ import { profile } from "@/content/profile";
 
 /*
  * Shared design for the generated Open Graph / Twitter images: the site's
- * light theme on a 1200x630 card. White ground, ink type in Jost (the site's
+ * light theme on a 1200x630 card. White ground, ink type in Geist (the site's
  * only face), surface-grey pills for questions and suggestions, signal red
  * only on the send button. No gradients, rules or shadows. Fonts are bundled
- * static TTFs (Satori cannot read woff2), see ./fonts.
+ * static TTFs (Satori cannot read woff2), see ./fonts. Their kerning and
+ * ligature features are stripped: Satori draws kerned glyphs but spaces the
+ * words by unkerned widths, which opened visible gaps after words like
+ * "LATAM" or "Microsoft".
  */
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
@@ -32,12 +35,12 @@ export const ogColors = {
 } as const;
 
 const FONT_DIR = path.join(process.cwd(), "src/lib/og/fonts");
-const FAMILY = "Jost";
+const FAMILY = "Geist";
 
 type Font = {
   name: string;
   data: Buffer;
-  weight: 400 | 500;
+  weight: 400 | 500 | 600;
   style: "normal";
 };
 
@@ -46,11 +49,13 @@ let fontsPromise: Promise<Font[]> | undefined;
 /** Loads the bundled fonts once per process. */
 export function loadOgFonts(): Promise<Font[]> {
   fontsPromise ??= Promise.all([
-    readFile(path.join(FONT_DIR, "Jost-Regular.ttf")),
-    readFile(path.join(FONT_DIR, "Jost-Medium.ttf")),
-  ]).then(([regular, medium]) => [
+    readFile(path.join(FONT_DIR, "Geist-Regular.ttf")),
+    readFile(path.join(FONT_DIR, "Geist-Medium.ttf")),
+    readFile(path.join(FONT_DIR, "Geist-SemiBold.ttf")),
+  ]).then(([regular, medium, semibold]) => [
     { name: FAMILY, data: regular, weight: 400, style: "normal" },
     { name: FAMILY, data: medium, weight: 500, style: "normal" },
+    { name: FAMILY, data: semibold, weight: 600, style: "normal" },
   ]);
   return fontsPromise;
 }
@@ -137,19 +142,19 @@ export function clampText(text: string, max: number) {
  * Display title sized to its length so long post titles still fit in three
  * lines. `max` caps the size when something else shares the card.
  */
-export function OgTitle({ text, max = 112 }: { text: string; max?: number }) {
+export function OgTitle({ text, max = 104 }: { text: string; max?: number }) {
   const fontSize = Math.min(
     max,
-    text.length > 70 ? 64 : text.length > 42 ? 76 : text.length > 24 ? 92 : 112,
+    text.length > 70 ? 60 : text.length > 42 ? 70 : text.length > 24 ? 84 : 104,
   );
   return (
     <div
       style={{
         display: "flex",
-        fontWeight: 500,
+        fontWeight: 600,
         fontSize,
-        lineHeight: 1.02,
-        letterSpacing: "-0.03em",
+        lineHeight: 1.04,
+        letterSpacing: "-0.045em",
         color: ogColors.ink,
         maxWidth: 1040,
       }}
@@ -165,8 +170,9 @@ export function OgLead({ children }: { children: ReactNode }) {
       style={{
         display: "flex",
         marginTop: 24,
-        fontSize: 34,
+        fontSize: 32,
         lineHeight: 1.35,
+        letterSpacing: "-0.012em",
         color: ogColors.muted,
         maxWidth: 1000,
       }}

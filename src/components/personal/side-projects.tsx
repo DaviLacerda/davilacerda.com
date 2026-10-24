@@ -1,3 +1,5 @@
+import { StarIcon } from "@phosphor-icons/react/dist/ssr/Star";
+
 import { Reveal } from "@/components/motion/reveal";
 import { TagList } from "@/components/ui/tag";
 import { TextLink } from "@/components/ui/text-link";
@@ -5,10 +7,18 @@ import { getSocial, profile, type Project } from "@/content/profile";
 import { getDictionary, interpolate, t, type Locale } from "@/i18n";
 
 /**
- * Open-source and personal projects (`kind: "side"`), featured first: name
- * and stars on one line, what it is, then the stack as tags.
+ * Open-source and personal projects (`kind: "side"`), featured first, two
+ * columns from 640px: the name (a link) with its stars, one line on what it
+ * is, and the stack as tags with the technologies' logos.
  */
-export function SideProjects({ lang }: { lang: Locale }) {
+export function SideProjects({
+  lang,
+  enter,
+}: {
+  lang: Locale;
+  /** Place in the entrance (see `Reveal`). */
+  enter?: number;
+}) {
   const dict = getDictionary(lang);
   const projects = [...profile.projects]
     .filter((project) => project.kind === "side")
@@ -20,13 +30,14 @@ export function SideProjects({ lang }: { lang: Locale }) {
       <Reveal
         as="ul"
         stagger
-        className="mt-8 grid gap-x-10 gap-y-12 sm:grid-cols-2"
+        enter={enter}
+        className="mt-6 grid gap-x-10 gap-y-9 sm:grid-cols-2"
       >
         {projects.map((project) => (
-          <ProjectRow key={project.id} project={project} lang={lang} />
+          <ProjectItem key={project.id} project={project} lang={lang} />
         ))}
       </Reveal>
-      <p className="mt-10">
+      <p className="mt-9">
         <TextLink
           href={github.url}
           newTabLabel={dict.a11y.opensInNewTab}
@@ -39,7 +50,7 @@ export function SideProjects({ lang }: { lang: Locale }) {
   );
 }
 
-function ProjectRow({ project, lang }: { project: Project; lang: Locale }) {
+function ProjectItem({ project, lang }: { project: Project; lang: Locale }) {
   const dict = getDictionary(lang);
   const labels = dict.personal.sections.sideProjects;
   const href = project.repoUrl ?? project.liveUrl;
@@ -48,8 +59,8 @@ function ProjectRow({ project, lang }: { project: Project; lang: Locale }) {
 
   return (
     <li>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <h3 className="text-lead font-medium">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h3 className="font-semibold">
           {href ? (
             <TextLink href={href} newTabLabel={dict.a11y.opensInNewTab}>
               {name}
@@ -59,26 +70,33 @@ function ProjectRow({ project, lang }: { project: Project; lang: Locale }) {
           )}
         </h3>
         {project.stars !== undefined ? (
-          <p className="text-small text-muted-foreground">
-            {interpolate(labels.stars, { count: project.stars })}
+          <p className="inline-flex items-center gap-1 text-small text-muted-foreground">
+            <StarIcon aria-hidden="true" className="size-3.5 self-center" />
+            <span className="sr-only">
+              {interpolate(labels.stars, { count: project.stars })}
+            </span>
+            <span aria-hidden="true">{project.stars}</span>
           </p>
         ) : null}
+        {showLive && project.liveUrl ? (
+          <TextLink
+            href={project.liveUrl}
+            newTabLabel={dict.a11y.opensInNewTab}
+            className="text-small text-muted-foreground"
+          >
+            {labels.live}
+          </TextLink>
+        ) : null}
       </div>
-      <p className="mt-1">{t(project.description, lang)}</p>
-      {project.stack.length || showLive ? (
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-          <TagList items={project.stack} label={labels.stack} />
-          {showLive && project.liveUrl ? (
-            <TextLink
-              href={project.liveUrl}
-              newTabLabel={dict.a11y.opensInNewTab}
-              className="text-small"
-            >
-              {labels.live}
-            </TextLink>
-          ) : null}
-        </div>
-      ) : null}
+      <p className="mt-1 text-muted-foreground">
+        {t(project.description, lang)}
+      </p>
+      <TagList
+        items={project.stack}
+        label={labels.stack}
+        logos
+        className="mt-3"
+      />
     </li>
   );
 }

@@ -22,7 +22,7 @@ import {
   composerStrings,
   composerTopics,
   topicCopy,
-  topicLead,
+  topicIntro,
 } from "@/lib/work/answers";
 import { isTopicId, topicIds } from "@/lib/work/topics";
 
@@ -54,10 +54,10 @@ const TITLE_ID = "answer-title";
 
 /**
  * One answer of the Work assistant, e.g. `/en/work/experience`: the
- * question, then the answer (title, a direct first paragraph and its
- * predefined panels), then the composer to ask the next thing. Everything is
- * in the server HTML; `TurnProvider` only adds the chat-turn reveal when the
- * page was opened from the composer.
+ * question, then the answer (title, a one-sentence intro and its predefined
+ * blocks), then the composer to ask the next thing. Everything is in the
+ * server HTML; `TurnProvider` only adds the chat-turn reveal when the page
+ * was opened from the composer.
  */
 export default async function TopicPage({ params }: PageProps) {
   const { lang, topic } = await params;
@@ -68,7 +68,7 @@ export default async function TopicPage({ params }: PageProps) {
   const [first, ...rest] = topicBlocks(topic, lang);
 
   return (
-    <Container className="pt-8 sm:pt-14">
+    <Container className="pt-8 sm:pt-12">
       <JsonLd
         data={[
           personJsonLd(lang),
@@ -89,21 +89,23 @@ export default async function TopicPage({ params }: PageProps) {
       <TurnProvider focusId={TITLE_ID}>
         <section aria-labelledby={TITLE_ID}>
           <TurnQuestion question={copy.question} label={dict.chat.turn.you} />
-          <TurnPart index={1} className="mt-10 sm:mt-14">
+          <TurnPart index={1} className="mt-8 sm:mt-10">
             <h1 id={TITLE_ID} tabIndex={-1} className="text-title outline-none">
               {copy.title}
             </h1>
           </TurnPart>
-          <TurnPart index={2} className="mt-5">
-            <p className="max-w-[60ch] text-lead">{topicLead(topic, lang)}</p>
+          <TurnPart index={2} className="mt-3">
+            <p className="max-w-[52ch] text-lead text-muted-foreground">
+              {topicIntro(topic, lang)}
+            </p>
           </TurnPart>
           {first ? (
-            <TurnPart index={3} className="mt-10" build>
+            <TurnPart index={3} className="mt-12" build>
               {first}
             </TurnPart>
           ) : null}
           {rest.map((block, index) => (
-            <Reveal key={index} className="mt-4">
+            <Reveal key={index} enter={4 + index} className="mt-14">
               {block}
             </Reveal>
           ))}
@@ -112,14 +114,16 @@ export default async function TopicPage({ params }: PageProps) {
 
       <Reveal
         as="section"
+        stagger
+        enter={4 + rest.length}
         aria-labelledby="ask-next"
-        className="mt-26 pt-2 sm:mt-34"
+        className="mt-20 sm:mt-24"
       >
         <h2 id="ask-next" className="text-heading">
           {dict.chat.turn.askNext}
         </h2>
         <Composer
-          className="mt-6"
+          className="mt-5"
           action={routes.ask(lang)}
           topics={composerTopics(lang)}
           strings={composerStrings(lang)}

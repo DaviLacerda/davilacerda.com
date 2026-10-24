@@ -62,7 +62,11 @@ export function TurnProvider({
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
-/** The visitor's question, right-aligned, growing out of its bottom-right corner. */
+/**
+ * The visitor's question, right-aligned, growing out of its bottom-right
+ * corner. Marked `data-ui`: it is a chat message, not a label for the
+ * heading under it.
+ */
 export function TurnQuestion({
   question,
   label,
@@ -77,6 +81,7 @@ export function TurnQuestion({
 
   return (
     <m.div
+      data-ui=""
       data-enter=""
       style={{ "--i": 0, transformOrigin: "100% 100%" } as CSSProperties}
       initial={turn ? { opacity: 0, y: 8, scale: 0.96 } : false}
@@ -84,7 +89,7 @@ export function TurnQuestion({
       transition={{ duration: 0.2, ease: EASE_OUT }}
       className="flex justify-end"
     >
-      <p className="max-w-[85%] rounded-[1.375rem] rounded-br-md bg-surface px-5 py-3 text-[1.1875rem] leading-snug">
+      <p className="max-w-[85%] rounded-[1.375rem] rounded-br-md bg-surface px-5 py-3 leading-snug">
         <span className="sr-only">{label}: </span>
         {text}
       </p>

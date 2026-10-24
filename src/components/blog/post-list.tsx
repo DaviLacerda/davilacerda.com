@@ -6,14 +6,19 @@ import { getDictionary, type Locale } from "@/i18n";
 import { formatDate, toIsoDate } from "@/i18n/format";
 import type { PostMeta } from "@/lib/blog";
 
-type PostListProps = { posts: PostMeta[]; lang: Locale };
+type PostListProps = {
+  posts: PostMeta[];
+  lang: Locale;
+  /** Place in the entrance (see `Reveal`). */
+  enter?: number;
+};
 
 /**
  * The blog index: one row per post, newest first. Title and date share a
  * line, the description sits under it; the whole row is the link and takes
  * the surface fill on hover.
  */
-export function PostList({ posts, lang }: PostListProps) {
+export function PostList({ posts, lang, enter }: PostListProps) {
   const dict = getDictionary(lang);
   if (posts.length === 0) {
     return (
@@ -26,7 +31,7 @@ export function PostList({ posts, lang }: PostListProps) {
   }
 
   return (
-    <Reveal as="ol" stagger className="-mx-4 mt-6 sm:-mx-5">
+    <Reveal as="ol" stagger enter={enter} className="-mx-4 mt-6 sm:-mx-5">
       {posts.map((post) => (
         <li key={post.slug}>
           <Link

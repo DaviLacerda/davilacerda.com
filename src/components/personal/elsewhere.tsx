@@ -1,36 +1,73 @@
+import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
+import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/ssr/EnvelopeSimple";
+import type { ReactNode } from "react";
+
 import { Reveal } from "@/components/motion/reveal";
-import { profile } from "@/content/profile";
+import { BrandLogo } from "@/components/ui/logo";
+import { getSocial, profile, type SocialId } from "@/content/profile";
 import { getDictionary, type Locale } from "@/i18n";
-import { isExternalUrl } from "@/lib/utils";
+import type { LogoId } from "@/lib/logos";
+import { cn, isExternalUrl } from "@/lib/utils";
+
+const socialLogos: Partial<Record<SocialId, LogoId>> = {
+  github: "github",
+  linkedin: "linkedin",
+  instagram: "instagram",
+  discord: "discord",
+};
 
 /**
- * Where to find Davi online: the network with its handle, and a line on what
- * is there. Sits on a surface panel, so a row takes the page colour on hover.
+ * Where to find Davi online: one row per network with its logo, its name
+ * and the handle; the whole row is the link and takes the surface fill on
+ * hover. `children` adds rows that are not links (the time zone on Contact).
  */
-export function Elsewhere({ lang }: { lang: Locale }) {
+export function SocialList({
+  lang,
+  ids,
+  className,
+  enter,
+  children,
+}: {
+  lang: Locale;
+  ids: readonly SocialId[];
+  className?: string;
+  /** Place in the entrance; the rows then arrive one after another (see `Reveal`). */
+  enter?: number;
+  children?: ReactNode;
+}) {
   const dict = getDictionary(lang);
-  const notes = dict.personal.sections.elsewhere.notes;
 
   return (
     <Reveal
       as="ul"
       stagger
-      className="-mx-4 mt-6 grid gap-x-2 sm:-mx-5 lg:grid-cols-2"
+      enter={enter}
+      className={cn("-mx-3 grid gap-1 sm:-mx-4 sm:grid-cols-2", className)}
     >
-      {profile.socials.map((social) => {
+      {ids.map((id) => {
+        const social = getSocial(id);
         const external = isExternalUrl(social.url);
+        const logo = socialLogos[id];
         return (
-          <li key={social.id}>
+          <li key={id}>
             <a
               href={social.url}
               {...(external
                 ? { target: "_blank", rel: "me noopener noreferrer" }
                 : {})}
-              className="group block h-full rounded-xl px-4 py-4 transition-colors duration-150 ease-out hover:bg-background sm:px-5"
+              className="group flex items-center gap-3 rounded-surface px-3 py-2.5 transition-colors duration-150 ease-out hover:bg-surface sm:px-4"
             >
-              <span className="flex flex-wrap items-baseline justify-between gap-x-4">
-                <span className="text-lead font-medium">
-                  {dict.socials[social.id]}
+              {logo ? (
+                <BrandLogo id={logo} className="size-6" />
+              ) : (
+                <EnvelopeSimpleIcon
+                  aria-hidden="true"
+                  className="size-6 shrink-0 text-muted-foreground"
+                />
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">
+                  {dict.socials[id]}
                   {external ? (
                     <span className="sr-only">
                       {" "}
@@ -38,17 +75,33 @@ export function Elsewhere({ lang }: { lang: Locale }) {
                     </span>
                   ) : null}
                 </span>
-                <span className="text-small break-all text-muted-foreground transition-colors duration-150 group-hover:text-foreground">
+                <span className="block text-small break-all text-muted-foreground">
                   {social.handle}
                 </span>
               </span>
-              <span className="mt-0.5 block text-muted-foreground">
-                {notes[social.id]}
-              </span>
+              {external ? (
+                <ArrowUpRightIcon
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-muted-foreground transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
+                />
+              ) : null}
             </a>
           </li>
         );
       })}
+      {children}
     </Reveal>
+  );
+}
+
+/** Every network in the profile, for the Personal tab. */
+export function Elsewhere({ lang, enter }: { lang: Locale; enter?: number }) {
+  return (
+    <SocialList
+      lang={lang}
+      ids={profile.socials.map((social) => social.id)}
+      className="mt-4"
+      enter={enter}
+    />
   );
 }

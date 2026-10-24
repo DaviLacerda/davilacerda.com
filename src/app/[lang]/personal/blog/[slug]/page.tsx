@@ -1,6 +1,4 @@
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { AuthorCard } from "@/components/blog/author-card";
@@ -93,7 +91,7 @@ export default async function PostPage({ params }: PageProps) {
     post.updated && post.updated !== post.date ? post.updated : undefined;
 
   return (
-    <Container as="article" className="pt-8 sm:pt-14">
+    <Container as="article" className="pt-8 sm:pt-12">
       <LocaleAlternates links={alternates} />
       <JsonLd
         data={[
@@ -121,7 +119,11 @@ export default async function PostPage({ params }: PageProps) {
         enter={3}
       />
 
-      <Prose html={post.html} className="mt-12 [&>p:first-child]:text-lead" />
+      <Prose
+        html={post.html}
+        className="mt-12 [&>p:first-child]:text-lead"
+        enter={4}
+      />
 
       <footer>
         {post.tags.length > 0 || updated ? (
@@ -144,32 +146,20 @@ export default async function PostPage({ params }: PageProps) {
           </Reveal>
         ) : null}
 
-        <Reveal className="mt-24 sm:mt-28">
+        <Reveal className="mt-20 sm:mt-24">
           <AuthorCard lang={lang} />
+          <RssLink
+            lang={lang}
+            label={dict.blog.subscribe}
+            className="mt-4 text-small"
+          />
         </Reveal>
 
         {newer || older ? (
-          <Reveal className="mt-20">
+          <Reveal className="mt-16">
             <PostPager lang={lang} newer={newer} older={older} />
           </Reveal>
         ) : null}
-
-        <Reveal
-          stagger
-          className="mt-12 flex flex-wrap items-center justify-between gap-4"
-        >
-          <Link
-            href={routes.blog(lang)}
-            className="group inline-flex items-center gap-2 font-medium"
-          >
-            <ArrowLeftIcon
-              aria-hidden="true"
-              className="size-4 transition-transform duration-150 ease-out group-hover:-translate-x-0.5"
-            />
-            <span className="link-underline">{dict.blog.backToBlog}</span>
-          </Link>
-          <RssLink lang={lang} label={dict.blog.subscribe} />
-        </Reveal>
       </footer>
     </Container>
   );

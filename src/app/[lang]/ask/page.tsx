@@ -55,10 +55,13 @@ export default async function AskPage({ params }: PageProps) {
         <p
           data-enter=""
           style={{ "--i": 1 } as CSSProperties}
-          className="mt-5 max-w-[60ch] text-lead"
+          className="mt-3 max-w-[52ch] text-lead text-muted-foreground"
         >
-          {c.fallbackTitle} {before}
-          <a href={`mailto:${profile.email}`} className="link-underline">
+          {before}
+          <a
+            href={`mailto:${profile.email}`}
+            className="text-foreground link-underline"
+          >
             {profile.email}
           </a>
           {after}

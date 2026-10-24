@@ -12,9 +12,14 @@
  * - Dates are strings: "YYYY", "YYYY-MM" or "YYYY-MM-DD" (see `@/i18n/format`).
  *   For ranges, `end: null` means "present" and an omitted field means unknown
  *   (render nothing for it).
+ * - Logos (`logo`): a bundled brand logo id (see `src/lib/logos/registry.ts`)
+ *   or a file you add under /public, e.g. `logo: "/logos/algar.svg"` (an SVG,
+ *   or a square PNG of at least 96px). Without one the UI shows the name's
+ *   initial on a tile.
  */
 import type { L10n, Localizable } from "@/i18n";
 import type { PartialDate } from "@/i18n/format";
+import type { LogoSource } from "@/lib/logos";
 
 export type SocialId =
   "github" | "linkedin" | "instagram" | "discord" | "email";
@@ -38,6 +43,8 @@ export type Experience = {
   id: string;
   company: Localizable;
   companyUrl?: string;
+  /** Company logo (see the rules above). */
+  logo?: LogoSource;
   /** Role for the whole tenure (e.g. "AI Engineer"). No seniority levels or formal titles. */
   role: L10n;
   /** Whole tenure at the company. Omitted = unknown. */
@@ -93,6 +100,8 @@ export type Certification = {
   kind: "certification" | "course";
   /** e.g. "Expert" for Microsoft Certified: ... Expert. */
   level?: string;
+  /** Logo shown beside it: the product line or the issuer. */
+  logo?: LogoSource;
   /** Completion/issue date. Omitted = unknown. */
   date?: PartialDate;
   credentialUrl?: string;
@@ -105,6 +114,8 @@ export type Education = {
   /** Common abbreviation, e.g. "UFU". */
   shortName?: string;
   url?: string;
+  /** Institution logo (see the rules above). */
+  logo?: LogoSource;
   degree: L10n;
   field: L10n;
   start?: PartialDate;
@@ -306,6 +317,7 @@ export const profile: Profile = {
       id: "algar",
       company: "Algar",
       companyUrl: "https://www.algar.com.br", // TODO(davi): confirm URL.
+      // TODO(davi): add /public/logos/algar.svg and set logo: "/logos/algar.svg".
       role: { en: "AI Engineer", "pt-br": "Engenheiro de IA" },
       start: "2024-08",
       end: null,
@@ -350,6 +362,7 @@ export const profile: Profile = {
     {
       id: "brain",
       company: "Brain (Centro de Inovação em Negócios Digitais)",
+      // TODO(davi): add /public/logos/brain.svg and set logo: "/logos/brain.svg".
       role: {
         en: "Research & Development Intern",
         "pt-br": "Estagiário de Pesquisa e Desenvolvimento",
@@ -626,6 +639,7 @@ export const profile: Profile = {
       issuerUrl: "https://learn.microsoft.com/credentials/",
       kind: "certification",
       level: "Expert",
+      logo: "azure",
       date: "2026-10",
       // TODO(davi): add the credential URL.
       description: {
@@ -641,6 +655,7 @@ export const profile: Profile = {
       issuerUrl: "https://learn.microsoft.com/credentials/",
       kind: "certification",
       level: "Expert",
+      logo: "azure",
       date: "2026-08",
       // TODO(davi): add the credential URL.
       description: {
@@ -652,6 +667,7 @@ export const profile: Profile = {
     // TODO(davi): a third certification was announced in June 2026; add its name, issuer and credential URL.
     {
       id: "rocketseat-ignite-react",
+      // TODO(davi): add /public/logos/rocketseat.svg and set logo on the Rocketseat entries.
       name: "Ignite: React",
       issuer: "Rocketseat",
       issuerUrl: "https://www.rocketseat.com.br",
@@ -665,6 +681,7 @@ export const profile: Profile = {
     },
     {
       id: "alura-imersao-react",
+      // TODO(davi): add /public/logos/alura.svg and set logo: "/logos/alura.svg".
       name: "Imersão React",
       issuer: "Alura",
       issuerUrl: "https://www.alura.com.br",
@@ -702,6 +719,7 @@ export const profile: Profile = {
       },
       shortName: "UFU",
       url: "https://ufu.br",
+      // TODO(davi): add /public/logos/ufu.svg and set logo: "/logos/ufu.svg".
       degree: { en: "Bachelor's degree", "pt-br": "Bacharelado" }, // TODO(davi): confirm degree type.
       field: { en: "Computer Science", "pt-br": "Ciência da Computação" },
       // TODO(davi): confirm start and graduation years.

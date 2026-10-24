@@ -58,22 +58,24 @@ export const ptBr: Dictionary = {
 
   chat: {
     home: {
-      lead: "{role} na {company}, em {place}. Constrói produtos de IA Generativa e agentes de IA de ponta a ponta.",
-      summaryTitle: "Em resumo",
-      glanceTitle: "Em destaque",
-      topicsTitle: "O que você pode perguntar",
+      lead: "{role} na {company}, em {place}, construindo produtos de IA generativa e agentes.",
+      highlightsTitle: "Destaques",
+      role: "{role} na {company}",
+      award: "{issuer}, com o {project}",
+      experts: "{count}× Microsoft Certified Expert",
+      expertsDetail: "IA multiagente e agêntica",
     },
     composer: {
       label: "Faça uma pergunta sobre o trabalho do Davi",
-      placeholder: "Pergunte sobre o Davi",
+      placeholder: "Pergunte sobre o trabalho do Davi",
       submit: "Perguntar",
       suggestions: "Sugestões de perguntas",
       bestMatch: "Tema mais próximo: {topic}",
-      noMatch: "Nenhum tema ainda. Tente uma das sugestões.",
-      note: "Um assistente guiado sobre o perfil verificado do Davi. Todas as respostas são escritas com antecedência; nenhum modelo responde ao vivo.",
-      fallbackTitle: "Ainda não tenho uma resposta escrita para isso.",
+      noMatch: "Nenhum tema ainda. Tente uma sugestão.",
+      note: "Respostas pré-escritas a partir do perfil verificado, sem modelo ao vivo.",
+      fallbackTitle: "Ainda não há resposta escrita para isso.",
       fallbackBody:
-        "Posso responder sobre os temas abaixo. Para qualquer outra coisa, escreva para o Davi em {email}.",
+        "Tente uma sugestão abaixo ou escreva para o Davi em {email}.",
       dismiss: "Fechar",
     },
     turn: {
@@ -89,6 +91,8 @@ export const ptBr: Dictionary = {
         description:
           "Davi Lacerda é Engenheiro de IA na Algar desde agosto de 2024, depois de um estágio de pesquisa e desenvolvimento no Brain. Datas, escopo e o que ele entregou.",
         summary: "A função na Algar e o estágio antes dela.",
+        intro:
+          "{role} na {company} desde {since}, depois de um estágio no {prevCompany}.",
       },
       "sales-copilot": {
         chip: "Sales Copilot",
@@ -98,6 +102,8 @@ export const ptBr: Dictionary = {
         description:
           "O copiloto de IA que Davi Lacerda construiu de ponta a ponta para os times de vendas da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
         summary: "O copiloto premiado que ele construiu de ponta a ponta.",
+        intro:
+          "Um copiloto de IA para os times de vendas da Algar, construído de ponta a ponta pelo Davi como principal desenvolvedor.",
       },
       certifications: {
         chip: "Certificações",
@@ -107,6 +113,8 @@ export const ptBr: Dictionary = {
         description:
           "Davi Lacerda tem duas certificações Microsoft de nível Expert, em soluções de IA multiagente e arquitetura de IA agêntica, além de cursos de React.",
         summary: "Duas credenciais Microsoft Expert, e cursos.",
+        intro:
+          "Duas certificações Microsoft de nível Expert, em IA multiagente e agêntica.",
       },
       skills: {
         chip: "Habilidades",
@@ -116,6 +124,8 @@ export const ptBr: Dictionary = {
         description:
           "Com o que Davi Lacerda trabalha: LLMs e agentes, RAG, machine learning, back-end, front-end, cloud e entrega.",
         summary: "LLMs, agentes, RAG e todo o stack ao redor.",
+        intro:
+          "IA Generativa e agentes no Azure, em TypeScript e Python, com todo o stack ao redor.",
       },
       education: {
         chip: "Formação",
@@ -125,6 +135,8 @@ export const ptBr: Dictionary = {
         description:
           "Davi Lacerda estudou Ciência da Computação na Universidade Federal de Uberlândia (UFU). Disciplinas, TCC e os idiomas em que ele trabalha.",
         summary: "Ciência da Computação na UFU, e idiomas.",
+        intro:
+          "Ciência da Computação na Universidade Federal de Uberlândia (UFU).",
       },
       faq: {
         chip: "Perguntas",
@@ -134,6 +146,7 @@ export const ptBr: Dictionary = {
         description:
           "Respostas curtas sobre Davi Lacerda: o que ele faz, se está aberto a vagas, o stack, o Sales Copilot, certificações, onde mora e formação.",
         summary: "Respostas curtas para o que recrutadores mais perguntam.",
+        intro: "Respostas curtas para o que recrutadores mais perguntam.",
       },
       contact: {
         chip: "Contato",
@@ -143,6 +156,8 @@ export const ptBr: Dictionary = {
         description:
           "Davi Lacerda está aberto a vagas de Engenheiro de IA, presenciais ou híbridas em Uberlândia e remotas. Mande um e-mail ou encontre ele no LinkedIn.",
         summary: "E-mail, LinkedIn e disponibilidade.",
+        intro:
+          "Aberto a vagas de Engenheiro de IA. O e-mail é o jeito mais rápido de falar com ele.",
       },
     },
     answers: {
@@ -152,7 +167,7 @@ export const ptBr: Dictionary = {
       },
       salesCopilot: {
         award: "Prêmio",
-        builtBy: "Construído de ponta a ponta pelo principal desenvolvedor",
+        builtBy: "Construído de ponta a ponta",
         layers: {
           frontEnd: {
             title: "Front-end",
@@ -184,9 +199,6 @@ export const ptBr: Dictionary = {
         degree: "Grau",
         institution: "Instituição",
         location: "Local",
-      },
-      faq: {
-        lead: "Respostas curtas para o que recrutadores e colaboradores mais perguntam.",
       },
       contact: {
         emailCta: "Mandar um e-mail",
@@ -264,12 +276,8 @@ export const ptBr: Dictionary = {
       title: "Fora do expediente",
       description:
         "Textos, experimentos e coisas que eu construo por diversão.",
-      // TODO(davi): deixe estes parágrafos com a sua cara (hobbies e a vida longe do teclado).
-      paragraphs: [
-        "Oi, eu sou o Davi. Moro em {city}, no Triângulo Mineiro, onde estudei Ciência da Computação e onde hoje construo produtos de IA. Esta é a outra metade do site: menos currículo, mais o que eu construo e escrevo no meu tempo livre.",
-        "Gosto de construir em público. A maioria dos meus projetos pessoais nasceu de pequenas vontades: um sorteador de episódios porque vivo revendo minhas séries favoritas, meus próprios temas para o VS Code porque passo o dia num editor, um quadro branco no estilo FigJam feito com React Flow.",
-        "Ultimamente também tenho escrito: notas sobre engenharia de IA. Espere agentes e sistemas multiagente, RAG, Model Context Protocol, Azure AI e o que é preciso para rodar IA Generativa em produção.",
-      ],
+      // TODO(davi): deixe esta frase com a sua cara (hobbies e a vida longe do teclado).
+      lead: "Oi, eu sou o Davi. O que eu construo e escrevo no meu tempo livre, em {city}.",
     },
     sections: {
       writing: {
@@ -290,13 +298,6 @@ export const ptBr: Dictionary = {
       elsewhere: {
         title: "Em outros lugares",
         description: "Pode dar um oi onde preferir.",
-        notes: {
-          github: "Código, projetos pessoais e experimentos",
-          linkedin: "Novidades da carreira e rede profissional",
-          instagram: "A vida fora do editor",
-          discord: "Papo sobre IA, código ou qualquer outra coisa",
-          email: "O melhor jeito de falar comigo, sobre qualquer assunto",
-        },
       },
     },
   },
