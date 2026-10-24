@@ -1,0 +1,534 @@
+@import "tailwindcss";
+
+/*
+ * Design system for davilacerda.com
+ * ---------------------------------
+ * 1. Tokens (CSS variables) for light and dark themes. next-themes toggles the
+ *    `.dark` class on <html>; system preference is the default.
+ * 2. Tailwind theme mapping: bg-background, text-foreground, text-muted-foreground,
+ *    border-border, text-accent, bg-accent-subtle, font-display, text-display, max-w-page...
+ * 3. Base styles, focus rings, selection and reduced motion.
+ * 4. Components: site backdrop (top glow), body grain and `.markdown` (blog prose + code).
+ *
+ * Contrast (WCAG): foreground/background 17:1 (light) and 16:1 (dark);
+ * muted-foreground >= 6:1 and accent >= 7:1 on background in both themes.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+ * 1. Tokens
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* Warm paper neutrals with an ink foreground. */
+  --background: oklch(0.985 0.004 95); /* #fbfaf7 */
+  --foreground: oklch(0.21 0.014 285); /* #17171f */
+  --surface: oklch(0.995 0.002 95); /* cards, code blocks */
+  --muted: oklch(0.958 0.005 95); /* subtle fills */
+  --muted-foreground: oklch(0.49 0.014 285); /* secondary text, 6.1:1 */
+  --border: oklch(0.905 0.006 95);
+  --border-strong: oklch(0.82 0.008 95);
+
+  /* Brand violet (the logo is #5b21b6), tuned per theme for AA contrast. */
+  --accent: oklch(0.46 0.2 293); /* ~#5f2fbd, 7.3:1 on background */
+  --accent-foreground: oklch(0.985 0.004 95); /* text on accent fills */
+  --accent-subtle: oklch(
+    0.945 0.028 293
+  ); /* tinted fills, highlighted code lines */
+
+  --ring: var(--accent);
+  --selection: color-mix(in oklch, var(--accent) 18%, transparent);
+  --grain-opacity: 0.045;
+  --glow-strength: 9%;
+
+  color-scheme: light;
+}
+
+.dark {
+  /* Deep ink neutrals, slightly violet. */
+  --background: oklch(0.165 0.008 285); /* #0e0e12 */
+  --foreground: oklch(0.94 0.006 285); /* #eaebef */
+  --surface: oklch(0.19 0.009 285);
+  --muted: oklch(0.205 0.01 285);
+  --muted-foreground: oklch(0.72 0.012 285); /* 7.7:1 */
+  --border: oklch(0.285 0.012 285);
+  --border-strong: oklch(0.37 0.014 285);
+
+  --accent: oklch(0.78 0.12 292); /* ~#b9a9fe, 9.3:1 on background */
+  --accent-foreground: oklch(0.17 0.01 285);
+  --accent-subtle: oklch(0.27 0.05 292);
+
+  --selection: color-mix(in oklch, var(--accent) 28%, transparent);
+  --grain-opacity: 0.035;
+  --glow-strength: 12%;
+
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Tailwind theme
+ * ------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-ring: var(--ring);
+
+  --font-sans:
+    var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@theme {
+  /* Fluid type scale (360px -> 1280px). Pair display sizes with font-display. */
+  --text-display: clamp(3rem, 1.95rem + 4.7vw, 6rem);
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.025em;
+  --text-h1: clamp(2.5rem, 1.85rem + 2.9vw, 4.25rem);
+  --text-h1--line-height: 1.02;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: clamp(2rem, 1.6rem + 1.75vw, 3rem);
+  --text-h2--line-height: 1.08;
+  --text-h2--letter-spacing: -0.015em;
+  --text-h3: clamp(1.375rem, 1.22rem + 0.7vw, 1.75rem);
+  --text-h3--line-height: 1.2;
+  --text-h3--letter-spacing: -0.01em;
+  --text-lead: clamp(1.125rem, 1.06rem + 0.3vw, 1.3125rem);
+  --text-lead--line-height: 1.6;
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1rem;
+  --text-eyebrow--letter-spacing: 0.14em;
+
+  /* Container widths: max-w-content (reading), max-w-page (default), max-w-wide. */
+  --container-content: 42rem;
+  --container-page: 70rem;
+  --container-wide: 80rem;
+
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Entrance animations. Stagger with style={{ animationDelay: "120ms" }}. */
+  --animate-fade-up: fade-up 0.7s var(--ease-editorial) both;
+  --animate-fade-in: fade-in 0.6s ease-out both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* Page gutter + max width. Prefer the <Container> component. */
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: var(--container-page);
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* Understated underline that turns accent on hover. */
+@utility link-underline {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+  transition:
+    text-decoration-color 0.2s ease,
+    color 0.2s ease;
+  &:hover {
+    text-decoration-color: var(--accent);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Base
+ * ------------------------------------------------------------------------- */
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  html {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    min-height: 100dvh;
+    position: relative;
+    isolation: isolate;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--selection);
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Components
+ * ------------------------------------------------------------------------- */
+
+@layer components {
+  /* Fixed decorative layer behind the page: accent glow + film grain. */
+  /* Decorative accent glow at the top of the page (scrolls away with it). */
+  .site-backdrop {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 60rem;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        60rem 30rem at 12% -10rem,
+        color-mix(in oklch, var(--accent) var(--glow-strength), transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        42rem 26rem at 100% -4rem,
+        color-mix(
+          in oklch,
+          var(--accent) calc(var(--glow-strength) * 0.55),
+          transparent
+        ),
+        transparent 70%
+      );
+    mask-image: linear-gradient(to bottom, #000 50%, transparent);
+  }
+
+  /* Film grain over the whole viewport, behind content. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .dark body::before {
+    filter: invert(1);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Markdown prose (blog posts). Wrap rendered HTML in `.markdown`.
+   * ----------------------------------------------------------------------- */
+  .markdown {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: color-mix(in oklch, var(--foreground) 90%, var(--background));
+  }
+
+  .markdown > * + * {
+    margin-top: 1.25em;
+  }
+
+  .markdown :where(h2, h3, h4) {
+    color: var(--foreground);
+    scroll-margin-top: 6rem;
+  }
+
+  .markdown h2 {
+    margin-top: 2.25em;
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  .markdown h3 {
+    margin-top: 2em;
+    font-size: 1.1875rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .markdown h4 {
+    margin-top: 1.75em;
+    font-weight: 600;
+  }
+
+  .markdown :where(h2, h3, h4) + * {
+    margin-top: 0.75em;
+  }
+
+  .markdown .heading-anchor {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .markdown .heading-anchor::after {
+    content: "#";
+    margin-left: 0.35em;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .markdown :where(h2, h3, h4):hover .heading-anchor::after,
+  .markdown .heading-anchor:focus-visible::after {
+    opacity: 1;
+  }
+
+  .markdown a:not(.heading-anchor) {
+    color: var(--foreground);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.22em;
+    text-decoration-color: color-mix(in oklch, var(--accent) 55%, transparent);
+    transition: text-decoration-color 0.2s ease;
+  }
+
+  .markdown a:not(.heading-anchor):hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .markdown strong {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  .markdown :where(ul, ol) {
+    padding-left: 1.4em;
+  }
+
+  .markdown ul {
+    list-style-type: disc;
+  }
+
+  .markdown ol {
+    list-style-type: decimal;
+  }
+
+  .markdown li + li {
+    margin-top: 0.4em;
+  }
+
+  .markdown li::marker {
+    color: var(--muted-foreground);
+  }
+
+  .markdown .contains-task-list {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .markdown .task-list-item input {
+    margin-right: 0.5em;
+    accent-color: var(--accent);
+  }
+
+  .markdown blockquote {
+    border-left: 2px solid var(--accent);
+    padding-left: 1.25em;
+    font-family: var(--font-display);
+    font-size: 1.375em;
+    font-style: italic;
+    line-height: 1.45;
+    color: var(--foreground);
+  }
+
+  .markdown hr {
+    margin-block: 3em;
+    border: 0;
+    height: 1px;
+    background-color: var(--border);
+  }
+
+  .markdown img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+  }
+
+  .markdown table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+
+  .markdown :where(th, td) {
+    border-bottom: 1px solid var(--border);
+    padding: 0.6em 0.9em;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .markdown th {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  .markdown :not(pre) > code {
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background-color: var(--muted);
+    padding: 0.1em 0.35em;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--foreground);
+  }
+
+  .markdown kbd {
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 0.375rem;
+    padding: 0.05em 0.4em;
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+  }
+
+  .markdown .footnotes {
+    margin-top: 3em;
+    border-top: 1px solid var(--border);
+    padding-top: 1.5em;
+    font-size: 0.9375rem;
+    color: var(--muted-foreground);
+  }
+
+  /* Code blocks (rehype-pretty-code + Shiki, dual light/dark themes). */
+  .markdown figure[data-rehype-pretty-code-figure] {
+    margin-block: 1.75em;
+  }
+
+  .markdown pre {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.875rem;
+    background-color: var(--surface);
+    padding-block: 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    tab-size: 2;
+  }
+
+  .markdown pre > code {
+    display: grid;
+    min-width: max-content;
+  }
+
+  .markdown pre [data-line] {
+    padding-inline: 1.25rem;
+    border-left: 2px solid transparent;
+  }
+
+  .markdown pre [data-highlighted-line] {
+    background-color: var(--accent-subtle);
+    border-left-color: var(--accent);
+  }
+
+  .markdown pre [data-highlighted-chars] {
+    border-radius: 0.25rem;
+    background-color: var(--accent-subtle);
+    padding: 0.1em 0.2em;
+  }
+
+  .markdown [data-rehype-pretty-code-title] {
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: 0.875rem 0.875rem 0 0;
+    background-color: var(--muted);
+    padding: 0.55rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+  }
+
+  .markdown [data-rehype-pretty-code-title] + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  .markdown [data-rehype-pretty-code-caption] {
+    margin-top: 0.6rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+
+  .markdown code[data-theme],
+  .markdown code[data-theme] span {
+    color: var(--shiki-light);
+  }
+
+  .dark .markdown code[data-theme],
+  .dark .markdown code[data-theme] span {
+    color: var(--shiki-dark);
+  }
+}

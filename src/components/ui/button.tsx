@@ -1,56 +1,89 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import Link from "next/link";
+import type { ComponentPropsWithoutRef } from "react";
 
-import { cn } from "@/lib/utils"
+import { cn, isExternalUrl } from "@/lib/utils";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
+type Variant = "primary" | "accent" | "outline" | "ghost";
+type Size = "sm" | "md" | "lg";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+const base =
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-[background-color,color,border-color,transform] duration-200 ease-editorial active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0";
+
+const variants: Record<Variant, string> = {
+  primary: "bg-foreground text-background hover:bg-foreground/85",
+  accent: "bg-accent text-accent-foreground hover:bg-accent/90",
+  outline:
+    "border border-border-strong bg-surface/60 text-foreground hover:border-foreground/40 hover:bg-muted",
+  ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+};
+
+const sizes: Record<Size, string> = {
+  sm: "h-8 px-3 text-sm",
+  md: "h-10 px-5 text-[0.9375rem]",
+  lg: "h-12 px-6 text-base",
+};
+
+/** Class names for button-styled elements (use on any element). */
+export function buttonVariants({
+  variant = "primary",
+  size = "md",
+  className,
+}: { variant?: Variant; size?: Size; className?: string } = {}) {
+  return cn(base, variants[variant], sizes[size], className);
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
+type ButtonProps = ComponentPropsWithoutRef<"button"> & {
+  variant?: Variant;
+  size?: Size;
+};
+
+export function Button({
+  variant,
+  size,
+  className,
+  type = "button",
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={buttonVariants({ variant, size, className })}
+      {...props}
+    />
+  );
+}
+
+type ButtonLinkProps = Omit<ComponentPropsWithoutRef<"a">, "href"> & {
+  href: string;
+  variant?: Variant;
+  size?: Size;
+};
+
+/**
+ * Link styled as a button. Internal paths use next/link; external URLs open in
+ * a new tab with `rel="noopener noreferrer"`; mailto:/tel: render a plain <a>.
+ */
+export function ButtonLink({
+  href,
+  variant,
+  size,
+  className,
+  ...props
+}: ButtonLinkProps) {
+  const classes = buttonVariants({ variant, size, className });
+  if (isExternalUrl(href)) {
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={classes}
         {...props}
       />
-    )
+    );
   }
-)
-Button.displayName = "Button"
-
-export { Button, buttonVariants }
+  if (!href.startsWith("/") && !href.startsWith("#")) {
+    return <a href={href} className={classes} {...props} />;
+  }
+  return <Link href={href} className={classes} {...props} />;
+}

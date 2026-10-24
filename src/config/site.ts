@@ -1,17 +1,42 @@
+/**
+ * Site-wide constants that are not localized. Localized copy lives in the
+ * dictionaries (`src/i18n/dictionaries`), facts about Davi in
+ * `src/content/profile.ts`.
+ */
 export const siteConfig = {
-    name: "Davi Lacerda",
-    url: "https://davilacerda.com",
-    description: {
-        en: "Davi Lacerda is a developer with knowledge in Next.js, React, TypeScript, Tailwind CSS, and more. Currently undergraduate student in Computer Science at the Federal University of Uberlândia(UFU).",
-        "pt-br": "Davi Lacerda é um desenvolvedor com conhecimentos em Next.js, React, TypeScript, Tailwind CSS, e mais. Atualmente estudante de graduação em Ciência da Computação na Universidade Federal de Uberlândia(UFU).",
-    },
-    links: {
-        github: "https://github.com/davilacerda",
-        linkedin: "https://www.linkedin.com/in/davi16lacerda/",
-        instagram: "https://www.instagram.com/davi16lacerda/",
-        email: "mailto:davi16lacerda@gmail.com",
-    },
-    ogImage: "https://davilacerda.com/images/og.png",
-};
+  name: "Davi Lacerda",
+  /** Canonical origin, no trailing slash. */
+  url: "https://davilacerda.com",
+  /** Brand violet, used for `theme-color`, manifest and OG images. */
+  brandColor: "#5b21b6",
+  themeColor: {
+    light: "#fbfaf7",
+    dark: "#0e0e12",
+  },
+  /** Keywords shared by every page (pages may add their own). */
+  keywords: [
+    "Davi Lacerda",
+    "AI Engineer",
+    "LLM Engineer",
+    "Generative AI",
+    "RAG",
+    "Retrieval-Augmented Generation",
+    "AI agents",
+    "Agentic AI",
+    "Multi-agent systems",
+    "Model Context Protocol",
+    "LLM applications",
+    "Azure",
+    "AI SDK",
+    "Machine Learning",
+    "TypeScript",
+    "Python",
+    "Next.js",
+    "Uberlândia",
+    "Brazil",
+    "Engenheiro de IA",
+    "IA Generativa",
+  ],
+} as const;
 
 export type SiteConfig = typeof siteConfig;

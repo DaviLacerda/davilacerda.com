@@ -1,36 +1,29 @@
 # davilacerda.com
 
-My portfolio built with Next.js, TypeScript, Tailwind CSS and shadcn/ui.
+Personal site of Davi Lacerda, AI Engineer. Bilingual (English and Brazilian Portuguese),
+light and dark themes, statically generated with Next.js and deployed on Vercel.
 
-![OG Image](public/images/og.png)
+## Stack
 
-## Technologies 👾
+- [Next.js 16](https://nextjs.org/) (App Router) and React 19
+- TypeScript (strict)
+- [Tailwind CSS v4](https://tailwindcss.com/) and next-themes
+- Markdown blog with unified, remark, rehype and Shiki
 
-* [NextJS](https://nextjs.org/)
-* [Typescript](https://www.typescriptlang.org/)
-* [Tailwind](https://tailwindcss.com/)
-* [shadcn/ui](https://ui.shadcn.com/)
+## Getting started
 
-## Getting started 🚀
-
-### Clone Repository 👩‍💻
-
-Clone the project on your computer and see how it works
-
-```
-  git clone https://github.com/DaviLacerda/davilacerda.com.git
-  cd davilacerda.com
+```bash
+yarn install
+yarn dev        # http://localhost:3000
+yarn build      # production build
+yarn lint       # ESLint
+yarn typecheck  # TypeScript
 ```
 
-After that, to run project, run this commands:
+## Writing posts
 
-##### yarn
-```
-  yarn install
-  yarn build
-  yarn start
-```
+See [content/blog/README.md](content/blog/README.md).
 
-## Deployment
+## Project structure
 
-Visit https://davilacerda.com/ to view the website.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for folders, design tokens, components and conventions.
