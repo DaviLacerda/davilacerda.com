@@ -76,7 +76,7 @@ export default async function PersonalPage({ params }: PageProps) {
           id="personal-title"
           data-enter=""
           style={{ "--i": 0 } as CSSProperties}
-          className="text-display"
+          className="text-hero text-display"
         >
           {intro.title}
         </h1>

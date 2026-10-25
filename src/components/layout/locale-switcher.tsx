@@ -53,7 +53,7 @@ export function LocaleSwitcher({
         document.cookie = `${LOCALE_COOKIE}=${target}; path=/; max-age=31536000; samesite=lax`;
       }}
       className={cn(
-        "inline-flex h-10 min-w-10 pressable items-center justify-center rounded-full px-2 text-small font-medium text-muted-foreground hover:bg-surface hover:text-foreground",
+        "inline-flex h-10 min-w-10 pressable items-center justify-center rounded-full px-2 text-small font-semibold text-muted-foreground hover:bg-surface hover:text-foreground",
         className,
       )}
     >

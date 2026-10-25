@@ -10,7 +10,7 @@ export const siteConfig = {
   /** Page backgrounds, used for `theme-color` and the manifest. */
   themeColor: {
     light: "#ffffff",
-    dark: "#0a0a0a",
+    dark: "#000000",
   },
   /** Keywords shared by every page (pages may add their own). */
   keywords: [

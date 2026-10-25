@@ -41,7 +41,14 @@ export function SiteHeader({ lang }: { lang: Locale }) {
 
         <div className="-mr-2 flex items-center">
           <LocaleSwitcher lang={lang} label={dict.locale.switchTo} />
-          <ThemeToggle label={dict.theme.toggle} />
+          <ThemeToggle
+            label={dict.theme.toggle}
+            names={{
+              system: dict.theme.system,
+              light: dict.theme.light,
+              dark: dict.theme.dark,
+            }}
+          />
         </div>
       </Container>
     </header>

@@ -116,7 +116,7 @@ export function PanelArrow({ className }: { className?: string }) {
     <ArrowRightIcon
       aria-hidden="true"
       className={cn(
-        "size-5 shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5",
+        "size-5 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-0.5",
         className,
       )}
     />
@@ -156,7 +156,7 @@ export function Disclosure({
     <details className={cn("disclosure group", className)}>
       <summary
         className={cn(
-          "inline-flex h-9 pressable items-center gap-1.5 rounded-full pr-3 pl-4 text-small font-medium transition-colors duration-150 ease-out",
+          "inline-flex h-9 pressable items-center gap-1.5 rounded-full pr-3 pl-4 text-small font-medium transition-colors duration-200 ease-out",
           tone === "ink"
             ? "bg-on-ink/12 hover:bg-on-ink/20"
             : tone === "surface"

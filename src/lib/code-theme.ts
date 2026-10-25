@@ -2,9 +2,10 @@ import type { ThemeRegistrationRaw } from "shiki";
 
 /*
  * Code highlighting in the site's monochrome palette: ink for code, weight
- * for keywords, a softer grey for strings and literals, the muted grey in
- * italics for comments, and muted punctuation. Every colour passes WCAG AA on
- * the code block's surface (#f4f4f4 light, #161616 dark).
+ * for keywords, a softer grey for strings and literals, the muted grey for
+ * comments (no italics anywhere on the site), and muted punctuation. Every
+ * colour passes WCAG AA on the code block's surface (#f4f4f4 light, #181818
+ * dark).
  */
 
 type Palette = {
@@ -27,7 +28,7 @@ function inkTheme(name: string, type: "light" | "dark", c: Palette) {
       { settings: { foreground: c.ink } },
       {
         scope: ["comment", "punctuation.definition.comment"],
-        settings: { foreground: c.muted, fontStyle: "italic" },
+        settings: { foreground: c.muted, fontStyle: "" },
       },
       {
         scope: [
@@ -84,6 +85,6 @@ export const codeThemes = {
     ink: "#ededed",
     soft: "#c2c2c2",
     muted: "#a1a1a1",
-    surface: "#161616",
+    surface: "#181818",
   }),
 };

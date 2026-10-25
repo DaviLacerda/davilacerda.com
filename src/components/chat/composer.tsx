@@ -211,7 +211,7 @@ export function Composer({
             enterKeyHint="send"
             maxLength={200}
             aria-describedby={statusId}
-            className="h-12 w-full rounded-full bg-surface pr-14 pl-5 text-body text-foreground transition-colors duration-150 ease-out placeholder:text-muted-foreground hover:bg-surface-strong focus-visible:outline-offset-2 lg:h-14 lg:pr-16 lg:pl-6"
+            className="h-12 w-full rounded-full bg-surface pr-14 pl-5 text-body text-foreground transition-colors duration-200 ease-out placeholder:text-muted-foreground hover:bg-surface-strong focus-visible:outline-offset-2 lg:h-14 lg:pr-16 lg:pl-6"
           />
           <button
             type="submit"
@@ -261,13 +261,13 @@ export function Composer({
                       // pill has landed (it carries the colour in flight), so
                       // its label sits on a real background of its own.
                       isActive &&
-                        "bg-foreground [transition:background-color_0s_320ms,transform_150ms_ease]",
+                        "bg-foreground [transition:background-color_0s_320ms,transform_200ms_var(--ease-out)]",
                     )}
                   >
                     {/* The chip's own fill, under the pill. */}
                     <span
                       aria-hidden="true"
-                      className="absolute inset-0 z-0 rounded-full bg-surface transition-colors duration-150 ease-out group-hover:bg-surface-strong"
+                      className="absolute inset-0 z-0 rounded-full bg-surface transition-colors duration-200 ease-out group-hover:bg-surface-strong"
                     />
                     {isActive ? (
                       <m.span
@@ -279,7 +279,7 @@ export function Composer({
                     ) : null}
                     <span
                       className={cn(
-                        "relative z-[2] transition-colors duration-150 ease-out",
+                        "relative z-[2] transition-colors duration-200 ease-out",
                         isActive ? "text-background" : "text-foreground",
                       )}
                     >

@@ -16,7 +16,8 @@ type NavTabsProps = {
 };
 
 /**
- * Work / Personal tabs. The active tab sits on a filled pill that slides to
+ * Work / Personal tabs, set as one small island: a round surface holding
+ * both tabs, 4px in. The active tab sits on a page-coloured pill that slides to
  * the other tab (a shared `layoutId`, 0.3s spring without bounce), so the
  * switch reads as one control changing state rather than two links. The pill
  * moves on click, before the next page has loaded, so the tab answers at
@@ -35,7 +36,7 @@ export function NavTabs({ lang, labels, ariaLabel }: NavTabsProps) {
 
   return (
     <nav aria-label={ariaLabel}>
-      <ul className="flex items-center gap-1">
+      <ul className="flex items-center gap-1 rounded-full bg-surface p-1">
         {tabs.map((tab) => {
           const href = tab.href(lang);
           const isActive = tab.id === fromUrl;
@@ -47,7 +48,7 @@ export function NavTabs({ lang, labels, ariaLabel }: NavTabsProps) {
                 <m.span
                   layoutId="tab-pill"
                   aria-hidden="true"
-                  className="absolute inset-0 rounded-full bg-surface"
+                  className="absolute inset-0 rounded-full bg-background"
                   transition={{ type: "spring", duration: 0.3, bounce: 0 }}
                 />
               ) : null}
@@ -61,7 +62,7 @@ export function NavTabs({ lang, labels, ariaLabel }: NavTabsProps) {
                     setPending({ tab: tab.id, from: pathname });
                 }}
                 className={cn(
-                  "relative inline-flex h-10 pressable items-center rounded-full px-4 text-small font-medium",
+                  "relative inline-flex h-8 pressable items-center rounded-full px-4 text-small font-semibold",
                   showPill
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",

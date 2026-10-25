@@ -21,12 +21,15 @@ type RevealProps<T extends ElementType> = {
   enter?: number;
 } & Omit<ComponentPropsWithoutRef<T>, "as">;
 
-const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+/** The heavy, fluid curve (`--ease-fluid` in globals.css). */
+const EASE_FLUID = [0.32, 0.72, 0, 1] as const;
 
 /**
  * Scroll entrance for content below the first screen: when the block comes
- * into view it rises 16px and fades in, 0.5s ease-out (children 60ms apart
- * with `stagger`). It plays once and never reverses.
+ * into view it settles into place: it rises 64px out of a 12px blur and
+ * fades in over 0.8s on a heavy, fluid curve (children 60ms apart with
+ * `stagger`). It plays once and never reverses. `inView` is an
+ * IntersectionObserver, so nothing listens to scroll.
  *
  * The server HTML is always the finished page: nothing is hidden without
  * JavaScript, with reduced motion, or for blocks already on screen when the
@@ -56,7 +59,8 @@ export function Reveal<T extends ElementType = "div">({
       : [element];
     for (const target of targets) {
       target.style.opacity = "0";
-      target.style.transform = "translateY(16px)";
+      target.style.transform = "translateY(64px)";
+      target.style.filter = "blur(12px)";
     }
 
     const stop = inView(
@@ -65,9 +69,12 @@ export function Reveal<T extends ElementType = "div">({
         targets.forEach((target, index) => {
           animateMini(
             target,
-            { opacity: 1, transform: "translateY(0px)" },
-            { duration: 0.5, delay: index * 0.06, ease: EASE_OUT },
-          );
+            { opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" },
+            { duration: 0.8, delay: index * 0.06, ease: EASE_FLUID },
+          ).then(() => {
+            // A lingering filter would make the block a containing block.
+            target.style.removeProperty("filter");
+          });
         });
       },
       { amount: 0.15 },

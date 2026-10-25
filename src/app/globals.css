@@ -30,7 +30,7 @@
  *   `rounded-surface` (20px); logo tiles `rounded-tile` (14px).
  * - Running text is 16 to 17px in full ink; secondary lines are 14 to 15px grey.
  *
- * Contrast (WCAG 2.2): foreground/background 19.8:1 light, 17.4:1 dark;
+ * Contrast (WCAG 2.2): foreground/background 19.8:1 light, 17.9:1 dark;
  * muted >= 5.2:1 on page and surface in both themes; on-ink-muted >= 5.5:1
  * on the ink panel in both themes.
  */
@@ -57,23 +57,31 @@
   --ring: #0a0a0a;
   --selection: color-mix(in srgb, #0a0a0a 14%, transparent);
 
+  /* Page titles: a left to right fade on the letters only, never on a background. */
+  --hero-from: #000000;
+  --hero-to: #666666;
+
   color-scheme: light;
 }
 
 .dark {
-  --background: #0a0a0a;
+  /* Dark surfaces stay on the approved neutral steps: #000, #181818, #272727, #313131. */
+  --background: #000000;
   --foreground: #ededed;
-  --surface: #161616;
-  --surface-strong: #222222;
-  --muted-foreground: #a1a1a1; /* 7.6:1 on page, 7.0:1 on surface */
-  --border: #2e2e2e;
+  --surface: #181818;
+  --surface-strong: #272727;
+  --muted-foreground: #a1a1a1; /* 8.1:1 on page, 6.9:1 on surface */
+  --border: #313131;
 
   --ink: #ededed;
-  --on-ink: #0a0a0a;
+  --on-ink: #000000;
   --on-ink-muted: #5c5c5c; /* 5.6:1 on ink */
 
   --ring: #ededed;
   --selection: color-mix(in srgb, #ededed 22%, transparent);
+
+  --hero-from: #ffffff;
+  --hero-to: #9b9b9b;
 
   color-scheme: dark;
 }
@@ -145,6 +153,8 @@
   /* Emil Kowalski's curves: ease-out for arrivals, ease-in-out for movement. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* Heavy and fluid: the scroll entrance, where content has room to settle. */
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* The reading column with its gutters (16px on a phone). Prefer <Container>. */
@@ -171,17 +181,34 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 0.24em;
   text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
-  transition: text-decoration-color 150ms ease;
+  transition: text-decoration-color 200ms var(--ease-out);
   &:hover {
     text-decoration-color: currentColor;
+  }
+}
+
+/*
+ * A page title (Davi's name, Personal, the 404): ink fading to grey from left
+ * to right. The element shrinks to its text so the fade spans the letters,
+ * not the column, and selected text stays readable.
+ */
+@utility text-hero {
+  width: fit-content;
+  background-image: linear-gradient(90deg, var(--hero-from), var(--hero-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  &::selection {
+    -webkit-text-fill-color: var(--foreground);
   }
 }
 
 /* Press feedback for every control: a 3% squeeze, released on the way up. */
 @utility pressable {
   transition-property: background-color, color, transform;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-out);
   @media (prefers-reduced-motion: no-preference) {
     &:active {
       transform: scale(0.97);
@@ -194,8 +221,8 @@
 /* A large linked panel: a 1% squeeze, so a whole tile answers the press without wobbling. */
 @utility pressable-panel {
   transition-property: background-color, color, transform;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-out);
   @media (prefers-reduced-motion: no-preference) {
     &:active {
       transform: scale(0.99);
@@ -259,6 +286,12 @@
   li,
   dd {
     text-wrap: pretty;
+  }
+
+  /* Dates and counts line up as they change. */
+  time,
+  [data-figures] {
+    font-variant-numeric: tabular-nums;
   }
 
   ::selection {
@@ -460,7 +493,7 @@
     margin-left: 0.35em;
     color: var(--muted-foreground);
     opacity: 0;
-    transition: opacity 150ms ease;
+    transition: opacity 200ms var(--ease-out);
   }
 
   .markdown :where(h2, h3, h4):hover .heading-anchor::after,
@@ -474,7 +507,7 @@
     text-decoration-thickness: 1px;
     text-underline-offset: 0.24em;
     text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
-    transition: text-decoration-color 150ms ease;
+    transition: text-decoration-color 200ms var(--ease-out);
   }
 
   .markdown a:not(.heading-anchor):hover {
@@ -483,6 +516,12 @@
 
   .markdown strong {
     font-weight: 600;
+  }
+
+  /* Emphasis by weight, never italics. */
+  .markdown :where(em, i, cite) {
+    font-style: normal;
+    font-weight: 500;
   }
 
   .markdown :where(ul, ol) {

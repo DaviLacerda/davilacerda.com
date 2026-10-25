@@ -64,6 +64,9 @@ export const en = {
     toggle: "Toggle color theme",
     switchToLight: "Switch to light theme",
     switchToDark: "Switch to dark theme",
+    system: "System",
+    light: "Light",
+    dark: "Dark",
   },
 
   /**
