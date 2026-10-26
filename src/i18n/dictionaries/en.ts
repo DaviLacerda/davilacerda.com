@@ -24,7 +24,7 @@ export const en = {
     personal: {
       title: "Personal",
       description:
-        "Writing, music and the corners of the internet where you can find Davi Lacerda.",
+        "Music, series, his teams, games, writing and where to find Davi Lacerda.",
     },
     blog: {
       title: "Blog",
@@ -310,7 +310,8 @@ export const en = {
   personal: {
     intro: {
       title: "Hi, I'm Davi.",
-      description: "Writing, music and where to find me.",
+      description:
+        "Music, series, my teams, games, writing and where to find me.",
       /**
        * First-person line under the title. `{city}` comes from the profile.
        * TODO(davi): make it yours (hobbies and life away from the keyboard).
@@ -330,6 +331,50 @@ export const en = {
       label: "{status} on Spotify: {title}, {artists}",
       /** Announced politely when the song changes while the page is open. */
       changed: "Now playing: {title}, {artists}",
+    },
+    /** The card beside the Spotify one (the show is in src/content/personal.ts). */
+    watching: {
+      status: "Watching",
+      /** The card's accessible name: "Watching: Show (CBS, 2024)". */
+      label: "Watching: {title} ({details})",
+    },
+    /** Live or last results of Davi's teams (src/content/personal.ts, /api/teams). */
+    teams: {
+      title: "My teams",
+      live: "Live",
+      /** `{when}` is "today", "yesterday" or a short date. */
+      final: "Final, {when}",
+      /** Live clock parts (NBA, NFL); soccer shows the minute as ESPN writes it ("67'"). */
+      quarter: "Q{n}",
+      overtime: "OT",
+      overtimeN: "{n}OT",
+      endOf: "End of Q{n}",
+      halftime: "Halftime",
+      shootout: "Penalties",
+      delayed: "Delayed",
+      /** What the quiet "—" means when ESPN cannot be reached. */
+      unavailable: "No game data right now",
+      /** Parts of a card's accessible name. */
+      matchup: "{team} vs {opponent}",
+      score: "{team} {teamScore}, {opponent} {opponentScore}",
+      /** Announced politely while the page is open. */
+      started: "{team} game is live",
+      ended: "Final: {score}",
+    },
+    /** Steam (live with STEAM_API_KEY) and links to the other game profiles. */
+    games: {
+      title: "Games",
+      playing: "Playing now",
+      recent: "Last two weeks",
+      onSteam: "On Steam",
+      /** Size of the Steam library. */
+      library: "{count} games",
+      /** The Steam card's accessible name: "Playing now on Steam: Game". */
+      label: "{status} on Steam: {game}",
+      /** Announced when the game changes while the page is open. */
+      changed: "Now playing on Steam: {game}",
+      /** A link card's accessible name: "Valorant, davi#XVI: Stats on Tracker.gg". */
+      profile: "{title}, {handle}: {label}",
     },
     sections: {
       writing: {

@@ -52,6 +52,65 @@ Check it with `curl https://davilacerda.com/api/now-playing`: `playing` or `rece
 Responses are cached on the CDN for 30 seconds. To revoke access, remove the app at
 [spotify.com/account/apps](https://www.spotify.com/account/apps/).
 
+## Currently watching
+
+The Watching card on the Personal tab reads `watching` in
+[`src/content/personal.ts`](src/content/personal.ts). To change the show, edit its one entry:
+
+```ts
+{ title: "Georgie & Mandy's First Marriage", year: 2024, network: "CBS", url: "https://en.wikipedia.org/wiki/Georgie_%26_Mandy%27s_First_Marriage" },
+```
+
+`url` (a page about the show) and `network` are optional. Without a `poster` the card sets the
+title's initials on a dark tile; to show a poster, put a file you are allowed to use in `public/`
+(2:3, e.g. `public/images/watching/show.webp`) and add `poster: "/images/watching/show.webp"`.
+The Personal Markdown and `/llms-full.txt` follow on the next build.
+
+## My teams
+
+"My teams" shows the live, last or next game of each team in `teams` in
+[`src/content/personal.ts`](src/content/personal.ts), from ESPN's public site API (no key).
+To add or change a team, copy an entry and set:
+
+- `sport`: `basketball`, `football` or `soccer`; `league`: ESPN's slug (`nba`, `nfl`, `bra.1`
+  for the Brasileirão; for a club, every competition ESPN has is covered anyway);
+- `espnId`: ESPN's team number. For a club it is in the espn.com URL
+  (`espn.com/soccer/team/_/id/874/corinthians`); for an NBA or NFL team, open
+  `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/bkn` (or
+  `football/nfl/teams/min`) and read `team.id`;
+- `logo`: `espnLogo("nba", "bkn")`, `espnLogo("nfl", "min")` or `espnLogo("soccer", "874")`.
+
+Check it with `curl https://davilacerda.com/api/teams`. When ESPN cannot be read the cards show
+the names, logos and a quiet dash. To preview every state locally, open
+`/en/personal?mock=live` (or `final`, `upcoming`, `mixed`, `unavailable`) under `yarn dev`, or
+under `yarn start` started with `PERSONAL_MOCKS=1`; the live site ignores `?mock=`.
+
+## Games
+
+The "Games" section has a Steam card and link cards for PlayStation (PSNProfiles), Valorant and
+Rainbow Six Siege (Tracker.gg); the handles are in `steam` and `gameProfiles` in
+[`src/content/personal.ts`](src/content/personal.ts).
+
+| Card                        | Shows                                                                  | Setup                      |
+| --------------------------- | ---------------------------------------------------------------------- | -------------------------- |
+| Steam                       | playing now, the last two weeks, library size; without the key, a link | `STEAM_API_KEY` (optional) |
+| Valorant, Rainbow Six Siege | a link to Tracker.gg (its developer API does not cover these games)    | none                       |
+| PlayStation                 | a link to PSNProfiles (PlayStation has no public API)                  | none                       |
+
+Steam, optional:
+
+1. Get a Web API key at [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)
+   (signed in to Steam; any domain name, e.g. `davilacerda.com`).
+2. On Steam, set the profile and its game details to Public (Edit Profile > Privacy Settings),
+   or the API answers without games.
+3. In Vercel, add `STEAM_API_KEY` (Sensitive) for Production and Preview and redeploy. `STEAM_ID`
+   (the 17-digit SteamID64) is optional: without it the server resolves `davi16lacerda` once.
+
+Check it with `curl https://davilacerda.com/api/steam`: `ok` means it works, `offline` means Steam
+refused (check the function logs), `unconfigured` means the key is missing. Responses are cached
+on the CDN for a minute. Preview the states locally with `/en/personal?mock=playing` (or
+`recent`, `idle`, `offline`).
+
 ## Writing posts
 
 See [content/blog/README.md](content/blog/README.md).

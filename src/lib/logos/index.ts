@@ -45,7 +45,11 @@ export function getLogoSvg(id: LogoId): LogoSvg {
     );
   }
   const { attributes, body } = iconToSVG(data);
-  return { label: spec.label, viewBox: attributes.viewBox, body };
+  return {
+    label: spec.label,
+    viewBox: attributes.viewBox,
+    body: "color" in spec ? body.replaceAll("currentColor", spec.color) : body,
+  };
 }
 
 /**

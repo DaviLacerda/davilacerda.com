@@ -15,7 +15,7 @@ export const ptBr: Dictionary = {
     personal: {
       title: "Pessoal",
       description:
-        "Textos, música e os cantos da internet onde você encontra Davi Lacerda.",
+        "Música, séries, seus times, jogos, textos e onde encontrar Davi Lacerda.",
     },
     blog: {
       title: "Blog",
@@ -278,7 +278,8 @@ export const ptBr: Dictionary = {
   personal: {
     intro: {
       title: "Oi, eu sou o Davi.",
-      description: "Textos, música e onde me encontrar.",
+      description:
+        "Música, séries, meus times, jogos, textos e onde me encontrar.",
       // TODO(davi): deixe esta frase com a sua cara (hobbies e a vida longe do teclado).
       lead: "Moro em {city} e crio pequenos projetos por diversão. E agora comecei a escrever também.",
       portraitAlt: "Retrato de Davi Lacerda",
@@ -290,6 +291,37 @@ export const ptBr: Dictionary = {
       onSpotify: "No Spotify",
       label: "{status} no Spotify: {title}, {artists}",
       changed: "Tocando agora: {title}, {artists}",
+    },
+    watching: {
+      status: "Assistindo",
+      label: "Assistindo: {title} ({details})",
+    },
+    teams: {
+      title: "Meus times",
+      live: "Ao vivo",
+      final: "Encerrado, {when}",
+      quarter: "{n}º quarto",
+      overtime: "Prorrogação",
+      overtimeN: "{n}ª prorrogação",
+      endOf: "Fim do {n}º quarto",
+      halftime: "Intervalo",
+      shootout: "Pênaltis",
+      delayed: "Atrasado",
+      unavailable: "Sem dados do jogo agora",
+      matchup: "{team} x {opponent}",
+      score: "{team} {teamScore}, {opponent} {opponentScore}",
+      started: "{team}: jogo ao vivo",
+      ended: "Fim de jogo: {score}",
+    },
+    games: {
+      title: "Jogos",
+      playing: "Jogando agora",
+      recent: "Últimas duas semanas",
+      onSteam: "Na Steam",
+      library: "{count} jogos",
+      label: "{status} na Steam: {game}",
+      changed: "Jogando agora na Steam: {game}",
+      profile: "{title}, {handle}: {label}",
     },
     sections: {
       writing: {

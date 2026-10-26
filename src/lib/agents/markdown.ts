@@ -1,6 +1,7 @@
 import "server-only";
 
 import { siteConfig } from "@/config/site";
+import { gameProfiles, steam, teams, watching } from "@/content/personal";
 import {
   getCertifications,
   profile,
@@ -19,6 +20,7 @@ import {
 import { formatDate, formatDateRange, formatPartialDate } from "@/i18n/format";
 import { getPostTranslations } from "@/lib/blog";
 import { routes } from "@/lib/routes";
+import { competitionLabel } from "@/lib/teams/types";
 import { absoluteUrl } from "@/lib/utils";
 import { topicCopy, topicLead } from "@/lib/work/answers";
 import { topicIds, type TopicId } from "@/lib/work/topics";
@@ -494,7 +496,11 @@ function postListItem(post: RawPost): string {
   return `- ${link(post.title, markdownPath({ kind: "post", lang: post.lang, slug: post.slug }))} (${meta}): ${post.description}`;
 }
 
-/** The Personal page: the hello, the blog index and social links (Spotify among them). */
+/**
+ * The Personal page: the hello, what Davi is watching, his teams and game
+ * profiles (as facts: live scores and the song playing are not part of it),
+ * the blog index and social links (Spotify among them).
+ */
 export function personalMarkdown(lang: Locale): string {
   const dict = getDictionary(lang);
   const s = dict.personal.sections;
@@ -518,7 +524,26 @@ export function personalMarkdown(lang: Locale): string {
       `**${dict.personal.intro.interests}:** ${profile.interests
         .map((interest) => t(interest.label, lang))
         .join(", ")}`,
+    watching.length > 0 &&
+      `**${dict.personal.watching.status}:** ${watching
+        .map((show) => {
+          const details = [show.network, show.year].filter(Boolean).join(", ");
+          return `${show.url ? link(show.title, show.url) : show.title} (${details})`;
+        })
+        .join("; ")}`,
     dict.personal.intro.description,
+    `## ${dict.personal.teams.title}`,
+    teams
+      .map((team) => `- ${team.name} (${competitionLabel(team.league, lang)})`)
+      .join("\n"),
+    `## ${dict.personal.games.title}`,
+    [
+      `- **Steam:** ${link(steam.vanity, steam.url)}`,
+      ...gameProfiles.map(
+        (game) =>
+          `- **${game.title}:** ${link(game.handle, game.url)} (${t(game.label, lang)})`,
+      ),
+    ].join("\n"),
     `## ${s.writing.title}`,
     s.writing.description,
     posts.length ? posts.map(postListItem).join("\n") : dict.blog.noPosts,

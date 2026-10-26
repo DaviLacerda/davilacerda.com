@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
     // WebP otherwise. 90 keeps the small print on the certificates crisp.
     formats: ["image/avif", "image/webp"],
     qualities: [75, 90],
+    // Team logos on the Personal tab (ESPN's CDN, 500px PNGs shown at 28px).
+    remotePatterns: [
+      { protocol: "https", hostname: "a.espncdn.com", pathname: "/i/**" },
+    ],
   },
 };
 
