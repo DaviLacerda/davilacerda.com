@@ -15,7 +15,7 @@ export const ptBr: Dictionary = {
     personal: {
       title: "Pessoal",
       description:
-        "Textos, projetos pessoais e os cantos da internet onde você encontra Davi Lacerda.",
+        "Textos, música e os cantos da internet onde você encontra Davi Lacerda.",
     },
     blog: {
       title: "Blog",
@@ -239,12 +239,7 @@ export const ptBr: Dictionary = {
       highlights: "Destaques",
       role: "Função",
       location: "Local",
-      viewProject: "Ver projeto",
-      sourceCode: "Código-fonte",
-      liveSite: "Site no ar",
       privateProject: "Privado",
-      featured: "Destaque",
-      stars: "{count} estrelas",
       issuedBy: "Emitido por {issuer}",
       coursework: "Disciplinas relevantes",
       thesis: "TCC",
@@ -274,28 +269,24 @@ export const ptBr: Dictionary = {
   personal: {
     intro: {
       title: "Oi, eu sou o Davi.",
-      description:
-        "Textos, experimentos e coisas que eu construo por diversão.",
+      description: "Textos, música e onde me encontrar.",
       // TODO(davi): deixe esta frase com a sua cara (hobbies e a vida longe do teclado).
       lead: "Moro em {city} e crio pequenos projetos por diversão. E agora comecei a escrever também.",
       portraitAlt: "Retrato de Davi Lacerda",
       interests: "Interesses",
+    },
+    listening: {
+      playing: "Ouvindo agora",
+      recent: "Tocou por último",
+      onSpotify: "No Spotify",
+      label: "{status} no Spotify: {title}, {artists}",
+      changed: "Tocando agora: {title}, {artists}",
     },
     sections: {
       writing: {
         title: "Textos",
         description:
           "Notas sobre engenharia de IA, LLMs e construção de software.",
-      },
-      sideProjects: {
-        title: "Projetos pessoais",
-        description:
-          "Coisas pequenas feitas por diversão, para aprender ou resolver uma vontade.",
-        source: "Código",
-        live: "Ver no ar",
-        stack: "Stack",
-        stars: "{count} estrelas no GitHub",
-        moreOnGitHub: "Mais no GitHub",
       },
       elsewhere: {
         title: "Em outros lugares",
@@ -343,6 +334,7 @@ export const ptBr: Dictionary = {
     github: "GitHub",
     linkedin: "LinkedIn",
     instagram: "Instagram",
+    spotify: "Spotify",
     discord: "Discord",
     email: "E-mail",
   },

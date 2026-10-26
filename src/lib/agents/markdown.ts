@@ -67,7 +67,9 @@ function frontmatter(
 }
 
 function link(text: string, url: string): string {
-  return `[${text.replace(/([[\]])/g, "\\$1")}](${absoluteUrl(url)})`;
+  // Site paths become absolute; full URLs and `mailto:` links stay as they are.
+  const href = url.startsWith("/") ? absoluteUrl(url) : url;
+  return `[${text.replace(/([[\]])/g, "\\$1")}](${href})`;
 }
 
 /** Joins non-empty parts with " · ". */
@@ -177,26 +179,14 @@ function projectBlock(project: Project, lang: Locale): string {
     project.role && t(project.role, lang),
     project.year && formatPartialDate(project.year, lang),
     project.isPrivate && labels.privateProject,
-    project.stars !== undefined &&
-      interpolate(labels.stars, { count: project.stars }),
-  );
-  const links = dot(
-    project.liveUrl && link(labels.liveSite, project.liveUrl),
-    project.repoUrl && link(labels.sourceCode, project.repoUrl),
   );
   return blocks(
     `### ${t(project.name, lang)}`,
     meta && `*${meta}*`,
     project.award && `**${labels.award}:** ${t(project.award, lang)}`,
     t(project.description, lang),
-    [
-      project.stack.length
-        ? `**${labels.stack}:** ${project.stack.join(", ")}`
-        : "",
-      links,
-    ]
-      .filter(Boolean)
-      .join("  \n"),
+    project.stack.length > 0 &&
+      `**${labels.stack}:** ${project.stack.join(", ")}`,
   );
 }
 
@@ -248,13 +238,6 @@ function experienceSection(lang: Locale): string[] {
       job.stack.length > 0 && `**${labels.stack}:** ${job.stack.join(", ")}`,
     ),
   );
-}
-
-function workProjects(): Project[] {
-  return [
-    ...profile.projects.filter((p) => p.kind === "work"),
-    ...profile.projects.filter((p) => p.kind === "side" && p.featured),
-  ];
 }
 
 function skillsList(lang: Locale): string {
@@ -378,7 +361,7 @@ export function workMarkdown(lang: Locale): string {
     `## ${s.experience.title}`,
     ...experienceSection(lang),
     `## ${s.projects.title}`,
-    ...workProjects().map((project) => projectBlock(project, lang)),
+    ...profile.projects.map((project) => projectBlock(project, lang)),
     `## ${s.skills.title}`,
     skillsList(lang),
     `## ${s.certifications.title}`,
@@ -420,7 +403,7 @@ function topicBody(topic: TopicId, lang: Locale): string[] {
       return [
         ...experienceSection(lang),
         ...profile.projects
-          .filter((p) => p.kind === "work" && p.id !== "sales-copilot")
+          .filter((p) => p.id !== "sales-copilot")
           .map((project) => projectBlock(project, lang)),
       ];
     case "sales-copilot": {
@@ -500,16 +483,13 @@ function postListItem(post: RawPost): string {
   return `- ${link(post.title, markdownPath({ kind: "post", lang: post.lang, slug: post.slug }))} (${meta}): ${post.description}`;
 }
 
-/** The Personal page: blog index, side projects and social links. */
+/** The Personal page: the hello, the blog index and social links (Spotify among them). */
 export function personalMarkdown(lang: Locale): string {
   const dict = getDictionary(lang);
   const s = dict.personal.sections;
   const page: PageRef = { kind: "personal", lang };
   const htmlPath = routes.personal(lang);
   const posts = getRawPosts(lang);
-  const sideProjects = [...profile.projects]
-    .filter((project) => project.kind === "side")
-    .sort((a, b) => Number(b.featured) - Number(a.featured));
 
   return blocks(
     frontmatter({
@@ -532,9 +512,6 @@ export function personalMarkdown(lang: Locale): string {
     s.writing.description,
     posts.length ? posts.map(postListItem).join("\n") : dict.blog.noPosts,
     `${dict.blog.rss}: ${absoluteUrl(routes.rss(lang))}`,
-    `## ${s.sideProjects.title}`,
-    s.sideProjects.description,
-    ...sideProjects.map((project) => projectBlock(project, lang)),
     `## ${s.elsewhere.title}`,
     s.elsewhere.description,
     profile.socials

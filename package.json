@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "logos": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/logos.mjs"
+    "logos": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/logos.mjs",
+    "spotify:token": "node scripts/spotify-refresh-token.mjs"
   },
   "dependencies": {
     "@iconify/utils": "^3.1.7",

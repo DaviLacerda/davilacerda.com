@@ -25,6 +25,7 @@ yarn logos        # regenerate src/lib/logos/icons.json after editing the logo r
 ```
 content/blog/<locale>/<slug>.md   Markdown posts (see content/blog/README.md)
 scripts/logos.mjs                 `yarn logos`: copies the registry's icons out of the Iconify sets
+scripts/spotify-refresh-token.mjs `yarn spotify:token`: one-time Spotify refresh token (README, "Spotify now playing")
 public/                           favicons, images/logo.png (brand mark, violet #5b21b6), images/davi.{webp,png} (portrait),
                                   certificates/*.png (certificate prints), logos/ (company and school logos)
 src/
@@ -38,10 +39,11 @@ src/
     [lang]/(assistant)/work/[topic]/  one answer on the canvas, e.g. /en/work/experience (static, 7 topics)
     [lang]/(assistant)/work/page.tsx  /en/work -> 308 to /en
     [lang]/(assistant)/ask/page.tsx   the composer's no-JS form target: "nothing on that yet" (noindex)
-    [lang]/personal/page.tsx      Personal tab: portrait, hello, interests, writing (blog index), side projects, elsewhere
+    [lang]/personal/page.tsx      Personal tab: portrait, hello, interests, now playing on Spotify, writing (blog index), elsewhere
     [lang]/personal/blog/[slug]/  Blog post
     [lang]/not-found.tsx          localized 404 (the way back and the topics as links)
     [lang]/[...rest]/page.tsx     sends unknown /<lang>/* paths to the 404
+    api/now-playing/route.ts      what Davi is listening to on Spotify (dynamic, CDN-cached 30s; see Spotify now playing)
   components/
     chat/                         the Work assistant: assistant (provider, Canvas, Identity, AskLink), context,
                                   composer, question, reply, piece, copy-email-button
@@ -49,7 +51,7 @@ src/
                                   certifications, skills, education, faq, contact) + parts (Panel, fit()...)
     motion/                       motion-provider (LazyMotion + MotionConfig), reveal (scroll entrance), features
     layout/                       site-header, nav-tabs, locale-switcher, theme-toggle, site-footer
-    personal/                     interests, side-projects, elsewhere
+    personal/                     interests, now-playing (the Spotify card, client), elsewhere
     blog/                         post-list, post-header, table-of-contents, author-card, post-pager, rss-link
     providers/                    theme-provider (next-themes), alternate-links (locale switcher targets)
     seo/json-ld.tsx               <JsonLd data={...} />
@@ -67,6 +69,7 @@ src/
     work/topics.ts                topic ids + keyword matcher (dependency-free; client, proxy, server)
     work/answers.ts               topic copy, leads and intros, composer/reply strings, stackLogos() (server-only)
     logos/                        brand logo registry, generated icons.json subset, getLogoSvg() (server-only)
+    spotify/                      now-playing.ts (Spotify Web API, server-only), types.ts (the JSON shape, shared)
     seo.ts                        buildMetadata() + JSON-LD builders
     utils.ts                      cn(), absoluteUrl(), isExternalUrl()
 ```
@@ -104,8 +107,8 @@ Import alias: `@/*` -> `src/*`.
 ## Design system
 
 Monochrome, clean and direct. White and near-black with a disciplined grey ramp; hierarchy comes
-from type weight, size and space only. The only colour on the site is a brand's own logo. No
-self-referential copy (nothing about how the site works or that answers are pre-written): the page
+from type weight, size and space only. The only colour on the site is a brand's own logo (and the
+album cover on the Spotify card). No self-referential copy (nothing about how the site works or that answers are pre-written): the page
 says what Davi did, in as few words as possible. The long versions live in the machine-readable
 layer (see Agent readiness). The Work tab is a split-pane assistant whose answers are pictures
 first (oversized figures, big logo marks, an ink panel for the headline fact); Personal and the
@@ -186,7 +189,10 @@ an ink panel a tile turns `tone="ink"` (translucent on-ink fill) and the logo ke
 `bg-surface` disc, so it follows the theme like everything else. Certificate prints are cropped to
 the certificate (transparent rounded corners), served through next/image (AVIF/WebP, `quality={90}`,
 allowed in `next.config.ts` `images.qualities`) and dimmed to 90% brightness in dark mode. No
-labels on top of pictures; captions go under them.
+labels on top of pictures; captions go under them. The album cover on the Spotify card is the one
+remote picture: a plain `<img>` straight from Spotify's CDN (the ~300px size it already serves; the
+optimizer would only re-encode an ever-changing URL), 8px corners, never cropped, blurred or
+covered (Spotify's design guidelines), with the Spotify logo beside it.
 
 **Icons:** Phosphor, regular weight (bold only on the send arrow), imported per icon from
 `@phosphor-icons/react/dist/ssr/<Name>` (works in server and client components). Always
@@ -220,6 +226,8 @@ from `scale(0)`, transform and opacity only.
 | Theme icon swap                        | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur                                                                                                  |
 | Copy confirmation (email, credential)  | `CopyButton` (`CopyEmailButton` wraps it)  | 150ms blur crossfade of icon and label, width reserved                                                                                            |
 | Certificate viewer open / close        | `ImageLightbox` (Motion `animate()`)       | FLIP from the print's own place: spring 0.42s no bounce (close 0.34s), page fades behind in 240ms, caption 140ms later; reduced motion: fade only |
+| Now playing: song change               | `NowPlayingCard` (`AnimatePresence`)       | new cover and text rise 6px out of a 4px blur in 250ms ease-out once the cover has loaded; the old one blurs out in 150ms; reduced motion: fade   |
+| Now playing: equalizer (`data-eq`)     | globals.css (CSS keyframes)                | four bars, scaleY from the bottom, 0.8s to 1.3s loops out of phase, ease-in-out; reduced motion: still bars of different heights                  |
 | Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                                                                                                          |
 | Hover fills, arrow nudges, fields      | Tailwind transitions                       | 150ms ease-out                                                                                                                                    |
 
@@ -313,6 +321,7 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<CopyButton value label copiedLabel variant? size? iconOnly?>`             | copy with a short crossfade confirmation (client); `CopyEmailButton` is the email preset                        |
 | `<ImageLightbox src width height alt caption detail? openLabel closeLabel>` | a link around a thumbnail that opens the image in a modal `<dialog>` (client; see Motion)                       |
 | `<Interests lang enter>`                                                    | the Personal tab's interest chips (Phosphor icon + label)                                                       |
+| `<NowPlayingCard profileUrl handle strings logo>`                           | the Spotify card under the hello (client; see Spotify now playing)                                              |
 | `<SocialList lang ids reveal?>` / `<Elsewhere lang>`                        | network rows with logo, name and handle (Contact answer, Personal)                                              |
 | `<Prose html enter?>`                                                       | renders `post.html` with `.markdown`                                                                            |
 | `<BrandMark>`                                                               | the pixel "d" in `currentColor`                                                                                 |
@@ -321,18 +330,19 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; the header is static (not sticky)                                                          |
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
-`reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, the providers. Pages,
-answers and logos stay Server Components.
+`reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, the
+providers. Pages, answers and logos stay Server Components.
 
 ## Content model (`src/content/profile.ts`)
 
 `profile` holds name/fullName, `headline`, `tagline`, `valueProp`, `summary` (first person),
 `tldr` (third person, factual: in the JSON-LD, Markdown, llms.txt and MCP; on screen it is one
 line and the overview), `location`,
-`email`, `availability`, `currentEmployer`, `socials[]`, `highlights[]` (hero stats),
+`email`, `availability`, `currentEmployer`, `socials[]` (GitHub, LinkedIn, Instagram, Spotify,
+Discord, email; `sameAs` ones go into the Person JSON-LD), `highlights[]` (hero stats),
 `experience[]` (`company, role, start, end|null, employmentType, workModel, location, description,
-highlights, stack`), `projects[]` (`kind: "work" | "side"`, `featured`, `role?`, `award?`,
-`repoUrl?`, `liveUrl?`, `stars?`), `skills[]` (groups `llm, rag, ml, backend, frontend, infra`),
+highlights, stack`), `projects[]` (work built at Algar: `context?`, `role?`, `award?`,
+`isPrivate?`, `year?`), `skills[]` (groups `llm, rag, ml, backend, frontend, infra`),
 `knowsAbout[]`, `certifications[]` (`kind: "certification" | "course"`, `level?` ("Expert", "Associate"),
 `credentialId?`, `certificationNumber?`, `expires?`, `credentialUrl?` (the Verify link renders only
 when set), `image?` `{ src, width, height }`: a PNG print cropped to the certificate),
@@ -347,6 +357,34 @@ Helpers: `allSkills()`, `getSocial(id)`, `getCertifications(kind?)`, `certificat
 Rules: only verified facts; anything unknown has a `TODO(davi)` comment. No seniority levels or
 formal titles for Algar (the role is "AI Engineer", since Aug 2024). Dates are strings
 (`"YYYY"`, `"YYYY-MM"`, `"YYYY-MM-DD"`); omitted = unknown (render nothing).
+
+## Spotify now playing
+
+The Personal tab's one live element: under the hello, a card with what Davi is listening to on
+Spotify (the cover, the song, the artists, and a small equalizer while it plays) or the last song
+played, linking to the track.
+
+- **Server:** `src/lib/spotify/now-playing.ts` exchanges `SPOTIFY_REFRESH_TOKEN` (with
+  `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`) for an access token at
+  `accounts.spotify.com/api/token` (kept in memory until a minute before it expires), asks
+  `GET /v1/me/player/currently-playing` and, when nothing is playing (204), a podcast or an ad
+  is, falls back to the paused song or `GET /v1/me/player/recently-played?limit=1`. It returns
+  `status` `"playing"` or `"recent"` with `title`, `artists[]`, `album`, `albumArt`, `url` (and
+  `progressMs`, `durationMs` while playing), `"offline"` on any failure (logged without secrets)
+  or `"unconfigured"` without the env vars. `src/app/api/now-playing/route.ts` serves it
+  with `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` and `X-Robots-Tag: noindex`,
+  always 200, so builds and previews never depend on Spotify.
+- **Client:** `NowPlayingCard` fetches it on mount and every 30 seconds while the tab is visible
+  (a `visibilitychange` listener stops it when hidden and catches up on return; no scroll
+  listeners). One card of fixed size (88px) in every state, so nothing shifts: a skeleton, the
+  song, or, for `offline` and `unconfigured`, "On Spotify" and the handle linking to the profile
+  (also what renders without JavaScript, via the `noscript:` variant). A song change is
+  announced in a polite live region (not the first one). The Spotify logo comes from the server
+  as a prop, so the logo registry stays out of the client bundle.
+- **Not machine-readable on purpose:** the song is ephemeral, so it is not in the Markdown,
+  llms.txt, MCP, search or OpenAPI. The Spotify profile is a regular social (Elsewhere, Markdown,
+  JSON, `sameAs`).
+- **Setup:** README, "Spotify now playing" (`yarn spotify:token`, `.env.example`).
 
 ## Blog (`src/lib/blog.ts`, server-only)
 

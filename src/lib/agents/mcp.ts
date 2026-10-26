@@ -154,7 +154,7 @@ export function staticResources() {
           lang === "en"
             ? "Personal page (English)"
             : "Página pessoal (Português)",
-        description: "Blog index, side projects and social links as Markdown.",
+        description: "Blog index and social links as Markdown.",
         mimeType: "text/markdown",
         read: () => personalMarkdown(lang),
       },

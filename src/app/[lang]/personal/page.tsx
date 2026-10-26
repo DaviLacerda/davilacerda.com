@@ -7,11 +7,12 @@ import { PostList } from "@/components/blog/post-list";
 import { RssLink } from "@/components/blog/rss-link";
 import { Elsewhere } from "@/components/personal/elsewhere";
 import { Interests } from "@/components/personal/interests";
-import { SideProjects } from "@/components/personal/side-projects";
+import { NowPlayingCard } from "@/components/personal/now-playing";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/container";
-import { profile } from "@/content/profile";
+import { BrandLogo } from "@/components/ui/logo";
+import { getSocial, profile } from "@/content/profile";
 import { getDictionary, interpolate, isLocale, t } from "@/i18n";
 import { getAllPosts } from "@/lib/blog";
 import { routes } from "@/lib/routes";
@@ -37,16 +38,16 @@ export async function generateMetadata({
     path: "/personal",
     title: dict.meta.personal.title,
     description: dict.meta.personal.description,
-    keywords: ["Blog", "Side projects", "Uberlândia"],
+    keywords: ["Blog", "Spotify", "Uberlândia"],
   });
 }
 
 /**
  * Personal tab: a reading layout about Davi the person, not the job. His
  * portrait (black and white, on the page's own surface tone), a hello, one
- * warm line and his interests as a row of chips; then the writing, the side
- * projects (with their stacks' logos) and where to find him online, one
- * column throughout and no panels.
+ * warm line, his interests as a row of chips and what he is listening to on
+ * Spotify (the cover is the one picture in colour); then the writing and
+ * where to find him online, one column throughout.
  */
 export default async function PersonalPage({ params }: PageProps) {
   const { lang } = await params;
@@ -55,6 +56,8 @@ export default async function PersonalPage({ params }: PageProps) {
   const { intro, sections } = dict.personal;
   const posts = getAllPosts(lang);
   const city = t(profile.location.city, lang);
+  const spotify = getSocial("spotify");
+  const afterInterests = 3 + profile.interests.length;
 
   return (
     <Container className="pt-12 sm:pt-20">
@@ -105,11 +108,26 @@ export default async function PersonalPage({ params }: PageProps) {
           {interpolate(intro.lead, { city })}
         </p>
         <Interests lang={lang} enter={3} className="mt-8" />
+        <div
+          data-enter=""
+          style={{ "--i": afterInterests } as CSSProperties}
+          className="mt-4"
+        >
+          <NowPlayingCard
+            profileUrl={spotify.url}
+            handle={spotify.handle}
+            strings={{
+              ...dict.personal.listening,
+              opensInNewTab: dict.a11y.opensInNewTab,
+            }}
+            logo={<BrandLogo id="spotify" className="size-6" />}
+          />
+        </div>
       </section>
 
       <PersonalSection
         id="blog"
-        enter={4 + profile.interests.length}
+        enter={afterInterests + 1}
         title={sections.writing.title}
         aside={
           posts.length > 0 ? (
@@ -117,27 +135,15 @@ export default async function PersonalPage({ params }: PageProps) {
           ) : null
         }
       >
-        <PostList
-          posts={posts}
-          lang={lang}
-          enter={5 + profile.interests.length}
-        />
-      </PersonalSection>
-
-      <PersonalSection
-        id="side-projects"
-        enter={6 + profile.interests.length}
-        title={sections.sideProjects.title}
-      >
-        <SideProjects lang={lang} enter={7 + profile.interests.length} />
+        <PostList posts={posts} lang={lang} enter={afterInterests + 2} />
       </PersonalSection>
 
       <PersonalSection
         id="elsewhere"
-        enter={8 + profile.interests.length}
+        enter={afterInterests + 3}
         title={sections.elsewhere.title}
       >
-        <Elsewhere lang={lang} enter={9 + profile.interests.length} />
+        <Elsewhere lang={lang} enter={afterInterests + 4} />
       </PersonalSection>
     </Container>
   );

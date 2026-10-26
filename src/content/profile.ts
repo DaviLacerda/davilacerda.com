@@ -22,7 +22,7 @@ import type { PartialDate } from "@/i18n/format";
 import type { LogoSource } from "@/lib/logos";
 
 export type SocialId =
-  "github" | "linkedin" | "instagram" | "discord" | "email";
+  "github" | "linkedin" | "instagram" | "spotify" | "discord" | "email";
 
 export type Social = {
   id: SocialId;
@@ -60,13 +60,11 @@ export type Experience = {
   stack: string[];
 };
 
+/** Something Davi built at a job (it may be private). */
 export type Project = {
   id: string;
   name: Localizable;
   description: L10n;
-  /** "work" = built at a job (may be private), "side" = personal/open source. */
-  kind: "work" | "side";
-  featured: boolean;
   stack: string[];
   /** Organization the project was built for, if any. */
   context?: string;
@@ -74,11 +72,7 @@ export type Project = {
   role?: L10n;
   /** Award or recognition, displayed as a badge. */
   award?: L10n;
-  repoUrl?: string;
-  liveUrl?: string;
   isPrivate?: boolean;
-  /** GitHub stars at the time of writing. */
-  stars?: number;
   year?: PartialDate;
 };
 
@@ -218,6 +212,8 @@ export type Profile = {
 
 const GITHUB = "https://github.com/DaviLacerda";
 const LINKEDIN = "https://www.linkedin.com/in/davi16lacerda/";
+/** Also where the Personal tab's "now playing" card sends visitors when nothing is playing. */
+const SPOTIFY = "https://open.spotify.com/user/dlacerda9";
 
 export const profile: Profile = {
   name: "Davi Lacerda",
@@ -298,6 +294,12 @@ export const profile: Profile = {
       id: "instagram",
       handle: "@davi16lacerda",
       url: "https://www.instagram.com/davi16lacerda/",
+      sameAs: true,
+    },
+    {
+      id: "spotify",
+      handle: "dlacerda9",
+      url: SPOTIFY,
       sameAs: true,
     },
     {
@@ -433,8 +435,6 @@ export const profile: Profile = {
     {
       id: "sales-copilot",
       name: "Sales Copilot",
-      kind: "work",
-      featured: true,
       context: "Algar",
       role: { en: "Main developer", "pt-br": "Principal desenvolvedor" },
       award: {
@@ -457,8 +457,6 @@ export const profile: Profile = {
         en: "Pricing and data initiatives",
         "pt-br": "Iniciativas de precificação e dados",
       },
-      kind: "work",
-      featured: false,
       context: "Algar",
       isPrivate: true,
       year: "2024",
@@ -469,110 +467,6 @@ export const profile: Profile = {
           "Trabalho em Python em iniciativas de precificação e dados, junto aos projetos de IA Generativa na Algar.",
       },
       stack: ["Python", "Data analysis", "Generative AI"],
-    },
-    {
-      id: "figma-jam-clone",
-      name: "figma-jam-clone",
-      kind: "side",
-      featured: true,
-      repoUrl: `${GITHUB}/figma-jam-clone`,
-      stars: 10,
-      description: {
-        en: "A FigJam-inspired whiteboard built with React Flow.",
-        "pt-br":
-          "Um quadro branco inspirado no FigJam, construído com React Flow.",
-      },
-      // TODO(davi): confirm stack.
-      stack: ["React", "React Flow", "TypeScript"],
-    },
-    {
-      id: "randomify",
-      name: "randomify",
-      kind: "side",
-      featured: true,
-      repoUrl: `${GITHUB}/randomify`,
-      liveUrl: "https://randomify.davilacerda.com",
-      description: {
-        en: "Picks a random episode of a TV series for you. Born from my habit of rewatching random episodes of favorite shows.",
-        "pt-br":
-          "Sorteia um episódio aleatório de uma série. Nasceu do meu hábito de rever episódios aleatórios das séries favoritas.",
-      },
-      // TODO(davi): confirm stack.
-      stack: ["Next.js", "TypeScript"],
-    },
-    {
-      id: "davi-lacerda-themes",
-      name: "davi-lacerda-themes",
-      kind: "side",
-      featured: false,
-      repoUrl: `${GITHUB}/davi-lacerda-themes`,
-      description: {
-        en: "My own color themes for Visual Studio Code.",
-        "pt-br": "Meus próprios temas de cores para o Visual Studio Code.",
-      },
-      stack: ["VS Code", "JSON"],
-    },
-    {
-      id: "notetaker",
-      name: "notetaker",
-      kind: "side",
-      featured: false,
-      repoUrl: `${GITHUB}/notetaker`,
-      description: {
-        en: "A note-taking app built with the T3 stack.",
-        "pt-br": "Um app de anotações construído com o T3 stack.",
-      },
-      stack: ["Next.js", "TypeScript", "T3 stack"],
-    },
-    {
-      id: "disneyplus-nextjs",
-      name: "disneyplus-nextjs",
-      kind: "side",
-      featured: false,
-      repoUrl: `${GITHUB}/disneyplus-nextjs`,
-      description: {
-        en: "A Disney+ interface clone built with Next.js.",
-        "pt-br": "Um clone da interface do Disney+ construído com Next.js.",
-      },
-      stack: ["Next.js", "React"],
-    },
-    {
-      id: "cashcard",
-      name: "cashcard",
-      kind: "side",
-      featured: false,
-      repoUrl: `${GITHUB}/cashcard`,
-      description: {
-        en: "A REST API built with Java and Spring.",
-        "pt-br": "Uma API REST construída com Java e Spring.",
-      },
-      stack: ["Java", "Spring"],
-    },
-    {
-      id: "nlw-journey",
-      name: "nlw-journey",
-      kind: "side",
-      featured: false,
-      repoUrl: `${GITHUB}/nlw-journey`,
-      description: {
-        en: "A Python project built during Rocketseat's NLW Journey event.",
-        "pt-br":
-          "Um projeto em Python construído durante o evento NLW Journey da Rocketseat.",
-      },
-      stack: ["Python"],
-    },
-    {
-      id: "davilacerda-com",
-      name: "davilacerda.com",
-      kind: "side",
-      featured: false,
-      repoUrl: `${GITHUB}/davilacerda.com`,
-      liveUrl: "https://davilacerda.com",
-      description: {
-        en: "This site, in English and Portuguese.",
-        "pt-br": "Este site, em português e inglês.",
-      },
-      stack: ["Next.js", "TypeScript", "Tailwind CSS"],
     },
   ],
 

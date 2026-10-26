@@ -24,7 +24,7 @@ export const en = {
     personal: {
       title: "Personal",
       description:
-        "Writing, side projects and the corners of the internet where you can find Davi Lacerda.",
+        "Writing, music and the corners of the internet where you can find Davi Lacerda.",
     },
     blog: {
       title: "Blog",
@@ -263,12 +263,7 @@ export const en = {
       highlights: "Highlights",
       role: "Role",
       location: "Location",
-      viewProject: "View project",
-      sourceCode: "Source code",
-      liveSite: "Live site",
       privateProject: "Private",
-      featured: "Featured",
-      stars: "{count} stars",
       issuedBy: "Issued by {issuer}",
       coursework: "Relevant coursework",
       thesis: "Thesis",
@@ -300,7 +295,7 @@ export const en = {
   personal: {
     intro: {
       title: "Hi, I'm Davi.",
-      description: "Writing, experiments and things I build for fun.",
+      description: "Writing, music and where to find me.",
       /**
        * First-person line under the title. `{city}` comes from the profile.
        * TODO(davi): make it yours (hobbies and life away from the keyboard).
@@ -310,20 +305,21 @@ export const en = {
       /** Accessible name of the interests row (and its label in Markdown). */
       interests: "Interests",
     },
+    /** The Spotify card under the hello (what Davi is listening to). */
+    listening: {
+      playing: "Listening now",
+      recent: "Last played",
+      /** The card when nothing can be shown: a link to the profile. */
+      onSpotify: "On Spotify",
+      /** The card's accessible name: "Listening now on Spotify: Song, Artist". */
+      label: "{status} on Spotify: {title}, {artists}",
+      /** Announced politely when the song changes while the page is open. */
+      changed: "Now playing: {title}, {artists}",
+    },
     sections: {
       writing: {
         title: "Writing",
         description: "Notes on AI engineering, LLMs and building software.",
-      },
-      sideProjects: {
-        title: "Side projects",
-        description:
-          "Small things built for fun, to learn or to scratch an itch.",
-        source: "Source",
-        live: "Live site",
-        stack: "Stack",
-        stars: "{count} stars on GitHub",
-        moreOnGitHub: "More on GitHub",
       },
       elsewhere: {
         title: "Elsewhere",
@@ -373,6 +369,7 @@ export const en = {
     github: "GitHub",
     linkedin: "LinkedIn",
     instagram: "Instagram",
+    spotify: "Spotify",
     discord: "Discord",
     email: "Email",
   },

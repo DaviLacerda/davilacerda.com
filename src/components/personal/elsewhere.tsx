@@ -13,6 +13,7 @@ const socialLogos: Partial<Record<SocialId, LogoId>> = {
   github: "github",
   linkedin: "linkedin",
   instagram: "instagram",
+  spotify: "spotify",
   discord: "discord",
 };
 

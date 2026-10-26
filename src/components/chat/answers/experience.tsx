@@ -198,7 +198,7 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
     item.id.startsWith("conecta-latam"),
   );
   const otherWork = profile.projects.filter(
-    (project) => project.kind === "work" && project.id !== "sales-copilot",
+    (project) => project.id !== "sales-copilot",
   );
   const company = current
     ? splitCompanyName(t(current.company, lang)).short

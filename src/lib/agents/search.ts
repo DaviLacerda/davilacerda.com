@@ -3,11 +3,10 @@ import "server-only";
 import { getCertifications, profile } from "@/content/profile";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { formatDateRange, formatPartialDate } from "@/i18n/format";
-import { routes } from "@/lib/routes";
 import { absoluteUrl } from "@/lib/utils";
 import type { TopicId } from "@/lib/work/topics";
 
-import { markdownPath, type PageRef } from "./discovery";
+import { markdownPath, pagePath, type PageRef } from "./discovery";
 import { getRawPosts } from "./posts";
 
 /**
@@ -73,8 +72,7 @@ function countOccurrences(haystack: string, needle: string): number {
 
 /**
  * Each profile document points at the page that answers it best: a Work
- * answer (`/en/work/<topic>`) or, for side projects and the summary, the
- * Personal and Work pages.
+ * answer (`/en/work/<topic>`) or, for the summary, the Work page.
  */
 function profileDocuments(lang: Locale): SearchDocument[] {
   const dict = getDictionary(lang);
@@ -84,11 +82,11 @@ function profileDocuments(lang: Locale): SearchDocument[] {
     section: string,
     title: string,
     text: string,
-    where: TopicId | "work" | "personal" = "work",
+    where: TopicId | "work" = "work",
   ): SearchDocument => {
     const page: PageRef =
-      where === "work" || where === "personal"
-        ? { kind: where, lang }
+      where === "work"
+        ? { kind: "work", lang }
         : { kind: "topic", lang, topic: where };
     return {
       id: `profile:${lang}:${id}`,
@@ -96,13 +94,7 @@ function profileDocuments(lang: Locale): SearchDocument[] {
       type: "profile",
       section,
       title,
-      url: absoluteUrl(
-        page.kind === "topic"
-          ? routes.topic(lang, page.topic)
-          : page.kind === "personal"
-            ? routes.personal(lang)
-            : routes.work(lang),
-      ),
+      url: absoluteUrl(pagePath(page)),
       markdownUrl: absoluteUrl(markdownPath(page)),
       text,
     };
@@ -155,16 +147,10 @@ function profileDocuments(lang: Locale): SearchDocument[] {
           project.role && t(project.role, lang),
           project.award && t(project.award, lang),
           project.stack.join(", "),
-          project.repoUrl,
-          project.liveUrl,
         ]
           .filter(Boolean)
           .join("\n"),
-        project.id === "sales-copilot"
-          ? "sales-copilot"
-          : project.kind === "work"
-            ? "experience"
-            : "personal",
+        project.id === "sales-copilot" ? "sales-copilot" : "experience",
       ),
     ),
     ...profile.skills.map((group) =>

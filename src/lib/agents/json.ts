@@ -162,12 +162,9 @@ export function jsonResume(lang: Locale) {
       ),
       keywords: project.stack,
       ...(project.year ? { startDate: project.year } : {}),
-      ...(project.liveUrl || project.repoUrl
-        ? { url: project.liveUrl ?? project.repoUrl }
-        : {}),
       ...(project.role ? { roles: [t(project.role, lang)] } : {}),
       ...(project.context ? { entity: project.context } : {}),
-      type: project.kind === "work" ? "application" : "personal project",
+      type: "application",
     })),
     meta: {
       canonical: absoluteUrl(
@@ -298,7 +295,7 @@ export function openApiDocument(): JsonValue {
       ),
       "/{lang}/personal.md": getOperation(
         "getPersonalMarkdown",
-        "Personal page (blog index, side projects, links) as Markdown",
+        "Personal page (blog index, links) as Markdown",
         "text/markdown",
         { parameters: [langParam] },
       ),

@@ -61,7 +61,7 @@ const en = {
       "Résumé: experience, projects, skills, certifications, education, awards and FAQ.",
     personalEn: "Personal (English)",
     personalPt: "Pessoal (Português)",
-    personalDesc: "Blog posts, side projects and where to find Davi online.",
+    personalDesc: "Blog posts and where to find Davi online.",
     topics: "Work answers",
     topicsIntro:
       "The Work tab is a guided assistant over the profile: each suggested question has its own page with a written answer, in both languages (English links below; Portuguese at the same paths under /pt-br).",

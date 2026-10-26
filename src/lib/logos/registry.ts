@@ -69,12 +69,6 @@ export const logoRegistry = {
     label: "Model Context Protocol",
     names: ["Model Context Protocol (MCP)", "MCP"],
   },
-  vscode: {
-    icon: "logos:visual-studio-code",
-    label: "Visual Studio Code",
-    names: ["VS Code"],
-  },
-  t3: { icon: "logos:t3", label: "T3 stack", names: ["T3 stack"] },
   github: {
     icon: "simple-icons:github",
     label: "GitHub",
@@ -83,6 +77,7 @@ export const logoRegistry = {
   linkedin: { icon: "logos:linkedin-icon", label: "LinkedIn" },
   instagram: { icon: "simple-icons:instagram", label: "Instagram" },
   discord: { icon: "logos:discord-icon", label: "Discord" },
+  spotify: { icon: "logos:spotify-icon", label: "Spotify" },
 } as const satisfies Record<string, LogoSpec>;
 
 export type LogoId = keyof typeof logoRegistry;

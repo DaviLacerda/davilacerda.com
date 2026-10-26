@@ -342,6 +342,66 @@
 }
 
 /*
+ * The equalizer on the Spotify card (`data-eq`, Personal tab): four bars that
+ * bounce out of step while a song plays. Constant motion, so each bar loops
+ * on its own period from its own phase, scaled from the bottom (transform
+ * only). With reduced motion the bars stand still at different heights.
+ */
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  30% {
+    transform: scaleY(1);
+  }
+  60% {
+    transform: scaleY(0.5);
+  }
+  80% {
+    transform: scaleY(0.8);
+  }
+}
+
+[data-eq] {
+  transform-origin: bottom;
+  transform: scaleY(var(--eq-rest));
+  --eq-rest: 0.6;
+  --eq-period: 1s;
+  --eq-phase: 0s;
+}
+
+[data-eq]:nth-child(1) {
+  --eq-rest: 0.55;
+  --eq-period: 1.1s;
+  --eq-phase: -0.4s;
+}
+
+[data-eq]:nth-child(2) {
+  --eq-rest: 1;
+  --eq-period: 0.8s;
+  --eq-phase: -0.15s;
+}
+
+[data-eq]:nth-child(3) {
+  --eq-rest: 0.7;
+  --eq-period: 1.3s;
+  --eq-phase: -0.7s;
+}
+
+[data-eq]:nth-child(4) {
+  --eq-rest: 0.4;
+  --eq-period: 0.95s;
+  --eq-phase: -0.5s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-eq] {
+    animation: eq var(--eq-period) ease-in-out var(--eq-phase) infinite;
+  }
+}
+
+/*
  * Disclosures (`<details class="disclosure">`): the answer or the list below
  * a summary grows open in 240ms ease-out and folds away faster (160ms), and
  * the caret turns with it. Native <details>, so it works without JavaScript;
