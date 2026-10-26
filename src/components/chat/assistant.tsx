@@ -289,7 +289,7 @@ export function Identity({
         id={isHome ? "work-title" : undefined}
         data-enter=""
         style={{ "--i": 0 } as CSSProperties}
-        className="text-name font-semibold"
+        className="text-hero text-name font-semibold"
       >
         {name}
       </Name>

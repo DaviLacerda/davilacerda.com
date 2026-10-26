@@ -33,7 +33,7 @@ export function AuthorCard({ lang }: { lang: Locale }) {
             <span className="link-underline">{dict.blog.moreAboutMe}</span>
             <ArrowRightIcon
               aria-hidden="true"
-              className="size-4 transition-transform duration-150 ease-out group-hover:translate-x-0.5"
+              className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
             />
           </Link>
         </li>

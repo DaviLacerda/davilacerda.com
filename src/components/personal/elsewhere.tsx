@@ -58,7 +58,7 @@ export function SocialList({
               {...(external
                 ? { target: "_blank", rel: "me noopener noreferrer" }
                 : {})}
-              className="group flex items-center gap-3 rounded-surface px-3 py-2.5 transition-colors duration-150 ease-out hover:bg-surface sm:px-4"
+              className="group flex items-center gap-3 rounded-surface px-3 py-2.5 transition-colors duration-200 ease-out hover:bg-surface sm:px-4"
             >
               {logo ? (
                 <BrandLogo id={logo} className="size-6" />
@@ -85,7 +85,7 @@ export function SocialList({
               {external ? (
                 <ArrowUpRightIcon
                   aria-hidden="true"
-                  className="size-4 shrink-0 text-muted-foreground transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
+                  className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
                 />
               ) : null}
             </a>

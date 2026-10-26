@@ -24,7 +24,7 @@ export default async function NotFound() {
 
   return (
     <Container className="pt-12 sm:pt-24">
-      <h1 {...enter(0)} className="text-display">
+      <h1 {...enter(0)} className="text-hero text-display">
         {dict.notFound.title}
       </h1>
       <p

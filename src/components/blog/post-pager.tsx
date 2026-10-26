@@ -51,7 +51,7 @@ function PagerLink({
     <Link
       href={post.url}
       rel={dir}
-      className="group flex items-center justify-between gap-6 rounded-surface px-4 py-4 transition-colors duration-150 ease-out hover:bg-surface sm:px-5"
+      className="group flex items-center justify-between gap-6 rounded-surface px-4 py-4 transition-colors duration-200 ease-out hover:bg-surface sm:px-5"
     >
       <span className="min-w-0">
         <span className="block text-small text-muted-foreground">{label}</span>
@@ -60,7 +60,7 @@ function PagerLink({
       <Icon
         aria-hidden="true"
         className={cn(
-          "size-5 shrink-0 text-muted-foreground transition-transform duration-150 ease-out group-hover:text-foreground",
+          "size-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-hover:text-foreground",
           dir === "prev"
             ? "order-first group-hover:-translate-x-0.5"
             : "group-hover:translate-x-0.5",

@@ -34,11 +34,11 @@ export function PostHeader({ post, translation }: PostHeaderProps) {
       <nav aria-label={dict.a11y.breadcrumb}>
         <Link
           href={routes.blog(lang)}
-          className="group -ml-1 inline-flex items-center gap-2 rounded-full px-1 py-1 text-small text-muted-foreground transition-colors duration-150 ease-out hover:text-foreground"
+          className="group -ml-1 inline-flex items-center gap-2 rounded-full px-1 py-1 text-small text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground"
         >
           <ArrowLeftIcon
             aria-hidden="true"
-            className="size-4 transition-transform duration-150 ease-out group-hover:-translate-x-0.5"
+            className="size-4 transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
           />
           {dict.blog.backToBlog}
         </Link>
@@ -47,7 +47,7 @@ export function PostHeader({ post, translation }: PostHeaderProps) {
       <h1
         data-enter=""
         style={{ "--i": 0 } as CSSProperties}
-        className={cn("mt-8 sm:mt-10", titleClass(post.title))}
+        className={cn("mt-8 text-hero sm:mt-10", titleClass(post.title))}
       >
         {post.title}
       </h1>

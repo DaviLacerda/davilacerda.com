@@ -38,7 +38,7 @@ export function TableOfContents({
           })}
     >
       <details className="group">
-        <summary className="inline-flex h-10 pressable cursor-pointer list-none items-center gap-2 rounded-full bg-surface px-4 text-small font-medium transition-colors duration-150 ease-out hover:bg-surface-strong [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex h-10 pressable cursor-pointer list-none items-center gap-2 rounded-full bg-surface px-4 text-small font-medium transition-colors duration-200 ease-out hover:bg-surface-strong [&::-webkit-details-marker]:hidden">
           {label}
           <CaretDownIcon
             aria-hidden="true"
@@ -50,7 +50,7 @@ export function TableOfContents({
             <li key={heading.id} className={cn(heading.depth === 3 && "pl-4")}>
               <a
                 href={`#${heading.id}`}
-                className="text-muted-foreground transition-colors duration-150 ease-out hover:text-foreground"
+                className="text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground"
               >
                 {heading.text}
               </a>

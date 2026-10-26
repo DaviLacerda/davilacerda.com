@@ -54,6 +54,9 @@ export const ptBr: Dictionary = {
     toggle: "Alternar tema de cores",
     switchToLight: "Mudar para o tema claro",
     switchToDark: "Mudar para o tema escuro",
+    system: "Sistema",
+    light: "Claro",
+    dark: "Escuro",
   },
 
   chat: {

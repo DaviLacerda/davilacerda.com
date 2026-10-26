@@ -118,11 +118,11 @@ colors:
 
 | Utility (`bg-*`, `text-*`)  | Light (dark)      | Use                                                           |
 | --------------------------- | ----------------- | ------------------------------------------------------------- |
-| `background` / `foreground` | #ffffff / #0a0a0a | page and body text (dark: #0a0a0a / #ededed)                  |
-| `surface`                   | #f4f4f4 (#161616) | panels, the composer, chips, tags, logo tiles, code           |
-| `surface-strong`            | #e8e8e8 (#222222) | hover on a surface, past jobs on the timeline                 |
+| `background` / `foreground` | #ffffff / #0a0a0a | page and body text (dark: #000000 / #ededed)                  |
+| `surface`                   | #f4f4f4 (#181818) | panels, the composer, chips, tags, logo tiles, code           |
+| `surface-strong`            | #e8e8e8 (#272727) | hover on a surface, past jobs on the timeline                 |
 | `muted-foreground`          | #666666 (#a1a1a1) | secondary lines only (>= 5.2:1 on page and surface)           |
-| `border`                    | #dcdcdc (#2e2e2e) | form fields and real tables only                              |
+| `border`                    | #dcdcdc (#313131) | form fields and real tables only                              |
 | `ink` / `on-ink`            | #0a0a0a / #ffffff | the headline panel, primary button, active chip (dark: white) |
 | `on-ink-muted`              | #a3a3a3 (#5c5c5c) | secondary lines on an ink panel (>= 5.6:1)                    |
 | `ring`                      | ink               | focus outline (global `:focus-visible`: 2px, 3px offset)      |
@@ -131,7 +131,11 @@ Rules: ink inverts with the theme (black panels and buttons in light, white in d
 emphasis on a screen is always the strongest contrast. Each answer has at most one ink panel (the
 award, the current job, UFU, the email); everything else sits on the page or on a `surface` fill.
 Surfaces are a fill one tone step from the page, never an outline or a shadow; lines only on form
-fields and real tables. Never hard-code hex colors in components (the OG template mirrors the
+fields and real tables. Dark surfaces use only the neutral steps #000000, #181818, #272727 and
+#313131. Backgrounds are always flat; the one gradient on the site is `text-hero`, a left to right
+fade on the letters of a page title (Davi's name, Personal, a post, the 404): #000 to #666 in
+light, #fff to #9b9b9b in dark. No italics anywhere (prose `em` is set in weight 500, code
+comments are plain muted grey). Never hard-code hex colors in components (the OG template mirrors the
 light tokens in `ogColors`). Davi's own violet favicons (`public/`) are kept as his brand; the UI
 draws the same mark in ink (`<BrandMark />`) and the generated app icons reproduce the favicon.
 
@@ -220,16 +224,16 @@ from `scale(0)`, transform and opacity only.
 | "Thinking" while the next answer loads | `leave()` on `open()`                      | the answer on screen dims to 0.35 and blurs 2px in 140ms                                                                                          |
 | Chip pill                              | `Composer` (`layoutId="chip-pill"`)        | spring 0.32s, no bounce, moves on click; instant while typing                                                                                     |
 | Timeline bars (`data-bar`)             | globals.css (clip-path reveal)             | 640ms ease-out, 140ms apart, on every mount                                                                                                       |
-| Scroll reveal                          | `<Reveal stagger? enter?>` (`animateMini`) | 500ms ease-out, rise 16px, 60ms stagger, once (Personal, blog)                                                                                    |
+| Scroll reveal                          | `<Reveal stagger? enter?>` (`inView`)      | 800ms `--ease-fluid`, rise 64px out of a 12px blur, 60ms stagger                                                                                  |
 | Disclosure (`details.disclosure`)      | globals.css (`::details-content`)          | open 240ms, close 160ms, ease-out; caret turns with it                                                                                            |
-| Header tab pill                        | `NavTabs` (`layoutId`)                     | spring 0.3s, no bounce, moves on click (optimistic)                                                                                               |
-| Theme icon swap                        | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur                                                                                                  |
+| Header tab pill (in the tab island)    | `NavTabs` (`layoutId`)                     | spring 0.3s, no bounce, moves on click (optimistic)                                                                                               |
+| Theme icon swap (System, Light, Dark)  | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur                                                                                                  |
 | Copy confirmation (email, credential)  | `CopyButton` (`CopyEmailButton` wraps it)  | 150ms blur crossfade of icon and label, width reserved                                                                                            |
 | Certificate viewer open / close        | `ImageLightbox` (Motion `animate()`)       | FLIP from the print's own place: spring 0.42s no bounce (close 0.34s), page fades behind in 240ms, caption 140ms later; reduced motion: fade only |
 | Now playing: song change               | `NowPlayingCard` (`AnimatePresence`)       | new cover and text rise 6px out of a 4px blur in 250ms ease-out once the cover has loaded; the old one blurs out in 150ms; reduced motion: fade   |
 | Now playing: equalizer (`data-eq`)     | globals.css (CSS keyframes)                | four bars, scaleY from the bottom, 0.8s to 1.3s loops out of phase, ease-in-out; reduced motion: still bars of different heights                  |
 | Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                                                                                                          |
-| Hover fills, arrow nudges, fields      | Tailwind transitions                       | 150ms ease-out                                                                                                                                    |
+| Hover fills, arrow nudges, fields      | Tailwind transitions                       | 200ms ease-out (never shorter, never a default curve)                                                                                             |
 
 The canvas swap is the assistant's signature: a chip click lights its chip at once (optimistic),
 the answer on screen steps back, and when the new route has rendered `Canvas` composes it in
@@ -327,7 +331,7 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<BrandMark>`                                                               | the pixel "d" in `currentColor`                                                                                 |
 | `<JsonLd data={node \| node[]}>`                                            | adds `@context`; arrays become one `@graph`                                                                     |
 | `<LocaleAlternates links>`                                                  | per-page locale switcher targets                                                                                |
-| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; the header is static (not sticky)                                                          |
+| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; static header, tabs in a round island, theme cycles System, Light, Dark                   |
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
 `reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, the

@@ -36,7 +36,7 @@ export function PostList({ posts, lang, enter }: PostListProps) {
         <li key={post.slug}>
           <Link
             href={post.url}
-            className="block rounded-surface px-4 py-4 transition-colors duration-150 ease-out hover:bg-surface sm:px-5"
+            className="block rounded-surface px-4 py-4 transition-colors duration-200 ease-out hover:bg-surface sm:px-5"
           >
             <span className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
               <span className="text-lead font-medium">{post.title}</span>
