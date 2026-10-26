@@ -67,10 +67,13 @@ export async function generateMetadata({
     keywords: [...siteConfig.keywords],
     category: "technology",
     formatDetection: { email: false, address: false, telephone: false },
+    // Generated from the vector mark by `yarn brand`. The SVG follows the
+    // browser's light or dark theme; the .ico (16/32/48) is the fallback, and
+    // its explicit size keeps Chrome on the SVG.
     icons: {
       icon: [
-        { url: "/favicon.ico", sizes: "any" },
-        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+        { url: "/favicon.ico", sizes: "32x32" },
+        { url: "/favicon.svg", type: "image/svg+xml" },
       ],
       apple: "/apple-touch-icon.png",
     },

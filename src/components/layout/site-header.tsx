@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { BrandMark } from "@/components/brand-mark";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { NavTabs } from "@/components/layout/nav-tabs";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -29,7 +29,7 @@ export function SiteHeader({ lang }: { lang: Locale }) {
           aria-label={dict.a11y.home}
           className="-ml-1 flex items-center gap-2.5 rounded-lg p-1 text-body font-medium tracking-tight"
         >
-          <BrandMark className="h-5 w-auto" />
+          <BrandMark draw className="h-6 w-auto" />
           <span className="hidden sm:inline">{profile.name}</span>
         </Link>
 
