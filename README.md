@@ -61,6 +61,8 @@ The Watching card on the Personal tab reads `watching` in
 { title: "Georgie & Mandy's First Marriage", year: 2024, network: "CBS", url: "https://en.wikipedia.org/wiki/Georgie_%26_Mandy%27s_First_Marriage" },
 ```
 
+The poster comes from [TVMaze](https://www.tvmaze.com/api) by the title (no key, cached for a day). To use your own image instead, add `poster: "/images/watching/<file>"`.
+
 `url` (a page about the show) and `network` are optional. Without a `poster` the card sets the
 title's initials on a dark tile; to show a poster, put a file you are allowed to use in `public/`
 (2:3, e.g. `public/images/watching/show.webp`) and add `poster: "/images/watching/show.webp"`.

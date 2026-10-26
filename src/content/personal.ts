@@ -5,6 +5,7 @@
  * work stay in `profile.ts`.)
  *
  * - Watching: replace the entry (one line); add a second one to show two.
+ *   The poster is looked up on TVMaze by the title.
  * - Teams: add, remove or reorder entries. `espnId` is ESPN's number for
  *   the team: for a club it is in its espn.com URL
  *   (espn.com/soccer/team/_/id/874/corinthians); for an NBA or NFL team,
@@ -27,7 +28,7 @@ export type Watching = {
   network?: string;
   /** A page about it (opens in a new tab). */
   url?: string;
-  /** A poster you are allowed to use, as a file in /public (2:3), e.g. "/images/watching/show.webp". Without one the card sets the title's initials. */
+  /** Optional poster file in /public (2:3). Without one the poster comes from TVMaze by title; if that fails, the card sets the title's initials. */
   poster?: string;
 };
 

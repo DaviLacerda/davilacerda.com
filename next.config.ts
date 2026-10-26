@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
     // Team logos on the Personal tab (ESPN's CDN, 500px PNGs shown at 28px).
     remotePatterns: [
       { protocol: "https", hostname: "a.espncdn.com", pathname: "/i/**" },
+      {
+        protocol: "https",
+        hostname: "static.tvmaze.com",
+        pathname: "/uploads/**",
+      },
     ],
   },
 };

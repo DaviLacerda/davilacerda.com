@@ -473,8 +473,10 @@ beside the Watching card.
 - **Setup:** README, "Spotify now playing" (`yarn spotify:token`, `.env.example`).
 
 Beside it, the **Watching** card: the show in `watching` (`personal.ts`), static, linking to a page
-about it. Its status line is "Watching" and the title may take two lines; the network and year
-are in its accessible name. It is a static fact, so the Markdown and llms-full carry it.
+about it. Its poster comes from TVMaze (`api.tvmaze.com/singlesearch/shows?q=<title>`, no key,
+`revalidate` one day, 4s timeout, only `static.tvmaze.com` images); a `poster` file in `/public`
+wins, and any failure falls back to the title's initials. Its status line is "Watching" and the
+title may take two lines; the network and year are in its accessible name. It is a static fact, so the Markdown and llms-full carry it.
 
 ## My teams (ESPN)
 

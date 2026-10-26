@@ -29,11 +29,39 @@ function initials(title: string): string {
  * it first aired go into its accessible name. Static: the show is one line
  * in `src/content/personal.ts`.
  */
-export function WatchingCards({ lang }: { lang: Locale }) {
+export async function WatchingCards({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
-  return watching.map((show) => (
-    <WatchingCard key={show.title} show={show} dict={dict} />
+  const posters = await Promise.all(
+    watching.map((show) => show.poster ?? fetchPoster(show.title)),
+  );
+  return watching.map((show, i) => (
+    <WatchingCard
+      key={show.title}
+      show={{ ...show, poster: posters[i] }}
+      dict={dict}
+    />
   ));
+}
+
+/**
+ * The show's poster from TVMaze (no key), looked up by title and cached for
+ * a day. Any failure leaves the card on the title's initials.
+ */
+async function fetchPoster(title: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(
+      `https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(title)}`,
+      { next: { revalidate: 86_400 }, signal: AbortSignal.timeout(4000) },
+    );
+    if (!res.ok) return undefined;
+    const show = (await res.json()) as {
+      image?: { medium?: string; original?: string } | null;
+    };
+    const src = show.image?.medium ?? show.image?.original;
+    return src?.startsWith("https://static.tvmaze.com/") ? src : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function WatchingCard({ show, dict }: { show: Watching; dict: Dictionary }) {
