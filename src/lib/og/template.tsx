@@ -6,7 +6,7 @@ import path from "node:path";
 
 import type { CSSProperties, ReactNode } from "react";
 
-import { BRAND_MARK } from "@/components/brand-mark";
+import { BRAND_MARK, brandMarkWidth } from "@/components/brand/mark";
 import { siteConfig } from "@/config/site";
 import { profile } from "@/content/profile";
 import { getLogoSvg, type LogoId } from "@/lib/logos";
@@ -81,21 +81,21 @@ export function ogPublicImage(publicPath: string): string {
   return uri;
 }
 
-/** Davi's mark (see `@/components/brand-mark`) as an inline SVG. */
+/** Davi's mark (`@/components/brand/mark`) as an inline SVG. */
 export function OgMark({
-  height = 34,
+  height = 36,
   color = ogColors.ink,
 }: {
   height?: number;
   color?: string;
 }) {
-  const width = Math.round((height * 139) / 128);
   return (
-    <svg width={width} height={height} viewBox={BRAND_MARK.viewBox}>
-      <path fillRule="evenodd" fill={color} d={BRAND_MARK.body} />
-      {BRAND_MARK.pixels.map((pixel) => (
-        <rect key={`${pixel.x}-${pixel.y}`} fill={color} {...pixel} />
-      ))}
+    <svg
+      width={brandMarkWidth(height)}
+      height={height}
+      viewBox={BRAND_MARK.viewBox}
+    >
+      <path fillRule="evenodd" fill={color} d={BRAND_MARK.glyph} />
     </svg>
   );
 }

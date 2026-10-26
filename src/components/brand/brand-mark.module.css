@@ -1,0 +1,50 @@
+/*
+ * <BrandMark>: the hover tilt and the one-time pen draw (brand-mark.tsx).
+ *
+ * The draw is a mask over the filled glyph: a wide, round-capped stroke along
+ * the glyph's centre line whose dash grows from nothing to the whole line, so
+ * the "d" is written bowl first, then the stem and the flag, and ends exactly
+ * as the filled shape. It only runs while <html> has `data-brand-draw` (set
+ * once per session by the inline script); otherwise the mask's white rect
+ * shows the whole glyph, so no JavaScript, reduced motion or a later visit all
+ * get the plain mark.
+ */
+
+.mark {
+  transform-origin: 30% 85%;
+}
+
+/* Hovering the home link: the "d" straightens a little and lifts, like a nib
+   leaving the paper. Pointer devices only. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mark {
+    transition: transform 200ms var(--ease-out);
+  }
+
+  a:hover > .mark {
+    transform: rotate(-7deg) translateY(-1px);
+  }
+}
+
+/* 900ms ease-in-out, softer at the start than --ease-in-out so the pen gets
+   going at once, and slow on the flag at the end. */
+@media (prefers-reduced-motion: no-preference) {
+  :global(html[data-brand-draw]) .still {
+    visibility: hidden;
+  }
+
+  :global(html[data-brand-draw]) .pen {
+    animation: pen-draw 900ms cubic-bezier(0.45, 0, 0.25, 1) both;
+  }
+}
+
+/* --pen-from (inline) is the pen's length plus one: the dash starts out of sight. */
+@keyframes pen-draw {
+  from {
+    stroke-dashoffset: var(--pen-from);
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}

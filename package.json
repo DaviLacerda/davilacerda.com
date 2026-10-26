@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "logos": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/logos.mjs",
+    "brand": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/brand.mjs",
     "spotify:token": "node scripts/spotify-refresh-token.mjs"
   },
   "dependencies": {
