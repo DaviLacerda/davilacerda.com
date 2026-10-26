@@ -8,16 +8,18 @@ import { LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
-import { formatPartialDate } from "@/i18n/format";
+import { formatPartialDate, toIsoDate } from "@/i18n/format";
 import { cn } from "@/lib/utils";
 import { splitCompanyName } from "@/lib/work/answers";
 
 import { BlockTitle, fit, Panel } from "./parts";
+import { PressList } from "./press";
 
 /**
  * Sales Copilot: the award first, as large as the canvas allows, on the ink
  * panel; then the project's four facts in large type; then how it was built,
- * drawn as its three layers with the AI tools in the middle.
+ * drawn as its three layers with the AI tools in the middle; then the press
+ * that covered it.
  */
 export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
@@ -83,7 +85,19 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
                 <TrophyIcon aria-hidden="true" className="size-6 text-on-ink" />
                 {labels.award}
               </span>
-              {award?.issuer ? <span>{award.issuer}</span> : null}
+              {award?.issuer ? (
+                <span>
+                  {award.issuer}
+                  {award.date ? (
+                    <>
+                      {", "}
+                      <time dateTime={toIsoDate(award.date)}>
+                        {formatPartialDate(award.date, lang)}
+                      </time>
+                    </>
+                  ) : null}
+                </span>
+              ) : null}
             </p>
             <div className="@container">
               <h2
@@ -137,6 +151,20 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
           className="mt-6"
         />
       </Piece>
+
+      {project.press?.length ? (
+        <Piece
+          i={5}
+          as="section"
+          className="mt-14"
+          aria-labelledby="press-title"
+        >
+          <BlockTitle id="press-title">
+            {dict.chat.answers.press.title}
+          </BlockTitle>
+          <PressList items={project.press} lang={lang} className="mt-5" />
+        </Piece>
+      ) : null}
     </>
   );
 }

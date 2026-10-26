@@ -107,13 +107,19 @@ export function jsonResume(lang: Locale) {
         region: profile.location.region,
         countryCode: profile.location.countryCode,
       },
-      profiles: profile.socials
-        .filter((social) => social.id !== "email")
-        .map((social) => ({
-          network: dict.socials[social.id],
-          username: social.handle.replace(/^@|^in\//, ""),
-          url: social.url,
-        })),
+      profiles: [
+        ...profile.socials
+          .filter((social) => social.id !== "email")
+          .map((social) => ({
+            network: dict.socials[social.id],
+            username: social.handle.replace(/^@|^in\//, ""),
+            url: social.url,
+          })),
+        {
+          network: profile.credentialsProfile.name,
+          url: t(profile.credentialsProfile.url, lang),
+        },
+      ],
     },
     work: profile.experience.map((job) => ({
       name: t(job.company, lang),
@@ -157,9 +163,11 @@ export function jsonResume(lang: Locale) {
     projects: profile.projects.map((project) => ({
       name: t(project.name, lang),
       description: t(project.description, lang),
-      highlights: [project.award && t(project.award, lang)].filter(
-        (value): value is string => Boolean(value),
-      ),
+      highlights: [
+        project.award && t(project.award, lang),
+        project.metric &&
+          `${project.metric.value} ${t(project.metric.label, lang)}`,
+      ].filter((value): value is string => Boolean(value)),
       keywords: project.stack,
       ...(project.year ? { startDate: project.year } : {}),
       ...(project.role ? { roles: [t(project.role, lang)] } : {}),

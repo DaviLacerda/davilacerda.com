@@ -139,7 +139,7 @@ export function Overview({ lang }: { lang: Locale }) {
             href={routes.topic(lang, "contact")}
             className="group flex pressable-panel flex-wrap items-center gap-x-6 gap-y-1 rounded-panel bg-surface px-6 py-5 hover:bg-surface-strong sm:px-8 sm:py-6"
           >
-            <h3 className="font-semibold">{dict.work.hero.availability}</h3>
+            <h3 className="font-semibold">{dict.work.hero.talk}</h3>
             <span className="text-muted-foreground">{profile.email}</span>
             <PanelArrow className="ml-auto" />
           </AskLink>

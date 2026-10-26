@@ -63,7 +63,7 @@ export function topicLead(topic: TopicId, lang: Locale): string {
     case "faq":
       return dict.chat.topics.faq.intro;
     case "contact":
-      return faqAnswer("open-to-roles", lang);
+      return faqAnswer("contact", lang);
   }
 }
 
@@ -174,15 +174,23 @@ export function timezoneOffset(lang: Locale): string {
   return parts.find((part) => part.type === "timeZoneName")?.value ?? "";
 }
 
-/** Logo wall order: the platform first, then languages, frameworks, data, tools. */
+/**
+ * Logo wall order: the platform first, then languages, the AI tooling,
+ * frameworks, data and tools. The first eight are the skills card's row.
+ */
 const WALL_ORDER: LogoId[] = [
   "azure",
   "python",
   "typescript",
+  "mcp",
+  "claude",
+  "githubcopilot",
+  "langchain",
   "nextjs",
   "react",
+  "svelte",
+  "dotnet",
   "nodejs",
-  "mcp",
   "tailwind",
   "postgresql",
   "supabase",

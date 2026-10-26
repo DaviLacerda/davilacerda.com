@@ -311,9 +311,12 @@ export function personJsonLd(lang: Locale): PersonLeaf {
           .filter(Boolean)
           .join(", "),
       ),
-    sameAs: profile.socials
-      .filter((social) => social.sameAs)
-      .map((social) => social.url),
+    sameAs: [
+      ...profile.socials
+        .filter((social) => social.sameAs)
+        .map((social) => social.url),
+      t(profile.credentialsProfile.url, lang),
+    ],
   };
 }
 

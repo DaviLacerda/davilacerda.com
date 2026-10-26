@@ -2,7 +2,7 @@ import { Piece } from "@/components/chat/piece";
 import { TextLink } from "@/components/ui/text-link";
 import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
-import { formatPartialDate } from "@/i18n/format";
+import { formatDateRange, formatPartialDate } from "@/i18n/format";
 
 import { BlockTitle, Panel } from "./parts";
 
@@ -55,10 +55,12 @@ export function EducationAnswer({ lang }: { lang: Locale }) {
                 <p className="mt-1 text-small text-on-ink-muted">
                   {[
                     t(edu.degree, lang),
+                    edu.end
+                      ? formatDateRange(edu.start, edu.end, lang)
+                      : edu.thesis?.year
+                        ? `${labels.thesis} ${formatPartialDate(edu.thesis.year, lang)}`
+                        : null,
                     t(edu.location, lang),
-                    edu.thesis?.year
-                      ? `${labels.thesis} ${formatPartialDate(edu.thesis.year, lang)}`
-                      : null,
                   ]
                     .filter(Boolean)
                     .join(", ")}

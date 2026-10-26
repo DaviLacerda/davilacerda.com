@@ -5,8 +5,9 @@
  * - `simple-icons:*` (@iconify-json/simple-icons): one path in `currentColor`.
  *
  * The rule, applied everywhere: a logo keeps its brand colours, except marks
- * whose brand colour is black or white (GitHub, Next.js, Vercel, Instagram's
- * glyph, MCP), which take the ink colour so they flip with the theme.
+ * whose brand colour is black or white (GitHub, GitHub Copilot, LangChain,
+ * Next.js, Vercel, Instagram's glyph, MCP), which take the ink colour so they
+ * flip with the theme.
  *
  * `names` are the strings used in `src/content/profile.ts` (stacks and skill
  * lists) that should show this logo; matching ignores case.
@@ -29,7 +30,7 @@ export const logoRegistry = {
   azure: {
     icon: "logos:microsoft-azure",
     label: "Microsoft Azure",
-    names: ["Azure", "Microsoft Azure"],
+    names: ["Azure", "Microsoft Azure", "Azure OpenAI", "Azure AI Foundry"],
   },
   microsoft: { icon: "logos:microsoft-icon", label: "Microsoft" },
   vercel: { icon: "simple-icons:vercel", label: "Vercel", names: ["Vercel"] },
@@ -64,10 +65,27 @@ export const logoRegistry = {
   figma: { icon: "logos:figma", label: "Figma", names: ["Figma"] },
   java: { icon: "logos:java", label: "Java", names: ["Java"] },
   spring: { icon: "logos:spring-icon", label: "Spring", names: ["Spring"] },
+  svelte: { icon: "logos:svelte-icon", label: "Svelte", names: ["Svelte"] },
+  dotnet: { icon: "logos:dotnet", label: ".NET", names: [".NET"] },
   mcp: {
     icon: "simple-icons:modelcontextprotocol",
     label: "Model Context Protocol",
     names: ["Model Context Protocol (MCP)", "MCP"],
+  },
+  claude: {
+    icon: "logos:claude-icon",
+    label: "Claude Code",
+    names: ["Claude Code"],
+  },
+  githubcopilot: {
+    icon: "simple-icons:githubcopilot",
+    label: "GitHub Copilot",
+    names: ["GitHub Copilot"],
+  },
+  langchain: {
+    icon: "simple-icons:langchain",
+    label: "LangChain",
+    names: ["LangChain"],
   },
   github: {
     icon: "simple-icons:github",

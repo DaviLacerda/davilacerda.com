@@ -11,9 +11,9 @@ import { timezoneOffset } from "@/lib/work/answers";
 import { BlockTitle, fit, Panel } from "./parts";
 
 /**
- * Contact: the email as the headline of the ink panel, then whether Davi is
- * open to roles and the two ways to use the email; then the other places to
- * find him and his time zone.
+ * Contact: the email as the headline of the ink panel, then one warm line
+ * (always happy to talk) and the two ways to use the email; then the other
+ * places to find him and his time zone.
  */
 export function ContactAnswer({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
@@ -40,20 +40,9 @@ export function ContactAnswer({ lang }: { lang: Locale }) {
             </h2>
           </div>
           <div>
-            {profile.availability.open ? (
-              <p className="flex items-start gap-2.5">
-                <span
-                  aria-hidden="true"
-                  className="mt-[0.6em] size-2 shrink-0 rounded-full bg-on-ink"
-                />
-                <span>
-                  {dict.work.hero.availability}
-                  <span className="block text-on-ink-muted">
-                    {t(profile.availability.modes, lang)}
-                  </span>
-                </span>
-              </p>
-            ) : null}
+            <p className="max-w-[52ch] text-lead text-balance">
+              {dict.work.hero.talkLine}
+            </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink
                 href={`mailto:${profile.email}`}

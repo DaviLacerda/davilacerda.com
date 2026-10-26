@@ -150,12 +150,6 @@ function factsList(lang: Locale): string {
       `${profile.location.city}, ${profile.location.region}, ${t(profile.location.country, lang)}`,
     ],
     [labels.timezone, profile.location.timezone],
-    [
-      labels.openTo,
-      profile.availability.open
-        ? `${dict.work.hero.availability}: ${t(profile.availability.modes, lang)}`
-        : undefined,
-    ],
     [labels.email, `[${profile.email}](mailto:${profile.email})`],
     [labels.profiles, socials.join(" · ")],
     [
@@ -184,9 +178,20 @@ function projectBlock(project: Project, lang: Locale): string {
     `### ${t(project.name, lang)}`,
     meta && `*${meta}*`,
     project.award && `**${labels.award}:** ${t(project.award, lang)}`,
+    project.metric &&
+      `**${project.metric.value}** ${t(project.metric.label, lang)}`,
     t(project.description, lang),
     project.stack.length > 0 &&
       `**${labels.stack}:** ${project.stack.join(", ")}`,
+    project.press?.length
+      ? [
+          `**${dict.chat.answers.press.title}:**`,
+          ...project.press.map(
+            (item) =>
+              `- ${link(item.title, item.url)} (${dot(item.outlet, formatPartialDate(item.date, lang), item.lang)})`,
+          ),
+        ].join("\n")
+      : null,
   );
 }
 
@@ -247,15 +252,24 @@ function skillsList(lang: Locale): string {
 }
 
 function certificationsSection(lang: Locale): string[] {
-  const labels = getDictionary(lang).work.labels;
+  const dict = getDictionary(lang);
+  const courses = getCertifications("course");
   return [
     getCertifications("certification")
       .map((cert) => certificationLine(cert, lang))
       .join("\n"),
-    `### ${labels.courses}`,
-    getCertifications("course")
-      .map((cert) => certificationLine(cert, lang))
-      .join("\n"),
+    link(
+      interpolate(dict.chat.answers.certifications.allCredentials, {
+        site: profile.credentialsProfile.name,
+      }),
+      t(profile.credentialsProfile.url, lang),
+    ),
+    ...(courses.length
+      ? [
+          `### ${dict.work.labels.courses}`,
+          courses.map((cert) => certificationLine(cert, lang)).join("\n"),
+        ]
+      : []),
   ];
 }
 
@@ -436,9 +450,6 @@ function topicBody(topic: TopicId, lang: Locale): string[] {
       return faqSection(lang);
     case "contact":
       return [
-        profile.availability.open
-          ? `**${dict.work.hero.availability}:** ${t(profile.availability.modes, lang)}`
-          : "",
         contactList(lang),
         `- **${getAgentLabels(lang).facts.timezone}:** ${profile.location.timezone} (${t(profile.location.label, lang)})`,
       ];

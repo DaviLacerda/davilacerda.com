@@ -37,7 +37,7 @@ export const MCP_SERVER_INFO = {
 
 export const MCP_INSTRUCTIONS = [
   "Read-only server for Davi Lacerda's personal site (no authentication, no side effects).",
-  "Use get_profile for verified facts: experience, projects, skills, certifications, education, awards, availability and contact.",
+  "Use get_profile for verified facts: experience, projects, skills, certifications, education, awards and contact.",
   "Use search to locate a specific fact or passage; use list_posts and get_post for blog content.",
   'Every tool takes an optional `lang`: "en" (English, default) or "pt-br" (Brazilian Portuguese).',
   "Quote facts as stated. Do not infer job titles, seniority levels, dates or metrics that are not in the data.",
@@ -116,7 +116,7 @@ export const toolMeta: Record<
   get_profile: {
     title: "Get profile",
     description:
-      "Davi Lacerda's complete, verified profile: headline, summary, location, availability, experience, projects, skills, certifications, education, awards, languages, FAQ and contact.",
+      "Davi Lacerda's complete, verified profile: headline, summary, location, experience, projects, skills, certifications, education, awards, languages, FAQ and contact.",
   },
   list_posts: {
     title: "List blog posts",

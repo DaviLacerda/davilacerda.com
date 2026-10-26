@@ -489,24 +489,11 @@ function EmailVisual({ lang }: { lang: Locale }) {
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          gap: 14,
           fontSize: 26,
           color: ogColors.onInkMuted,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            width: 12,
-            height: 12,
-            borderRadius: 12,
-            background: ogColors.onInk,
-          }}
-        />
-        {profile.availability.open
-          ? dict.work.hero.availability
-          : dict.chat.topics.contact.title}
+        {dict.work.hero.talk}
       </div>
       <div
         style={{

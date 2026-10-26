@@ -60,10 +60,24 @@ export type Experience = {
   stack: string[];
 };
 
+/** A news article about a project. Only links that were opened and checked. */
+export type PressLink = {
+  /** The publication, as it writes its own name ("Mobile Time"). */
+  outlet: string;
+  /** The headline as published (not translated). */
+  title: string;
+  url: string;
+  date: PartialDate;
+  /** BCP 47 language of the article ("pt-BR"). */
+  lang: string;
+};
+
 /** Something Davi built at a job (it may be private). */
 export type Project = {
   id: string;
   name: Localizable;
+  /** One line for the project's card (the full story is `description`). */
+  summary?: L10n;
   description: L10n;
   stack: string[];
   /** Organization the project was built for, if any. */
@@ -72,6 +86,10 @@ export type Project = {
   role?: L10n;
   /** Award or recognition, displayed as a badge. */
   award?: L10n;
+  /** The headline result, set large on the card: "96%" and what it measures. */
+  metric?: { value: string; label: L10n };
+  /** Press coverage, newest first. */
+  press?: PressLink[];
   isPrivate?: boolean;
   year?: PartialDate;
 };
@@ -193,8 +211,6 @@ export type Profile = {
   image?: string;
   /** Things Davi likes away from work (the Personal tab). */
   interests: Interest[];
-  /** Open to new roles, and on which terms. */
-  availability: { open: boolean; modes: L10n };
   currentEmployer: { name: string; url?: string };
   socials: Social[];
   highlights: Highlight[];
@@ -204,6 +220,8 @@ export type Profile = {
   /** Extra topics for schema.org `knowsAbout` (merged with skills). */
   knowsAbout: string[];
   certifications: Certification[];
+  /** Davi's public profile listing every credential he holds (Microsoft Learn), per locale. */
+  credentialsProfile: { name: string; url: L10n };
   education: Education[];
   achievements: Achievement[];
   languages: SpokenLanguage[];
@@ -235,15 +253,15 @@ export const profile: Profile = {
   },
 
   summary: {
-    en: "I'm an AI Engineer at Algar in Uberlândia, Brazil, focused on Generative AI and AI agents. I was the main developer behind Algar's Sales Copilot, designing and building it end to end, from the back end and front end to the AI tools that power it; it won Best AI Project in LATAM at the Conecta Latam awards. My background spans front-end and back-end development, machine learning, UI/UX design and automation, and I hold three Microsoft certifications: Expert in multi-agent AI solutions and in agentic AI architecture, and Associate in Azure AI apps and agents. These days I'm most interested in agents, the Model Context Protocol (MCP) and making GenAI dependable in real products.",
+    en: "I'm an AI Engineer at Algar in Uberlândia, Brazil, focused on Generative AI and AI agents. I was the main developer behind Algar's Sales Copilot, designing and building it end to end, from the back end and front end to the AI tools that power it; it won Best AI Project in LATAM at the Conecta Latam awards. My other work there includes Billy, a GenAI app that cut manual invoice review time by 96%, and a move to newer models that cut GenAI costs by more than 40%. I also lead the adoption of Claude Code and GitHub Copilot across Algar's engineering teams. I hold three Microsoft certifications: Expert in multi-agent AI solutions and in agentic AI architecture, and Associate in Azure AI apps and agents. These days I'm most interested in agents, the Model Context Protocol (MCP) and making GenAI dependable in real products.",
     "pt-br":
-      "Sou Engenheiro de IA na Algar, em Uberlândia, com foco em IA Generativa e agentes de IA. Fui o principal desenvolvedor do Sales Copilot da Algar, que projetei e construí de ponta a ponta, do back-end e do front-end às ferramentas de IA que o fazem funcionar; ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam. Minha experiência passa por desenvolvimento front-end e back-end, machine learning, UI/UX design e automação, e tenho três certificações Microsoft: Expert em soluções de IA multiagente e em arquitetura de IA agêntica, e Associate em apps e agentes de IA no Azure. Hoje me interesso principalmente por agentes, pelo Model Context Protocol (MCP) e por tornar a IA Generativa confiável em produtos reais.",
+      "Sou Engenheiro de IA na Algar, em Uberlândia, com foco em IA Generativa e agentes de IA. Fui o principal desenvolvedor do Sales Copilot da Algar, que projetei e construí de ponta a ponta, do back-end e do front-end às ferramentas de IA que o fazem funcionar; ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam. Também trabalhei no Billy, uma aplicação de IA Generativa que reduziu em 96% o tempo de revisão manual de faturas, e numa migração para modelos mais novos que cortou mais de 40% dos custos com IA Generativa. Também lidero a adoção do Claude Code e do GitHub Copilot entre os times de engenharia da Algar. Tenho três certificações Microsoft: Expert em soluções de IA multiagente e em arquitetura de IA agêntica, e Associate em apps e agentes de IA no Azure. Hoje me interesso principalmente por agentes, pelo Model Context Protocol (MCP) e por tornar a IA Generativa confiável em produtos reais.",
   },
 
   tldr: {
-    en: "Davi Lacerda (Davi Tobias Lacerda) is an AI Engineer based in Uberlândia, Minas Gerais, Brazil. He has worked as an AI Engineer at Algar since August 2024 and was the main developer of Algar's Sales Copilot, which won Best AI Project in LATAM at the Conecta Latam awards. He holds three Microsoft certifications (Multi-Agent AI Solutions Expert and Agentic AI Business Solutions Architect, both Expert level, and Azure AI Apps and Agents Developer Associate), studied Computer Science at the Federal University of Uberlândia (UFU), and works across Generative AI, AI agents, Azure, the AI SDK and full-stack development. He is open to AI Engineer roles, on-site or hybrid in Uberlândia and remote, and can be reached at davi16lacerda@gmail.com.",
+    en: "Davi Lacerda (Davi Tobias Lacerda) is an AI Engineer based in Uberlândia, Minas Gerais, Brazil. He has worked as an AI Engineer at Algar since August 2024 and was the main developer of Algar's Sales Copilot, which won Best AI Project in LATAM at the Conecta Latam awards in December 2025. His other work there includes Billy, a generative AI app that cut manual invoice review time by 96%, and, since May 2026, leading the adoption of Claude Code and GitHub Copilot across Algar's engineering teams. He holds three Microsoft certifications (Multi-Agent AI Solutions Expert and Agentic AI Business Solutions Architect, both Expert level, and Azure AI Apps and Agents Developer Associate), a B.Sc. in Computer Science from the Federal University of Uberlândia (UFU, 2024), and works across Generative AI, AI agents, Azure, the AI SDK and full-stack development. He is always happy to talk about AI and agents, at davi16lacerda@gmail.com.",
     "pt-br":
-      "Davi Lacerda (Davi Tobias Lacerda) é Engenheiro de IA em Uberlândia, Minas Gerais, Brasil. Ele atua como Engenheiro de IA na Algar desde agosto de 2024 e foi o principal desenvolvedor do Sales Copilot da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam. Tem três certificações Microsoft (Multi-Agent AI Solutions Expert e Agentic AI Business Solutions Architect, ambas de nível Expert, e Azure AI Apps and Agents Developer Associate), estudou Ciência da Computação na Universidade Federal de Uberlândia (UFU) e atua com IA Generativa, agentes de IA, Azure, AI SDK e desenvolvimento full-stack. Está aberto a vagas de Engenheiro de IA, presenciais ou híbridas em Uberlândia e remotas, e pode ser contatado em davi16lacerda@gmail.com.",
+      "Davi Lacerda (Davi Tobias Lacerda) é Engenheiro de IA em Uberlândia, Minas Gerais, Brasil. Ele atua como Engenheiro de IA na Algar desde agosto de 2024 e foi o principal desenvolvedor do Sales Copilot da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam em dezembro de 2025. Também trabalhou no Billy, uma aplicação de IA Generativa que reduziu em 96% o tempo de revisão manual de faturas, e, desde maio de 2026, lidera a adoção do Claude Code e do GitHub Copilot entre os times de engenharia da Algar. Tem três certificações Microsoft (Multi-Agent AI Solutions Expert e Agentic AI Business Solutions Architect, ambas de nível Expert, e Azure AI Apps and Agents Developer Associate), é bacharel em Ciência da Computação pela Universidade Federal de Uberlândia (UFU, 2024) e atua com IA Generativa, agentes de IA, Azure, AI SDK e desenvolvimento full-stack. Está sempre aberto a uma conversa sobre IA e agentes, em davi16lacerda@gmail.com.",
   },
 
   location: {
@@ -275,14 +293,6 @@ export const profile: Profile = {
       label: { en: "Series on shuffle", "pt-br": "Séries no aleatório" },
     },
   ],
-
-  availability: {
-    open: true,
-    modes: {
-      en: "On-site or hybrid in Uberlândia, and remote",
-      "pt-br": "Presencial ou híbrido em Uberlândia, e remoto",
-    },
-  },
 
   // TODO(davi): confirm Algar's URL (or the specific Algar company you work for).
   currentEmployer: { name: "Algar", url: "https://www.algar.com.br" },
@@ -324,6 +334,14 @@ export const profile: Profile = {
         en: "in LATAM at the Conecta Latam awards, for Algar's Sales Copilot",
         "pt-br":
           "da América Latina no prêmio Conecta Latam, com o Sales Copilot da Algar",
+      },
+    },
+    {
+      value: { en: "96%", "pt-br": "96%" },
+      label: {
+        en: "less time on manual invoice review with Billy, at Algar",
+        "pt-br":
+          "menos tempo de revisão manual de faturas com o Billy, na Algar",
       },
     },
     {
@@ -369,29 +387,34 @@ export const profile: Profile = {
         "pt-br":
           "Projeto, construo e coloco em produção produtos de IA Generativa e agentes de IA na Algar, sendo responsável por eles da arquitetura à produção.",
       },
+      // From Davi's CV (October 2026). His formal titles there are not shown on purpose.
       highlights: {
         en: [
-          "Led Algar's Sales Copilot as main developer and owned it end to end, from architecture and back end to the front end and the AI tools that power it. It won Best AI Project in LATAM at the Conecta Latam awards.",
-          "Design and build multi-agent and agentic AI systems that take Generative AI from prototype to production.",
-          "Architect enterprise-grade AI solutions on Microsoft Azure with security, governance and business outcomes in mind.",
-          "Work full-stack across back-end services, user-facing interfaces and the AI tooling between them, with TypeScript, Python and the AI SDK.",
-          "Contributed to pricing, data and FinOps initiatives alongside Generative AI projects.",
+          "Main developer of Algar's Sales Copilot, built end to end: a Svelte front end, a .NET back end and the AI tools on Azure OpenAI. It listens to sales calls in real time, suggests arguments and offers, and won Best AI Project in LATAM at the Conecta Latam awards.",
+          "Billy: a generative AI app that automates telecom invoice analysis and validation with Azure OpenAI and RPA. It cut manual review time by 96% and saved millions in operating costs.",
+          "Bud: an agent built with Copilot Studio, Power Automate and a message broker that lets Microsoft Teams users request SAP reports and actions through RPA. It cut the projects team's workload by 40%.",
+          "Led the move to newer generative AI models across several projects, cutting costs by more than 40% with no loss in performance or accuracy (GenAI FinOps).",
+          "Created an LLM-as-a-judge benchmarking approach, so model decisions rest on measured accuracy and data.",
+          "Since May 2026, lead the adoption of AI development tools (Claude Code, GitHub Copilot) across Algar's engineering teams, training developers in Skills, MCP and AI-assisted engineering practices.",
+          "Build AI agents and automations for complex workflows with Mastra, LangGraph, CrewAI and the AI SDK, on Azure OpenAI and Azure AI Foundry.",
         ],
         "pt-br": [
-          "Liderei o Sales Copilot da Algar como principal desenvolvedor, de ponta a ponta: da arquitetura e do back-end ao front-end e às ferramentas de IA que o fazem funcionar. Ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
-          "Projeto e construo sistemas de IA multiagente e agêntica que levam a IA Generativa do protótipo à produção.",
-          "Arquiteto soluções de IA de nível corporativo no Microsoft Azure, com foco em segurança, governança e resultados de negócio.",
-          "Atuo no stack inteiro, entre serviços de back-end, interfaces para usuários e as ferramentas de IA no meio, com TypeScript, Python e AI SDK.",
-          "Contribuí para iniciativas de precificação, dados e FinOps junto aos projetos de IA Generativa.",
+          "Principal desenvolvedor do Sales Copilot da Algar, construído de ponta a ponta: front-end em Svelte, back-end em .NET e as ferramentas de IA no Azure OpenAI. Ele escuta as ligações de vendas em tempo real, sugere argumentos e ofertas, e venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+          "Billy: aplicação de IA Generativa que automatiza a análise e a validação de faturas de telecom com Azure OpenAI e RPA. Reduziu o tempo de revisão manual em 96% e gerou economia de milhões em custos operacionais.",
+          "Bud: agente criado com Copilot Studio, Power Automate e message broker que permite a usuários do Microsoft Teams solicitar relatórios e ações no SAP via RPA. Reduziu em 40% a carga de trabalho da área de projetos.",
+          "Liderei a migração para modelos de IA Generativa mais novos em vários projetos, reduzindo custos em mais de 40% sem perda de desempenho nem de acurácia (GenAI FinOps).",
+          "Criei uma abordagem de benchmarking com LLM como juiz (LLM-as-a-judge), para que as decisões sobre modelos se apoiem em acurácia medida e em dados.",
+          "Desde maio de 2026, lidero a adoção de ferramentas de IA para desenvolvimento (Claude Code e GitHub Copilot) entre os times de engenharia da Algar, capacitando pessoas desenvolvedoras em Skills, MCP e boas práticas de engenharia assistida por IA.",
+          "Desenvolvo agentes de IA e automações para fluxos complexos com Mastra, LangGraph, CrewAI e AI SDK, no Azure OpenAI e no Azure AI Foundry.",
         ],
       },
-      // TODO(davi): add the specific models, frameworks and data stores you use at Algar.
       stack: [
-        "Generative AI",
-        "AI agents",
-        "Multi-agent systems",
-        "Azure",
+        "Azure OpenAI",
+        "Azure AI Foundry",
         "AI SDK",
+        "Mastra",
+        "LangGraph",
+        "Claude Code",
         "TypeScript",
         "Python",
       ],
@@ -421,10 +444,12 @@ export const profile: Profile = {
         en: [
           "Researched telecommunications, technology and AI topics.",
           "Strategically supported the Center of Excellence for Automations.",
+          "Gave talks on generative AI at high schools in Uberlândia: its history, how it works and how to use it well.",
         ],
         "pt-br": [
           "Pesquisei temas de telecomunicações, tecnologia e IA.",
           "Apoiei estrategicamente o Centro de Excelência em Automações.",
+          "Dei palestras sobre IA Generativa em escolas de ensino médio de Uberlândia: história, funcionamento e boas práticas de uso.",
         ],
       },
       stack: ["Artificial Intelligence", "Automation", "Research"],
@@ -443,36 +468,151 @@ export const profile: Profile = {
       },
       isPrivate: true,
       year: "2025",
-      description: {
-        en: "An AI copilot for Algar's sales teams. I designed and built it end to end, from the back end and front end to the AI tools that power it. Named Best AI Project in LATAM at the Conecta Latam awards.",
+      summary: {
+        en: "Listens to sales calls and suggests arguments and offers in real time.",
         "pt-br":
-          "Um copiloto com IA para os times de vendas da Algar. Projetei e construí de ponta a ponta, do back-end e do front-end às ferramentas de IA que o fazem funcionar. Eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+          "Escuta as ligações de vendas e sugere argumentos e ofertas em tempo real.",
       },
-      // TODO(davi): confirm the stack (models, AI SDK / Azure services, front-end framework, data stores).
-      stack: ["TypeScript", "Generative AI", "AI agents", "Azure", "AI SDK"],
+      description: {
+        en: "An AI copilot for Algar's sales teams (small business and corporate): it listens to calls, reads the conversation in real time and suggests arguments and offers that fit each customer. I designed and built it end to end, from the Svelte front end and the .NET back end to the AI tools on Azure OpenAI. Named Best AI Project in LATAM at the Conecta Latam awards.",
+        "pt-br":
+          "Um copiloto com IA para os times de vendas da Algar (PMEs e Corporativo): escuta as ligações, analisa a conversa em tempo real e sugere argumentos e ofertas sob medida para cada cliente. Projetei e construí de ponta a ponta, do front-end em Svelte e do back-end em .NET às ferramentas de IA no Azure OpenAI. Eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+      },
+      stack: ["Azure OpenAI", "Svelte", ".NET"],
+      // Opened and checked October 2026. Mobile Time describes the copilot
+      // (calls, arguments, Azure OpenAI) before it had its name.
+      press: [
+        {
+          outlet: "Tele.Síntese",
+          title:
+            "Anatel e profissionais brasileiros são reconhecidos em prêmio internacional",
+          url: "https://telesintese.com.br/anatel-e-profissionais-brasileiros-sao-reconhecidos-em-premio-internacional/",
+          date: "2025-12-05",
+          lang: "pt-BR",
+        },
+        {
+          outlet: "Mobile Time",
+          title:
+            "Algar Telecom amplia uso de inteligência artificial generativa",
+          url: "https://www.mobiletime.com.br/noticias/14/06/2024/algar-telecom-amplia-uso-de-inteligencia-artificial-generativa/",
+          date: "2024-06-14",
+          lang: "pt-BR",
+        },
+      ],
     },
     {
-      id: "pricing",
-      name: {
-        en: "Pricing and data initiatives",
-        "pt-br": "Iniciativas de precificação e dados",
-      },
+      id: "billy",
+      name: "Billy",
       context: "Algar",
       isPrivate: true,
+      // In production since March 2024 (Teletime, September 2024).
       year: "2024",
-      // TODO(davi): describe the pricing project in one or two sentences if you can share it.
-      description: {
-        en: "Python work on pricing and data initiatives, alongside Generative AI projects at Algar.",
-        "pt-br":
-          "Trabalho em Python em iniciativas de precificação e dados, junto aos projetos de IA Generativa na Algar.",
+      summary: {
+        en: "Generative AI that analyzes and validates telecom invoices.",
+        "pt-br": "IA Generativa que analisa e valida faturas de telecom.",
       },
-      stack: ["Python", "Data analysis", "Generative AI"],
+      metric: {
+        value: "96%",
+        label: {
+          en: "less time on manual review",
+          "pt-br": "menos tempo de revisão manual",
+        },
+      },
+      description: {
+        en: "A generative AI app that automates the analysis and validation of telecom invoices, extracting and interpreting contract data, with Azure OpenAI and RPA. It cut manual review time by 96% and saved millions in operating costs.",
+        "pt-br":
+          "Uma aplicação de IA Generativa que automatiza a análise e a validação de faturas de telecom, extraindo e interpretando dados de contratos, com Azure OpenAI e RPA. Reduziu o tempo de revisão manual em 96% e gerou economia de milhões em custos operacionais.",
+      },
+      stack: ["Azure OpenAI", "RPA"],
+      // Opened and checked October 2026; each names Billy and its numbers.
+      press: [
+        {
+          outlet: "Mobile Time",
+          title: "Algar economiza R$ 3 milhões em revisão de faturas usando IA",
+          url: "https://www.mobiletime.com.br/noticias/10/02/2025/algar-billy/",
+          date: "2025-02-10",
+          lang: "pt-BR",
+        },
+        {
+          outlet: "Convergência Digital",
+          title:
+            "Algar Telecom avança de IA analítica para preditiva e generativa",
+          url: "https://convergenciadigital.com.br/mercado/algar-telecom-avanca-de-ia-analitica-para-preditiva-e-generativa/",
+          date: "2024-11-21",
+          lang: "pt-BR",
+        },
+        {
+          outlet: "Teletime",
+          title:
+            "Algar Telecom usa inteligência artificial para automação de faturas",
+          url: "https://teletime.com.br/16/09/2024/algar-telecom-usa-inteligencia-artificial-para-automacao-de-faturas/",
+          date: "2024-09-16",
+          lang: "pt-BR",
+        },
+      ],
+    },
+    {
+      id: "bud",
+      name: "Bud",
+      context: "Algar",
+      isPrivate: true,
+      // TODO(davi): add the year Bud went live.
+      summary: {
+        en: "A Teams agent for SAP reports and actions.",
+        "pt-br": "Um agente no Teams para relatórios e ações no SAP.",
+      },
+      metric: {
+        value: "40%",
+        label: {
+          en: "less workload for the projects team",
+          "pt-br": "menos carga de trabalho na área de projetos",
+        },
+      },
+      description: {
+        en: "An agent built with Copilot Studio, Power Automate and a message broker that lets Microsoft Teams users request SAP reports and actions through RPA. It cut the projects team's workload by 40%.",
+        "pt-br":
+          "Um agente criado com Copilot Studio, Power Automate e message broker que permite a usuários do Microsoft Teams solicitar relatórios e ações no SAP via RPA. Reduziu em 40% a carga de trabalho da área de projetos.",
+      },
+      stack: [
+        "Copilot Studio",
+        "Power Automate",
+        "Microsoft Teams",
+        "SAP",
+        "RPA",
+      ],
+    },
+    {
+      id: "genai-finops",
+      name: "GenAI FinOps",
+      context: "Algar",
+      isPrivate: true,
+      // TODO(davi): add the year of the model migration.
+      summary: {
+        en: "Moved projects to newer generative AI models.",
+        "pt-br":
+          "Migração dos projetos para modelos de IA Generativa mais novos.",
+      },
+      metric: {
+        value: "40%+",
+        label: {
+          en: "lower costs, same accuracy",
+          "pt-br": "menos custo, mesma acurácia",
+        },
+      },
+      description: {
+        en: "Led the move to newer generative AI models across several projects, cutting costs by more than 40% with no loss in performance or accuracy: the most value per token.",
+        "pt-br":
+          "Liderei a migração para modelos de IA Generativa mais novos em vários projetos, reduzindo custos em mais de 40% sem perda de desempenho nem de acurácia: o máximo valor por token.",
+      },
+      stack: ["Generative AI", "GenAI FinOps"],
     },
   ],
 
   // Verified on LinkedIn: Generative AI, AI agents, Azure, AI SDK, front-end and back-end
   // development, machine learning, UI/UX design, automation, FinOps, Agile, MCP (interest).
-  // TODO(davi): confirm the remaining items and add tools you use (vector DB, eval tooling, cloud services).
+  // Davi's CV (October 2026) adds the agent frameworks, Azure OpenAI and AI Foundry,
+  // Copilot Studio and Power Automate, LLM-as-a-judge, Claude Code and GitHub Copilot,
+  // scikit-learn, Svelte and .NET (the Sales Copilot).
   skills: [
     {
       id: "llm",
@@ -481,16 +621,29 @@ export const profile: Profile = {
         "Generative AI",
         "AI agents",
         "Multi-agent systems",
-        "Model Context Protocol (MCP)",
+        "Azure OpenAI",
+        "Azure AI Foundry",
         "AI SDK",
+        "Mastra",
+        "LangGraph",
+        "LangChain",
+        "CrewAI",
+        "Model Context Protocol (MCP)",
         "Prompt engineering",
-        "Tool calling",
+        "Generative UI",
       ],
     },
     {
       id: "rag",
-      title: { en: "RAG & retrieval", "pt-br": "RAG e recuperação" },
-      skills: ["Retrieval-Augmented Generation", "Embeddings", "Vector search"],
+      title: { en: "RAG & evaluation", "pt-br": "RAG e avaliação" },
+      skills: [
+        "Retrieval-Augmented Generation",
+        "Embeddings",
+        "Vector search",
+        "LLM-as-a-judge",
+        "Experiment design",
+        "GenAI FinOps",
+      ],
     },
     {
       id: "ml",
@@ -498,6 +651,7 @@ export const profile: Profile = {
       skills: [
         "Machine learning",
         "Python",
+        "scikit-learn",
         "Data analysis",
         "Computational intelligence",
       ],
@@ -508,6 +662,7 @@ export const profile: Profile = {
       skills: [
         "Python",
         "TypeScript",
+        ".NET",
         "Node.js",
         "Java",
         "Spring",
@@ -522,6 +677,7 @@ export const profile: Profile = {
       skills: [
         "React",
         "Next.js",
+        "Svelte",
         "TypeScript",
         "Tailwind CSS",
         "UI/UX design",
@@ -530,12 +686,15 @@ export const profile: Profile = {
     },
     {
       id: "infra",
-      title: { en: "Cloud & delivery", "pt-br": "Cloud e entrega" },
+      title: { en: "Cloud & tooling", "pt-br": "Cloud e ferramentas" },
       skills: [
         "Microsoft Azure",
+        "Copilot Studio",
+        "Power Automate",
+        "RPA",
+        "Claude Code",
+        "GitHub Copilot",
         "Vercel",
-        "Automation",
-        "FinOps",
         "Git & GitHub",
         "Agile",
       ],
@@ -552,6 +711,8 @@ export const profile: Profile = {
     "Agentic AI",
     "Model Context Protocol",
     "Retrieval-Augmented Generation",
+    "LLM Evaluation",
+    "AI-assisted Software Engineering",
     "Machine Learning",
     "Microsoft Azure",
     "Full-stack Development",
@@ -572,7 +733,8 @@ export const profile: Profile = {
       expires: "2027-10-02",
       credentialId: "EC8CEDC7DF459008",
       certificationNumber: "B66FB6-532437",
-      // TODO(davi): paste Microsoft Learn share link (credentialUrl); the Verify link shows once it is set.
+      credentialUrl:
+        "https://learn.microsoft.com/api/credentials/share/en-us/DaviTobiasLacerda/EC8CEDC7DF459008",
       image: {
         src: "/certificates/multi-agent-ai-solutions-expert.png",
         width: 669,
@@ -596,7 +758,8 @@ export const profile: Profile = {
       expires: "2027-08-14",
       credentialId: "FA07966E5B1A461",
       certificationNumber: "0FE606-E0517X",
-      // TODO(davi): paste Microsoft Learn share link (credentialUrl); the Verify link shows once it is set.
+      credentialUrl:
+        "https://learn.microsoft.com/api/credentials/share/en-us/DaviTobiasLacerda/FA07966E5B1A461",
       image: {
         src: "/certificates/agentic-ai-business-solutions-architect.png",
         width: 768,
@@ -620,7 +783,8 @@ export const profile: Profile = {
       expires: "2027-06-23",
       credentialId: "7D5DACB2C80D7C0D",
       certificationNumber: "5DA4S7-D97848",
-      // TODO(davi): paste Microsoft Learn share link (credentialUrl); the Verify link shows once it is set.
+      credentialUrl:
+        "https://learn.microsoft.com/api/credentials/share/en-us/DaviTobiasLacerda/7D5DACB2C80D7C0D",
       image: {
         src: "/certificates/azure-ai-apps-and-agents-developer-associate.png",
         width: 923,
@@ -632,51 +796,38 @@ export const profile: Profile = {
           "Certificação de nível Associate em construir apps e agentes de IA no Azure.",
       },
     },
+    // Shown as a quiet "Also completed" list under the certifications. Only
+    // AI work that adds signal: the 2022 React courses (Rocketseat, Alura) and
+    // Microsoft Learn module badges are left out on purpose.
     {
-      id: "rocketseat-ignite-react",
-      name: "Ignite: React",
-      issuer: "Rocketseat",
-      logo: "/logos/rocketseat.png",
-      issuerUrl: "https://www.rocketseat.com.br",
+      id: "dlai-mcp-rich-context-ai-apps-with-anthropic",
+      name: "MCP: Build Rich-Context AI Apps with Anthropic",
+      issuer: "DeepLearning.AI",
+      issuerUrl: "https://www.deeplearning.ai",
       kind: "course",
-      date: "2022-03",
-      description: {
-        en: "Intensive React specialization track, February to March 2022.",
-        "pt-br":
-          "Trilha intensiva de especialização em React, de fevereiro a março de 2022.",
-      },
+      date: "2025-08",
+      credentialUrl:
+        "https://learn.deeplearning.ai/accomplishments/d90cf952-a2e3-4606-8106-7d852747a30a",
     },
     {
-      id: "alura-imersao-react",
-      logo: "/logos/alura.png",
-      name: "Imersão React",
-      issuer: "Alura",
-      issuerUrl: "https://www.alura.com.br",
+      id: "dlai-pydantic-for-llm-workflows",
+      name: "Pydantic for LLM Workflows",
+      issuer: "DeepLearning.AI",
+      issuerUrl: "https://www.deeplearning.ai",
       kind: "course",
-      date: "2022-01",
-      description: {
-        en: "Hands-on React immersion, January 2022.",
-        "pt-br": "Imersão prática em React, janeiro de 2022.",
-      },
-    },
-    {
-      id: "rocketseat-nlw",
-      name: {
-        en: "Next Level Week (NLW) events",
-        "pt-br": "Eventos Next Level Week (NLW)",
-      },
-      issuer: "Rocketseat",
-      logo: "/logos/rocketseat.png",
-      issuerUrl: "https://www.rocketseat.com.br",
-      kind: "course",
-      // TODO(davi): confirm which NLW editions and dates (the nlw-journey repo suggests NLW Journey).
-      description: {
-        en: "Rocketseat's week-long build events, including NLW Journey (Python).",
-        "pt-br":
-          "Eventos de uma semana da Rocketseat, incluindo o NLW Journey (Python).",
-      },
+      date: "2025-08",
+      credentialUrl:
+        "https://learn.deeplearning.ai/accomplishments/112afc35-5e86-4ab8-becf-58da57a30900",
     },
   ],
+
+  credentialsProfile: {
+    name: "Microsoft Learn",
+    url: {
+      en: "https://learn.microsoft.com/en-us/users/davitobiaslacerda/",
+      "pt-br": "https://learn.microsoft.com/pt-br/users/davitobiaslacerda/",
+    },
+  },
 
   education: [
     {
@@ -688,9 +839,13 @@ export const profile: Profile = {
       shortName: "UFU",
       url: "https://ufu.br",
       // TODO(davi): add /public/logos/ufu.svg and set logo: "/logos/ufu.svg".
-      degree: { en: "Bachelor's degree", "pt-br": "Bacharelado" }, // TODO(davi): confirm degree type.
+      degree: {
+        en: "Bachelor of Science (B.Sc.)",
+        "pt-br": "Bacharelado",
+      },
       field: { en: "Computer Science", "pt-br": "Ciência da Computação" },
-      // TODO(davi): confirm start and graduation years.
+      // TODO(davi): add the start year.
+      end: "2024-11",
       location: { en: "Uberlândia, Brazil", "pt-br": "Uberlândia, Brasil" },
       thesis: {
         year: "2024",
@@ -726,11 +881,13 @@ export const profile: Profile = {
       },
       issuer: "Conecta Latam",
       featured: true,
-      // TODO(davi): add the award date (year at least) and a link to the announcement.
+      // Winners announced on December 3, 2025, in Panama City (Tele.Síntese).
+      date: "2025-12",
+      url: "https://telesintese.com.br/anatel-e-profissionais-brasileiros-sao-reconhecidos-em-premio-internacional/",
       description: {
-        en: "Algar's Sales Copilot, which I led as main developer, was named Best AI Project in LATAM at the Conecta Latam awards, a recognition across Latin America.",
+        en: "Algar's Sales Copilot, which I led as main developer, won the Conecta Latam Awards 2025 in the category Best AI Implementation Initiative in Telecommunications, a recognition across Latin America.",
         "pt-br":
-          "O Sales Copilot da Algar, do qual fui o principal desenvolvedor, foi eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam, um reconhecimento em toda a região.",
+          "O Sales Copilot da Algar, do qual fui o principal desenvolvedor, venceu o Conecta Latam Awards 2025 na categoria Melhor Iniciativa de Implementação de IA em Telecomunicações, um reconhecimento em toda a América Latina.",
       },
     },
     {
@@ -794,21 +951,9 @@ export const profile: Profile = {
         "pt-br": "O que Davi Lacerda faz?",
       },
       answer: {
-        en: "Davi Lacerda is an AI Engineer at Algar in Uberlândia, Brazil. He builds Generative AI products and AI agents end to end, from the back end and front end to the AI tools behind them. He was the main developer of Algar's Sales Copilot, named Best AI Project in LATAM at the Conecta Latam awards.",
+        en: "Davi Lacerda is an AI Engineer at Algar in Uberlândia, Brazil. He builds Generative AI products and AI agents end to end, from the back end and front end to the AI tools behind them. He was the main developer of Algar's Sales Copilot, named Best AI Project in LATAM at the Conecta Latam awards, and his other work there includes Billy, which cut manual invoice review time by 96%.",
         "pt-br":
-          "Davi Lacerda é Engenheiro de IA na Algar, em Uberlândia. Ele constrói produtos de IA Generativa e agentes de IA de ponta a ponta, do back-end e do front-end às ferramentas de IA por trás deles. Foi o principal desenvolvedor do Sales Copilot da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
-      },
-    },
-    {
-      id: "open-to-roles",
-      question: {
-        en: "Is Davi open to AI Engineer roles?",
-        "pt-br": "Davi está aberto a vagas de Engenheiro de IA?",
-      },
-      answer: {
-        en: "Yes. Davi is open to AI Engineer roles, on-site or hybrid in Uberlândia, Brazil, and remote. The best way to reach him is by email at davi16lacerda@gmail.com or on LinkedIn.",
-        "pt-br":
-          "Sim. Davi está aberto a vagas de Engenheiro de IA, presenciais ou híbridas em Uberlândia e remotas. A melhor forma de contato é pelo e-mail davi16lacerda@gmail.com ou pelo LinkedIn.",
+          "Davi Lacerda é Engenheiro de IA na Algar, em Uberlândia. Ele constrói produtos de IA Generativa e agentes de IA de ponta a ponta, do back-end e do front-end às ferramentas de IA por trás deles. Foi o principal desenvolvedor do Sales Copilot da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam, e também trabalhou no Billy, que reduziu em 96% o tempo de revisão manual de faturas.",
       },
     },
     {
@@ -818,9 +963,9 @@ export const profile: Profile = {
         "pt-br": "Qual é o stack de tecnologia do Davi?",
       },
       answer: {
-        en: "Generative AI and AI agents built with Microsoft Azure and the AI SDK, in TypeScript and Python; full-stack web development with Next.js, React and Tailwind CSS; plus machine learning, automation and UI/UX design.",
+        en: "Generative AI and AI agents on Azure OpenAI and Azure AI Foundry, built with Mastra, LangGraph, CrewAI and the AI SDK, in TypeScript and Python, and evaluated with LLM-as-a-judge benchmarks; Copilot Studio and Power Automate for agents inside Microsoft 365; full-stack web development with Next.js, React, Svelte and .NET; and AI-assisted engineering with Claude Code, GitHub Copilot and MCP.",
         "pt-br":
-          "IA Generativa e agentes de IA construídos com Microsoft Azure e AI SDK, em TypeScript e Python; desenvolvimento web full-stack com Next.js, React e Tailwind CSS; além de machine learning, automação e UI/UX design.",
+          "IA Generativa e agentes de IA no Azure OpenAI e no Azure AI Foundry, construídos com Mastra, LangGraph, CrewAI e AI SDK, em TypeScript e Python, e avaliados com benchmarks de LLM como juiz (LLM-as-a-judge); Copilot Studio e Power Automate para agentes dentro do Microsoft 365; desenvolvimento web full-stack com Next.js, React, Svelte e .NET; e engenharia assistida por IA com Claude Code, GitHub Copilot e MCP.",
       },
     },
     {
@@ -830,9 +975,21 @@ export const profile: Profile = {
         "pt-br": "O que é o Sales Copilot que Davi construiu?",
       },
       answer: {
-        en: "The Sales Copilot is an AI copilot for Algar's sales teams. Davi was its main developer, designing and building it end to end, from the back end and front end to the AI tools that power it. It won Best AI Project in LATAM at the Conecta Latam awards.",
+        en: "The Sales Copilot is an AI copilot for Algar's sales teams: it listens to calls, reads the conversation in real time and suggests arguments and offers that fit each customer. Davi was its main developer, designing and building it end to end, from the Svelte front end and the .NET back end to the AI tools on Azure OpenAI. It won Best AI Project in LATAM at the Conecta Latam awards in December 2025.",
         "pt-br":
-          "O Sales Copilot é um copiloto com IA para os times de vendas da Algar. Davi foi o principal desenvolvedor, projetando e construindo de ponta a ponta, do back-end e do front-end às ferramentas de IA que o fazem funcionar. Ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+          "O Sales Copilot é um copiloto com IA para os times de vendas da Algar: escuta as ligações, analisa a conversa em tempo real e sugere argumentos e ofertas sob medida para cada cliente. Davi foi o principal desenvolvedor, projetando e construindo de ponta a ponta, do front-end em Svelte e do back-end em .NET às ferramentas de IA no Azure OpenAI. Ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam, em dezembro de 2025.",
+      },
+    },
+    {
+      id: "billy",
+      question: {
+        en: "What is Billy?",
+        "pt-br": "O que é o Billy?",
+      },
+      answer: {
+        en: "Billy is a generative AI app at Algar that automates the analysis and validation of telecom invoices, extracting and interpreting contract data with Azure OpenAI and RPA. It cut manual review time by 96% and saved millions in operating costs.",
+        "pt-br":
+          "O Billy é uma aplicação de IA Generativa da Algar que automatiza a análise e a validação de faturas de telecom, extraindo e interpretando dados de contratos com Azure OpenAI e RPA. Reduziu o tempo de revisão manual em 96% e gerou economia de milhões em custos operacionais.",
       },
     },
     {
@@ -842,9 +999,9 @@ export const profile: Profile = {
         "pt-br": "Quais certificações Davi tem?",
       },
       answer: {
-        en: "Davi holds three Microsoft certifications. Two are Expert level: Microsoft Certified: Multi-Agent AI Solutions Expert (October 2026) and Microsoft Certified: Agentic AI Business Solutions Architect (August 2026). The third is Microsoft Certified: Azure AI Apps and Agents Developer Associate (June 2026).",
+        en: "Davi holds three Microsoft certifications. Two are Expert level: Microsoft Certified: Multi-Agent AI Solutions Expert (October 2026) and Microsoft Certified: Agentic AI Business Solutions Architect (August 2026). The third is Microsoft Certified: Azure AI Apps and Agents Developer Associate (June 2026). All three are valid for a year and can be verified on Microsoft Learn.",
         "pt-br":
-          "Davi tem três certificações Microsoft. Duas são de nível Expert: Microsoft Certified: Multi-Agent AI Solutions Expert (outubro de 2026) e Microsoft Certified: Agentic AI Business Solutions Architect (agosto de 2026). A terceira é a Microsoft Certified: Azure AI Apps and Agents Developer Associate (junho de 2026).",
+          "Davi tem três certificações Microsoft. Duas são de nível Expert: Microsoft Certified: Multi-Agent AI Solutions Expert (outubro de 2026) e Microsoft Certified: Agentic AI Business Solutions Architect (agosto de 2026). A terceira é a Microsoft Certified: Azure AI Apps and Agents Developer Associate (junho de 2026). As três valem por um ano e podem ser verificadas no Microsoft Learn.",
       },
     },
     {
@@ -866,9 +1023,21 @@ export const profile: Profile = {
         "pt-br": "Onde Davi estudou?",
       },
       answer: {
-        en: "Davi studied Computer Science at the Federal University of Uberlândia (UFU), with coursework in artificial intelligence, computational intelligence, compilers and distributed systems.",
+        en: "Davi holds a B.Sc. in Computer Science from the Federal University of Uberlândia (UFU), completed in November 2024, with coursework in artificial intelligence, computational intelligence, compilers and distributed systems.",
         "pt-br":
-          "Davi estudou Ciência da Computação na Universidade Federal de Uberlândia (UFU), com disciplinas de inteligência artificial, inteligência computacional, compiladores e sistemas distribuídos.",
+          "Davi é bacharel em Ciência da Computação pela Universidade Federal de Uberlândia (UFU), com conclusão em novembro de 2024 e disciplinas de inteligência artificial, inteligência computacional, compiladores e sistemas distribuídos.",
+      },
+    },
+    {
+      id: "contact",
+      question: {
+        en: "How can I reach Davi?",
+        "pt-br": "Como falar com o Davi?",
+      },
+      answer: {
+        en: "By email at davi16lacerda@gmail.com or on LinkedIn. He is always happy to talk about AI, agents or a good idea.",
+        "pt-br":
+          "Pelo e-mail davi16lacerda@gmail.com ou pelo LinkedIn. Ele está sempre aberto a uma conversa sobre IA, agentes ou uma boa ideia.",
       },
     },
   ],

@@ -86,7 +86,7 @@ export const ptBr: Dictionary = {
         title: "Experiência profissional",
         metaTitle: "Experiência profissional de Davi Lacerda",
         description:
-          "Davi Lacerda é Engenheiro de IA na Algar desde agosto de 2024, depois de um estágio de pesquisa e desenvolvimento no Brain. Datas, escopo e o que ele entregou.",
+          "Davi Lacerda é Engenheiro de IA na Algar desde agosto de 2024, depois de um estágio de pesquisa e desenvolvimento no Brain. Datas, escopo e o que ele entregou, do Sales Copilot ao Billy e ao Bud.",
         summary: "A função na Algar e o estágio antes dela.",
         intro:
           "{role} na {company} desde {since}, depois de um estágio no {prevCompany}.",
@@ -97,10 +97,10 @@ export const ptBr: Dictionary = {
         title: "Sales Copilot",
         metaTitle: "Sales Copilot, Melhor Projeto de IA da América Latina",
         description:
-          "O copiloto de IA que Davi Lacerda construiu de ponta a ponta para os times de vendas da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+          "O copiloto de IA que Davi Lacerda construiu de ponta a ponta para os times de vendas da Algar: escuta as ligações e sugere argumentos e ofertas em tempo real. Eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
         summary: "O copiloto premiado que ele construiu de ponta a ponta.",
         intro:
-          "Um copiloto de IA para os times de vendas da Algar, construído de ponta a ponta pelo Davi como principal desenvolvedor.",
+          "Um copiloto de IA que escuta as ligações de vendas da Algar e sugere argumentos e ofertas em tempo real, construído de ponta a ponta pelo Davi.",
       },
       certifications: {
         chip: "Certificações",
@@ -108,8 +108,8 @@ export const ptBr: Dictionary = {
         title: "Certificações",
         metaTitle: "Certificações Microsoft de Davi Lacerda",
         description:
-          "Davi Lacerda tem três certificações Microsoft: Expert em soluções de IA multiagente e em arquitetura de IA agêntica, e Associate em apps e agentes de IA no Azure. Com os certificados e seus IDs.",
-        summary: "Três certificações Microsoft, e cursos.",
+          "Davi Lacerda tem três certificações Microsoft: Expert em soluções de IA multiagente e em arquitetura de IA agêntica, e Associate em apps e agentes de IA no Azure. Com os certificados, seus IDs e links para verificá-los.",
+        summary: "Três certificações Microsoft, com os certificados.",
         intro: "Três certificações Microsoft: duas Expert, uma Associate.",
       },
       skills: {
@@ -140,7 +140,7 @@ export const ptBr: Dictionary = {
         title: "Perguntas frequentes",
         metaTitle: "Perguntas sobre Davi Lacerda",
         description:
-          "Respostas curtas sobre Davi Lacerda: o que ele faz, se está aberto a vagas, o stack, o Sales Copilot, certificações, onde mora e formação.",
+          "Respostas curtas sobre Davi Lacerda: o que ele faz, o stack, o Sales Copilot, o Billy, certificações, onde mora, formação e como falar com ele.",
         summary: "Respostas curtas para o que recrutadores mais perguntam.",
         intro: "Respostas curtas para o que recrutadores mais perguntam.",
       },
@@ -150,10 +150,9 @@ export const ptBr: Dictionary = {
         title: "Contato",
         metaTitle: "Fale com Davi Lacerda",
         description:
-          "Davi Lacerda está aberto a vagas de Engenheiro de IA, presenciais ou híbridas em Uberlândia e remotas. Mande um e-mail ou encontre ele no LinkedIn.",
-        summary: "E-mail, LinkedIn e disponibilidade.",
-        intro:
-          "Aberto a vagas de Engenheiro de IA. O e-mail é o jeito mais rápido de falar com ele.",
+          "Mande um e-mail para Davi Lacerda ou encontre ele no LinkedIn. Ele está sempre aberto a uma conversa sobre IA, agentes ou uma boa ideia.",
+        summary: "E-mail, LinkedIn e fuso horário.",
+        intro: "O e-mail é o jeito mais rápido de falar com ele.",
       },
     },
     answers: {
@@ -183,6 +182,10 @@ export const ptBr: Dictionary = {
         role: "Função",
         access: "Acesso",
       },
+      press: {
+        title: "Na mídia",
+        language: { "pt-BR": "em português", en: "em inglês" },
+      },
       certifications: {
         credentials: "Credenciais",
         viewFullSize: "Ver em tamanho real",
@@ -192,7 +195,9 @@ export const ptBr: Dictionary = {
         copied: "Copiado",
         verify: "Verificar",
         issued: "Emitida em {date}",
-        courses: "Cursos",
+        validThrough: "válida até {date}",
+        allCredentials: "Todas as credenciais no {site}",
+        courses: "Também concluídos",
         course: "Curso",
         issuer: "Emissor",
         date: "Data",
@@ -214,7 +219,9 @@ export const ptBr: Dictionary = {
 
   work: {
     hero: {
-      availability: "Aberto a vagas de Engenheiro de IA",
+      talk: "Aberto a conversar",
+      talkLine:
+        "Sempre aberto a uma conversa sobre IA, agentes ou uma boa ideia.",
     },
     sections: {
       about: { title: "Sobre" },
@@ -222,14 +229,14 @@ export const ptBr: Dictionary = {
       experience: { title: "Experiência" },
       projects: { title: "Projetos selecionados" },
       skills: { title: "Habilidades" },
-      certifications: { title: "Certificações e cursos" },
+      certifications: { title: "Certificações" },
       education: { title: "Formação" },
       achievements: { title: "Prêmios e conquistas" },
       faq: { title: "Perguntas frequentes" },
       contact: {
         title: "Contato",
         description:
-          "Davi está aberto a vagas de Engenheiro de IA. O e-mail é a melhor forma de falar com ele.",
+          "Davi está sempre aberto a uma conversa sobre IA, agentes ou uma boa ideia. O e-mail é a melhor forma de falar com ele.",
       },
     },
     labels: {
@@ -237,7 +244,7 @@ export const ptBr: Dictionary = {
       mainDeveloper: "Principal desenvolvedor",
       level: "Nível {level}",
       credentialId: "ID da credencial",
-      courses: "Cursos",
+      courses: "Também concluídos",
       stack: "Stack",
       highlights: "Destaques",
       role: "Função",
@@ -253,7 +260,6 @@ export const ptBr: Dictionary = {
       "Engenheiro de IA",
       "Engenheiro de IA Uberlândia",
       "Engenheiro de IA Brasil",
-      "Contratar Engenheiro de IA",
       "Desenvolvedor de agentes de IA",
       "Agentes de IA",
       "IA multiagente",

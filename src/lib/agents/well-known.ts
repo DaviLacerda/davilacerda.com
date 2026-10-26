@@ -237,7 +237,7 @@ export function mcpServerCard() {
 /** The SKILL.md published at `/.well-known/agent-skills/about-davi-lacerda/SKILL.md`. */
 export function skillMarkdown(): string {
   const description =
-    "Answer questions about Davi Lacerda (AI Engineer at Algar, Uberlândia, Brazil): experience, projects, skills, certifications, education, awards, availability, contact and blog posts. Use when asked who Davi Lacerda is, whether he fits a role, or what he has written. Data comes from davilacerda.com via a read-only MCP server, Markdown pages or JSON.";
+    "Answer questions about Davi Lacerda (AI Engineer at Algar, Uberlândia, Brazil): experience, projects, skills, certifications, education, awards, contact and blog posts. Use when asked who Davi Lacerda is, whether he fits a role, or what he has written. Data comes from davilacerda.com via a read-only MCP server, Markdown pages or JSON.";
   const certs = getCertifications("certification")
     .map(
       (cert) =>
@@ -331,7 +331,7 @@ export function aiCatalog() {
           "who is Davi Lacerda",
           "AI Engineer in Uberlândia Brazil experience and certifications",
           "what did Davi Lacerda build at Algar",
-          "is Davi Lacerda open to AI Engineer roles",
+          "how to contact Davi Lacerda",
         ],
         version: MCP_SERVER_INFO.version,
       },

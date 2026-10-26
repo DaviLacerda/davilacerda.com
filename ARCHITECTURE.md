@@ -180,12 +180,12 @@ both fill two lines); put `@container` on an unpadded wrapper, not on the padded
 `icons.json` (about 30KB, committed), so the multi-MB sets stay dev dependencies. `getLogoSvg()`
 builds the SVG on the server and `<BrandLogo>` inlines it: no client JavaScript, no requests.
 Colour rule, the same everywhere: a logo keeps its brand colours, except marks whose brand colour
-is black or white (GitHub, Next.js, Vercel, Instagram's glyph, MCP), which use the simple-icons
+is black or white (GitHub, GitHub Copilot, LangChain, Next.js, Vercel, Instagram's glyph, MCP), which use the simple-icons
 version in `currentColor` so they follow the theme. Logos are decorative next to their name
 (`aria-hidden`); a logo standing alone gets `label` (role `img` + `aria-label`). Gradient ids are
 scoped per instance (`scopeSvgIds`). Company and school logos are files: set `logo:
 "/logos/<name>.svg"` on the entry in `profile.ts` and `<LogoTile>` renders it; without one it shows
-a monogram on the tile (Algar, Brain, UFU, Rocketseat and Alura are monograms until the files are
+a monogram on the tile (Algar, Brain and UFU are monograms until the files are
 added; see the `TODO(davi)` notes). Only technologies already in `profile.ts` get a logo. On
 an ink panel a tile turns `tone="ink"` (translucent on-ink fill) and the logo keeps its colours.
 
@@ -274,19 +274,27 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
   a right-aligned bubble, then the `h1#answer-title`) and one component per topic, each a picture
   first, built only from `profile.ts`:
   - overview (home): award ink panel, Azure mark + "3×" Microsoft Certified with the tiers, current role
-    with its tile and "Since Aug 2024", contact row; each panel links to its answer;
+    with its tile and "Since Aug 2024", contact row ("Open to talk", `work.hero.talk`); each panel
+    links to its answer;
   - experience: the career as one bar (Brain, then Algar in ink up to "Today"), one panel per job
-    (the current one in ink) with its stack and highlights in a disclosure, then other Algar work;
+    (the current one in ink) with its stack and highlights in a disclosure, then "Also at Algar":
+    the Sales Copilot as a link to its answer, then one result panel per project with a `metric`
+    (the figure set large, the name, the one-line `summary`, its press as pills; the first, Billy,
+    across the canvas, the others side by side on a shared subgrid so their names line up);
   - sales-copilot: "Best AI Project in LATAM" filling an ink panel, a facts row (company, year,
-    role, access), the three layers it was built in (AI tools in ink) and the stack;
+    role, access), the three layers it was built in (AI tools in ink), the stack, then "Coverage"
+    (`PressList`: outlet, month, language when it differs from the page, headline);
   - certifications: an oversized "3×" with the tiers (`certificationsSummary()`), then one panel per
     credential whose picture is the print of its certificate (the newest across the canvas, the
-    others side by side; a tap opens it in `ImageLightbox`), its tier and date, the credential ID
-    with a copy button and, once `credentialUrl` is set, a Verify link; courses;
+    others side by side; a tap opens it in `ImageLightbox`), its tier, month issued and "valid
+    through", the credential ID with a copy button and a Verify link (`credentialUrl`); then a
+    quiet locale-matched link to every credential on Microsoft Learn (`credentialsProfile`), and
+    the courses as a short "Also completed" list (name linked to the accomplishment, issuer, month);
   - skills: a logo wall of the stack (`stackLogos()`), then the groups as short inline lists;
   - education: "UFU" set huge on an ink panel, coursework, languages as large type;
-  - faq: one disclosure per question; contact: the email as the headline of an ink panel, the two
-    actions, then LinkedIn, GitHub and the time zone.
+  - faq: one disclosure per question; contact: the email as the headline of an ink panel, one
+    warm line ("Always happy to talk about AI, agents or a good idea", `work.hero.talkLine`; no
+    availability or hiring copy anywhere), the two actions, then LinkedIn, GitHub and the time zone.
     Every part is a `<Piece i>` (`data-piece`, order `--p`) so the entrance composes it in order.
     Topic pages keep their own title, description, canonical, hreflang, JSON-LD (FAQPage on `faq`),
     OG image and Markdown rendition. `topicLead()` is the longer factual paragraph: Markdown,
@@ -321,6 +329,7 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<Piece i as?>`                                                             | one part of an answer, in entrance order (server or client)                                                     |
 | `<Question text label>` / `<Reply question strings>`                        | the question bubble; the "nothing on that yet" reply (client)                                                   |
 | `<Panel as? tone?>`, `fit()`, `<BlockTitle>`, `<Disclosure>`                | answer building blocks in `answers/parts.tsx` (server)                                                          |
+| `<PressList items lang>` / `<PressPills items lang>`                        | a project's coverage as rows (Sales Copilot) or compact pills (result panels), in `answers/press.tsx` (server)  |
 | `<Reveal as? stagger? enter?>`                                              | scroll entrance below the fold; with `enter`, part of the load entrance (client)                                |
 | `<CopyButton value label copiedLabel variant? size? iconOnly?>`             | copy with a short crossfade confirmation (client); `CopyEmailButton` is the email preset                        |
 | `<ImageLightbox src width height alt caption detail? openLabel closeLabel>` | a link around a thumbnail that opens the image in a modal `<dialog>` (client; see Motion)                       |
@@ -342,14 +351,20 @@ providers. Pages, answers and logos stay Server Components.
 `profile` holds name/fullName, `headline`, `tagline`, `valueProp`, `summary` (first person),
 `tldr` (third person, factual: in the JSON-LD, Markdown, llms.txt and MCP; on screen it is one
 line and the overview), `location`,
-`email`, `availability`, `currentEmployer`, `socials[]` (GitHub, LinkedIn, Instagram, Spotify,
+`email`, `currentEmployer`, `socials[]` (GitHub, LinkedIn, Instagram, Spotify,
 Discord, email; `sameAs` ones go into the Person JSON-LD), `highlights[]` (hero stats),
 `experience[]` (`company, role, start, end|null, employmentType, workModel, location, description,
-highlights, stack`), `projects[]` (work built at Algar: `context?`, `role?`, `award?`,
-`isPrivate?`, `year?`), `skills[]` (groups `llm, rag, ml, backend, frontend, infra`),
+highlights, stack`), `projects[]` (work built at Algar: `summary?` (one line), `metric?`
+`{ value, label }` (a project with one is told by its result on Experience), `press?`
+(`{ outlet, title, url, date, lang }`, articles that cover the project; shown as Coverage and in the
+Markdown, JSON Resume and search; not in the JSON-LD, since they don't name Davi), `context?`,
+`role?`, `award?`, `isPrivate?`, `year?`), `skills[]` (groups `llm, rag, ml, backend, frontend, infra`),
 `knowsAbout[]`, `certifications[]` (`kind: "certification" | "course"`, `level?` ("Expert", "Associate"),
-`credentialId?`, `certificationNumber?`, `expires?`, `credentialUrl?` (the Verify link renders only
-when set), `image?` `{ src, width, height }`: a PNG print cropped to the certificate),
+`credentialId?`, `certificationNumber?`, `expires?`, `credentialUrl?` (the Verify link, or the
+course's accomplishment page; renders only when set), `image?` `{ src, width, height }`: a PNG print
+cropped to the certificate; curated: the three Microsoft certifications, plus courses only when
+they add AI signal), `credentialsProfile` (`{ name, url: L10n }`, the Microsoft Learn profile:
+linked under the certifications, in `sameAs` and the JSON Resume profiles),
 `education[]` (experience, certifications and education take an optional `logo`: a registry id
 such as `"azure"` or a `/public` path such as `"/logos/algar.svg"`), `achievements[]` (`featured` ones: the Conecta Latam award and the Microsoft
 Expert certifications), `languages[]`, `faq[]` (rendered on the FAQ topic, `/[lang]/work/faq`, and
