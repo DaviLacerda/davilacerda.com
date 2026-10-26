@@ -111,7 +111,6 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         t(profile.valueProp, lang),
         profile.tagline,
         `${profile.location.city}, ${profile.location.region}, ${t(profile.location.country, lang)}`,
-        t(profile.availability.modes, lang),
         profile.email,
         ...profile.languages.map(
           (l) => `${t(l.name, lang)} (${t(l.level, lang)})`,
@@ -146,7 +145,12 @@ function profileDocuments(lang: Locale): SearchDocument[] {
           project.context,
           project.role && t(project.role, lang),
           project.award && t(project.award, lang),
+          project.metric &&
+            `${project.metric.value} ${t(project.metric.label, lang)}`,
           project.stack.join(", "),
+          ...(project.press ?? []).map(
+            (item) => `${item.outlet}: ${item.title} (${item.url})`,
+          ),
         ]
           .filter(Boolean)
           .join("\n"),
@@ -225,7 +229,6 @@ function profileDocuments(lang: Locale): SearchDocument[] {
       [
         s.contact.description,
         profile.email,
-        t(profile.availability.modes, lang),
         ...profile.socials.map(
           (social) => `${dict.socials[social.id]}: ${social.url}`,
         ),

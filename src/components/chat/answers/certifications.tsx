@@ -1,4 +1,6 @@
+import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
 import Image from "next/image";
+import type { ReactNode } from "react";
 
 import { Piece } from "@/components/chat/piece";
 import { CopyButton } from "@/components/ui/copy-button";
@@ -14,16 +16,17 @@ import { getDictionary, interpolate, t, type Locale } from "@/i18n";
 import { formatPartialDate, toIsoDate } from "@/i18n/format";
 import { certificationsSummary } from "@/lib/work/answers";
 
-import { BlockTitle, Panel } from "./parts";
+import { Panel } from "./parts";
 
 /**
  * Certifications: the count, oversized ("3×", with the tiers beside it),
  * then the certificates themselves. Each credential is a panel whose picture
  * is the print of its certificate (the newest one across the canvas, the
  * others side by side); a tap opens it full size. Under the print: the
- * credential's name, its tier and date, and the credential ID to copy (plus
- * a Verify link once the profile has the issuer's share link). The courses
- * follow as a short row with their schools' logos.
+ * credential's name, its tier, date and expiry, and the credential ID to copy
+ * with a Verify link (the issuer's share link). Then a quiet link to every
+ * credential on Microsoft Learn, and the few courses worth listing, one line
+ * each, as "Also completed".
  */
 export function CertificationsAnswer({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
@@ -65,22 +68,56 @@ export function CertificationsAnswer({ lang }: { lang: Locale }) {
         ))}
       </ul>
 
+      <Piece i={3 + credentials.length} className="mt-6">
+        <TextLink
+          href={t(profile.credentialsProfile.url, lang)}
+          newTabLabel={dict.a11y.opensInNewTab}
+          className="text-small"
+        >
+          {interpolate(a.allCredentials, {
+            site: profile.credentialsProfile.name,
+          })}
+        </TextLink>
+      </Piece>
+
       {courses.length ? (
         <Piece
-          i={3 + credentials.length}
+          i={4 + credentials.length}
           as="section"
           className="mt-14"
           aria-labelledby="courses-title"
         >
-          <BlockTitle id="courses-title">{a.courses}</BlockTitle>
-          <ul className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-3">
+          <h2 id="courses-title" className="font-semibold">
+            {a.courses}
+          </h2>
+          <ul className="mt-3 grid gap-3">
             {courses.map((course) => (
-              <li key={course.id} className="flex items-start gap-4">
-                <LogoTile logo={course.logo} name={course.issuer} size="lg" />
+              <li key={course.id} className="flex items-start gap-3">
+                {course.logo ? (
+                  <LogoTile logo={course.logo} name={course.issuer} size="sm" />
+                ) : null}
                 <span className="min-w-0">
-                  <span className="block font-medium">
-                    {t(course.name, lang)}
-                  </span>
+                  {course.credentialUrl ? (
+                    <a
+                      href={course.credentialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link-underline"
+                    >
+                      <LastWordWith name={t(course.name, lang)}>
+                        <ArrowUpRightIcon
+                          aria-hidden="true"
+                          className="ml-0.5 inline size-[0.85em] align-[-0.05em] text-muted-foreground"
+                        />
+                      </LastWordWith>
+                      <span className="sr-only">
+                        {" "}
+                        ({dict.a11y.opensInNewTab})
+                      </span>
+                    </a>
+                  ) : (
+                    t(course.name, lang)
+                  )}
                   <span className="block text-small text-muted-foreground">
                     {course.issuer}
                     {course.date
@@ -93,6 +130,26 @@ export function CertificationsAnswer({ lang }: { lang: Locale }) {
           </ul>
         </Piece>
       ) : null}
+    </>
+  );
+}
+
+/** The text with `children` glued to its last word, so an icon never wraps onto a line alone. */
+function LastWordWith({
+  name,
+  children,
+}: {
+  name: string;
+  children: ReactNode;
+}) {
+  const at = name.lastIndexOf(" ");
+  return (
+    <>
+      {name.slice(0, at + 1)}
+      <span className="whitespace-nowrap">
+        {name.slice(at + 1)}
+        {children}
+      </span>
     </>
   );
 }
@@ -124,7 +181,13 @@ function Credential({
   const level = cert.level
     ? interpolate(labels.level, { level: cert.level })
     : "";
-  const date = cert.date ? formatPartialDate(cert.date, lang) : "";
+  // Month and year: "Oct 2026, valid through Oct 2027" (the day is on the print).
+  const date = cert.date ? formatPartialDate(cert.date.slice(0, 7), lang) : "";
+  const validThrough = cert.expires
+    ? interpolate(a.validThrough, {
+        date: formatPartialDate(cert.expires.slice(0, 7), lang),
+      })
+    : "";
   const image = cert.image;
 
   return (
@@ -180,6 +243,12 @@ function Credential({
             {level && date ? ", " : null}
             {cert.date ? (
               <time dateTime={toIsoDate(cert.date)}>{date}</time>
+            ) : null}
+            {cert.expires ? (
+              <>
+                {level || date ? ", " : null}
+                <time dateTime={toIsoDate(cert.expires)}>{validThrough}</time>
+              </>
             ) : null}
           </p>
         </div>

@@ -7,7 +7,7 @@ import { Piece } from "@/components/chat/piece";
 import { LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { TextLink } from "@/components/ui/text-link";
-import { profile, type Experience } from "@/content/profile";
+import { profile, type Experience, type Project } from "@/content/profile";
 import { getDictionary, interpolate, t, type Locale } from "@/i18n";
 import {
   formatDateRange,
@@ -27,6 +27,7 @@ import {
   PanelArrow,
   type Tone,
 } from "./parts";
+import { PressPills } from "./press";
 
 /** Months since year 0 for "YYYY" or "YYYY-MM" (a year alone counts from January). */
 function monthIndex(date: PartialDate): number {
@@ -187,8 +188,72 @@ function JobPanel({ job, lang }: { job: Experience; lang: Locale }) {
 }
 
 /**
+ * A project told by its result: the figure set large ("96%") with what it
+ * measures, then the name, one line and, when there is any, the press as
+ * small links. The first one (`featured`) spans the row, figure beside text.
+ */
+function ProjectPanel({
+  project,
+  metric,
+  lang,
+  featured,
+}: {
+  project: Project;
+  metric: NonNullable<Project["metric"]>;
+  lang: Locale;
+  featured: boolean;
+}) {
+  const titleId = `${project.id}-title`;
+  return (
+    <Panel
+      as="article"
+      aria-labelledby={titleId}
+      className={cn(
+        "flex h-full flex-col justify-between gap-10",
+        // Side by side, the cards share two rows (the figure, then the name),
+        // so their names line up whatever the length of the copy. A subgrid
+        // can't be a size container, so the Panel's `@container` is dropped.
+        featured
+          ? "sm:flex-row sm:items-end sm:gap-12 sm:p-10 sm:*:flex-1"
+          : "sm:@container-normal sm:row-span-2 sm:grid sm:grid-rows-subgrid sm:justify-normal",
+      )}
+    >
+      <p className="font-semibold">
+        <span
+          className={cn(
+            "block leading-[0.85] tracking-[-0.06em]",
+            featured
+              ? "text-figure"
+              : "text-[clamp(3.25rem,2.6rem+2.4vw,4.75rem)]",
+          )}
+        >
+          {metric.value}
+        </span>
+        <span className="mt-3 block font-normal text-muted-foreground">
+          {t(metric.label, lang)}
+        </span>
+      </p>
+      <div>
+        <h3 id={titleId} className="text-heading">
+          {t(project.name, lang)}
+        </h3>
+        {project.summary ? (
+          <p className="mt-1 text-small text-muted-foreground">
+            {t(project.summary, lang)}
+          </p>
+        ) : null}
+        {project.press?.length ? (
+          <PressPills items={project.press} lang={lang} className="mt-5" />
+        ) : null}
+      </div>
+    </Panel>
+  );
+}
+
+/**
  * Experience: the career as a bar (the timeline), then one panel per job,
- * the current one in ink, then what else he shipped there.
+ * the current one in ink, then what else he shipped there: the Sales Copilot
+ * as a link to its answer, and the projects told by their results.
  */
 export function ExperienceAnswer({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
@@ -197,9 +262,13 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
   const award = profile.achievements.find((item) =>
     item.id.startsWith("conecta-latam"),
   );
-  const otherWork = profile.projects.filter(
+  const otherProjects = profile.projects.filter(
     (project) => project.id !== "sales-copilot",
   );
+  const results = otherProjects.flatMap((project) =>
+    project.metric ? [{ project, metric: project.metric }] : [],
+  );
+  const otherWork = otherProjects.filter((project) => !project.metric);
   const company = current
     ? splitCompanyName(t(current.company, lang)).short
     : "";
@@ -216,7 +285,7 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
           </Piece>
         ))}
       </div>
-      {current && (copilot || otherWork.length) ? (
+      {current && (copilot || otherProjects.length) ? (
         <Piece
           i={3 + profile.experience.length}
           as="section"
@@ -228,7 +297,7 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
           </BlockTitle>
           <ul className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
             {copilot ? (
-              <li>
+              <li className="sm:col-span-2">
                 <AskLink
                   href={routes.topic(lang, "sales-copilot")}
                   className="group flex h-full pressable-panel items-center gap-4 rounded-surface bg-surface p-4 hover:bg-surface-strong sm:p-5"
@@ -250,6 +319,23 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
                 </AskLink>
               </li>
             ) : null}
+            {results.map(({ project, metric }, index) => (
+              <li
+                key={project.id}
+                className={
+                  index === 0
+                    ? "sm:col-span-2"
+                    : "sm:row-span-2 sm:grid sm:grid-rows-subgrid"
+                }
+              >
+                <ProjectPanel
+                  project={project}
+                  metric={metric}
+                  lang={lang}
+                  featured={index === 0}
+                />
+              </li>
+            ))}
             {otherWork.map((project) => (
               <li
                 key={project.id}

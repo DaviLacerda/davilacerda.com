@@ -104,7 +104,7 @@ export const en = {
         title: "Work experience",
         metaTitle: "Davi Lacerda's work experience",
         description:
-          "Davi Lacerda has been an AI Engineer at Algar since August 2024, after a research and development internship at Brain. Dates, scope and what he shipped.",
+          "Davi Lacerda has been an AI Engineer at Algar since August 2024, after a research and development internship at Brain. Dates, scope and what he shipped, from the Sales Copilot to Billy and Bud.",
         summary: "His role at Algar and the internship before it.",
         /** One sentence under the answer's title. `{prevCompany}` is the short name. */
         intro:
@@ -116,10 +116,10 @@ export const en = {
         title: "Sales Copilot",
         metaTitle: "Sales Copilot, Best AI Project in LATAM",
         description:
-          "The AI copilot Davi Lacerda built end to end for Algar's sales teams, named Best AI Project in LATAM at the Conecta Latam awards.",
+          "The AI copilot Davi Lacerda built end to end for Algar's sales teams: it listens to calls and suggests arguments and offers in real time. Named Best AI Project in LATAM at the Conecta Latam awards.",
         summary: "The award-winning copilot he built end to end.",
         intro:
-          "An AI copilot for Algar's sales teams, built end to end by Davi as main developer.",
+          "An AI copilot that listens to Algar's sales calls and suggests arguments and offers in real time, built end to end by Davi.",
       },
       certifications: {
         chip: "Certifications",
@@ -127,8 +127,8 @@ export const en = {
         title: "Certifications",
         metaTitle: "Davi Lacerda's Microsoft certifications",
         description:
-          "Davi Lacerda holds three Microsoft certifications: Expert in multi-agent AI solutions and in agentic AI architecture, and Associate in Azure AI apps and agents. With the certificates and their IDs.",
-        summary: "Three Microsoft certifications, and courses.",
+          "Davi Lacerda holds three Microsoft certifications: Expert in multi-agent AI solutions and in agentic AI architecture, and Associate in Azure AI apps and agents. With the certificates, their IDs and links to verify them.",
+        summary: "Three Microsoft certifications, with the certificates.",
         intro: "Three Microsoft certifications: two Expert, one Associate.",
       },
       skills: {
@@ -159,7 +159,7 @@ export const en = {
         title: "Common questions",
         metaTitle: "Questions about Davi Lacerda",
         description:
-          "Short answers about Davi Lacerda: what he does, whether he is open to roles, his stack, the Sales Copilot, certifications, location and education.",
+          "Short answers about Davi Lacerda: what he does, his stack, the Sales Copilot, Billy, certifications, location, education and how to reach him.",
         summary: "Short answers to what recruiters ask most.",
         intro: "Short answers to what recruiters ask most.",
       },
@@ -169,10 +169,9 @@ export const en = {
         title: "Contact",
         metaTitle: "Contact Davi Lacerda",
         description:
-          "Davi Lacerda is open to AI Engineer roles, on-site or hybrid in Uberlândia and remote. Email him or find him on LinkedIn.",
-        summary: "Email, LinkedIn and availability.",
-        intro:
-          "Open to AI Engineer roles. Email is the fastest way to reach him.",
+          "Email Davi Lacerda or find him on LinkedIn. He is always happy to talk about AI, agents or a good idea.",
+        summary: "Email, LinkedIn and time zone.",
+        intro: "Email is the fastest way to reach him.",
       },
     },
     answers: {
@@ -203,6 +202,12 @@ export const en = {
         role: "Role",
         access: "Access",
       },
+      /** News coverage of a project (Sales Copilot, Billy). */
+      press: {
+        title: "Coverage",
+        /** Beside an article in another language than the page, by BCP 47 tag. */
+        language: { "pt-BR": "in Portuguese", en: "in English" },
+      },
       certifications: {
         credentials: "Credentials",
         /** The link around a certificate's print; opens it full size. */
@@ -214,7 +219,12 @@ export const en = {
         copied: "Copied",
         verify: "Verify",
         issued: "Issued {date}",
-        courses: "Courses",
+        /** After the issue date: "valid through Oct 2027". */
+        validThrough: "valid through {date}",
+        /** The quiet link to Davi's public credentials page. `{site}` is "Microsoft Learn". */
+        allCredentials: "All credentials on {site}",
+        /** The short list of courses under the certifications. */
+        courses: "Also completed",
         course: "Course",
         issuer: "Issuer",
         date: "Date",
@@ -237,7 +247,10 @@ export const en = {
   /** Section titles and labels shared by the Work answers and the agent layer. */
   work: {
     hero: {
-      availability: "Open to AI Engineer roles",
+      /** The overview's contact row and the contact card. */
+      talk: "Open to talk",
+      /** On the contact answer, under the email. */
+      talkLine: "Always happy to talk about AI, agents or a good idea.",
     },
     sections: {
       about: { title: "About" },
@@ -245,14 +258,14 @@ export const en = {
       experience: { title: "Experience" },
       projects: { title: "Selected projects" },
       skills: { title: "Skills" },
-      certifications: { title: "Certifications and courses" },
+      certifications: { title: "Certifications" },
       education: { title: "Education" },
       achievements: { title: "Awards and achievements" },
       faq: { title: "Frequently asked questions" },
       contact: {
         title: "Contact",
         description:
-          "Davi is open to AI Engineer roles. Email is the best way to reach him.",
+          "Davi is always happy to talk about AI, agents or a good idea. Email is the best way to reach him.",
       },
     },
     labels: {
@@ -261,7 +274,7 @@ export const en = {
       /** A certification's tier: "Expert level". */
       level: "{level} level",
       credentialId: "Credential ID",
-      courses: "Courses",
+      courses: "Also completed",
       stack: "Stack",
       highlights: "Highlights",
       role: "Role",
@@ -278,7 +291,6 @@ export const en = {
     keywords: [
       "AI Engineer Brazil",
       "AI Engineer Uberlândia",
-      "Hire an AI Engineer",
       "Generative AI Engineer",
       "LLM applications",
       "AI agents developer",
