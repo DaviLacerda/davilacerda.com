@@ -60,6 +60,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    // Matcher ignoring `/_next/` and `/api/`
-    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|images/|robots.txt|sitemap.xml).*)"],
+    // Matcher ignoring `/_next/`, `/api/`, `/.well-known/` and any path with a file extension
+    // (favicons, robots.txt, sitemap.xml, etc.) so public files are not redirected to a locale
+    matcher: ["/((?!api|_next/static|_next/image|images/|\\.well-known/|.*\\..*).*)"],
 };
