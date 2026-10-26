@@ -202,16 +202,32 @@ function projectBlock(project: Project, lang: Locale): string {
 
 function certificationLine(cert: Certification, lang: Locale): string {
   const labels = getDictionary(lang).work.labels;
+  const c = getAgentLabels(lang).certificate;
   const meta = dot(
     cert.issuer,
-    cert.level === "Expert" ? labels.expertLevel : cert.level,
+    cert.level && interpolate(labels.level, { level: cert.level }),
     cert.date && formatPartialDate(cert.date, lang),
   );
   const description = cert.description ? ` ${t(cert.description, lang)}` : "";
-  const credential = cert.credentialUrl
-    ? ` ${link(labels.viewCredential, cert.credentialUrl)}`
-    : "";
-  return `- **${t(cert.name, lang)}** (${meta}).${description}${credential}`;
+  const facts = dot(
+    cert.credentialId && `${labels.credentialId}: \`${cert.credentialId}\``,
+    cert.certificationNumber && `${c.number}: \`${cert.certificationNumber}\``,
+    cert.expires &&
+      interpolate(c.validUntil, {
+        date: formatPartialDate(cert.expires, lang),
+      }),
+  );
+  const links = dot(
+    cert.image && link(c.image, cert.image.src),
+    cert.credentialUrl && link(c.verify, cert.credentialUrl),
+  );
+  return [
+    `- **${t(cert.name, lang)}** (${meta}).${description}`,
+    facts && `  - ${facts}`,
+    links && `  - ${links}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function experienceSection(lang: Locale): string[] {
@@ -506,7 +522,12 @@ export function personalMarkdown(lang: Locale): string {
     }),
     `# ${interpolate(getAgentLabels(lang).personalTitle, { name: profile.name })}`,
     `> ${dict.meta.personal.description}`,
-    `${dict.personal.intro.title}. ${dict.personal.intro.description}`,
+    `${dict.personal.intro.title} ${interpolate(dict.personal.intro.lead, { city: profile.location.city })}`,
+    profile.interests.length > 0 &&
+      `**${dict.personal.intro.interests}:** ${profile.interests
+        .map((interest) => t(interest.label, lang))
+        .join(", ")}`,
+    dict.personal.intro.description,
     `## ${s.writing.title}`,
     s.writing.description,
     posts.length ? posts.map(postListItem).join("\n") : dict.blog.noPosts,

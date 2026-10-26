@@ -29,6 +29,7 @@ export function MotionProvider({ children }: { children: ReactNode }) {
       const anchor = target?.closest?.("a[href]");
       if (!(anchor instanceof HTMLAnchorElement)) return;
       if (anchor.target || anchor.hasAttribute("download")) return;
+      if (anchor.hasAttribute("data-lightbox")) return; // opens a viewer, not a page
       if (anchor.origin !== window.location.origin) return;
       markClientNavigation();
     }

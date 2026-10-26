@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 
 import { PostList } from "@/components/blog/post-list";
 import { RssLink } from "@/components/blog/rss-link";
 import { Elsewhere } from "@/components/personal/elsewhere";
+import { Interests } from "@/components/personal/interests";
 import { SideProjects } from "@/components/personal/side-projects";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal } from "@/components/motion/reveal";
@@ -35,14 +37,16 @@ export async function generateMetadata({
     path: "/personal",
     title: dict.meta.personal.title,
     description: dict.meta.personal.description,
-    keywords: ["Blog", "AI engineering", "Side projects"],
+    keywords: ["Blog", "Side projects", "Uberlândia"],
   });
 }
 
 /**
- * Personal tab: a reading layout. The title and one first-person line, then
- * the writing, the side projects (with their stacks' logos) and where to find
- * Davi online, one column throughout and no panels.
+ * Personal tab: a reading layout about Davi the person, not the job. His
+ * portrait (black and white, on the page's own surface tone), a hello, one
+ * warm line and his interests as a row of chips; then the writing, the side
+ * projects (with their stacks' logos) and where to find him online, one
+ * column throughout and no panels.
  */
 export default async function PersonalPage({ params }: PageProps) {
   const { lang } = await params;
@@ -72,26 +76,40 @@ export default async function PersonalPage({ params }: PageProps) {
       />
 
       <section aria-labelledby="personal-title">
+        {profile.image ? (
+          <div data-enter="" style={{ "--i": 0 } as CSSProperties}>
+            <Image
+              src={profile.image}
+              width={304}
+              height={304}
+              alt={intro.portraitAlt}
+              priority
+              sizes="(min-width: 640px) 8.5rem, 6.5rem"
+              className="size-26 rounded-full bg-surface sm:size-34"
+            />
+          </div>
+        ) : null}
         <h1
           id="personal-title"
           data-enter=""
-          style={{ "--i": 0 } as CSSProperties}
-          className="text-display"
+          style={{ "--i": 1 } as CSSProperties}
+          className="mt-8 text-display sm:mt-10"
         >
           {intro.title}
         </h1>
         <p
           data-enter=""
-          style={{ "--i": 1 } as CSSProperties}
-          className="mt-4 max-w-[44ch] text-lead text-muted-foreground"
+          style={{ "--i": 2 } as CSSProperties}
+          className="mt-4 max-w-[40ch] text-lead text-muted-foreground"
         >
           {interpolate(intro.lead, { city })}
         </p>
+        <Interests lang={lang} enter={3} className="mt-8" />
       </section>
 
       <PersonalSection
         id="blog"
-        enter={2}
+        enter={4 + profile.interests.length}
         title={sections.writing.title}
         aside={
           posts.length > 0 ? (
@@ -99,23 +117,27 @@ export default async function PersonalPage({ params }: PageProps) {
           ) : null
         }
       >
-        <PostList posts={posts} lang={lang} enter={3} />
+        <PostList
+          posts={posts}
+          lang={lang}
+          enter={5 + profile.interests.length}
+        />
       </PersonalSection>
 
       <PersonalSection
         id="side-projects"
-        enter={4}
+        enter={6 + profile.interests.length}
         title={sections.sideProjects.title}
       >
-        <SideProjects lang={lang} enter={5} />
+        <SideProjects lang={lang} enter={7 + profile.interests.length} />
       </PersonalSection>
 
       <PersonalSection
         id="elsewhere"
-        enter={6}
+        enter={8 + profile.interests.length}
         title={sections.elsewhere.title}
       >
-        <Elsewhere lang={lang} enter={7} />
+        <Elsewhere lang={lang} enter={9 + profile.interests.length} />
       </PersonalSection>
     </Container>
   );

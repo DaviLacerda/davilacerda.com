@@ -380,6 +380,17 @@
   }
 }
 
+/*
+ * The image viewer (`ImageLightbox`): while it is open the page behind keeps
+ * its place and does not scroll. The viewer measures the classic scrollbar
+ * it takes away (`--scrollbar-gap`, 0 with overlay scrollbars) and the page
+ * keeps that much room, so nothing shifts sideways.
+ */
+html:has(dialog[data-lightbox][open]) {
+  overflow: hidden;
+  padding-right: var(--scrollbar-gap, 0px);
+}
+
 /* ---------------------------------------------------------------------------
  * 5. The docked composer (below 1024px)
  *

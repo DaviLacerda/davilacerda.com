@@ -2,10 +2,16 @@ import "server-only";
 
 import type { ComposerStrings } from "@/components/chat/composer";
 import type { ReplyStrings } from "@/components/chat/reply";
-import { allSkills, profile, type FaqItem } from "@/content/profile";
+import {
+  allSkills,
+  certificationTiers,
+  getCertifications,
+  profile,
+  type FaqItem,
+} from "@/content/profile";
 import { getDictionary, interpolate, t, type Locale } from "@/i18n";
 import { formatLongPartialDate } from "@/i18n/format";
-import { techLogo, type LogoId } from "@/lib/logos";
+import { isLogoId, techLogo, type LogoId } from "@/lib/logos";
 import { routes } from "@/lib/routes";
 
 import { topicIds, type TopicId } from "./topics";
@@ -94,6 +100,24 @@ export function topicIntro(topic: TopicId, lang: Locale): string {
       ? splitCompanyName(t(previous.company, lang)).short
       : "",
   });
+}
+
+/**
+ * The certifications in one look: how many ("3"), the program they belong to
+ * ("Microsoft Certified") and the tiers ("2 Expert, 1 Associate"). Shared by
+ * the overview, the Certifications answer and their OG cards.
+ */
+export function certificationsSummary(lang: Locale) {
+  const credentials = getCertifications("certification");
+  const logo = credentials[0]?.logo;
+  return {
+    count: credentials.length,
+    title: getDictionary(lang).chat.home.certifiedTitle,
+    tiers: certificationTiers()
+      .map((tier) => `${tier.count} ${tier.level}`)
+      .join(", "),
+    logo: logo && isLogoId(logo) ? logo : null,
+  };
 }
 
 /** FAQ items shown on the FAQ topic (and in its FAQPage JSON-LD). */

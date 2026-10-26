@@ -33,7 +33,7 @@ export async function generateMetadata({
 /**
  * Work tab (home). The layout supplies Davi's name (this page's h1), one
  * line, the composer and the suggestions; the canvas shows the overview: the
- * award, the Microsoft Expert credentials, the current role and how to reach
+ * award, the Microsoft certifications, the current role and how to reach
  * him, each a link to the answer that tells the whole story. The long
  * factual TL;DR lives in the JSON-LD, the Markdown rendition, llms.txt and
  * the MCP server, not on screen.

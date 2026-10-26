@@ -1,5 +1,6 @@
 import "server-only";
 
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -60,6 +61,24 @@ export function loadOgFonts(): Promise<Font[]> {
     { name: FAMILY, data: semibold, weight: 600, style: "normal" },
   ]);
   return fontsPromise;
+}
+
+const imageCache = new Map<string, string>();
+
+/**
+ * A PNG or JPEG from /public as a data URI for an <img> on a card (Satori's
+ * renderer cannot read WebP or AVIF). Read once per process; OG images are
+ * generated at build time.
+ */
+export function ogPublicImage(publicPath: string): string {
+  let uri = imageCache.get(publicPath);
+  if (!uri) {
+    const file = readFileSync(path.join(process.cwd(), "public", publicPath));
+    const type = publicPath.endsWith(".png") ? "image/png" : "image/jpeg";
+    uri = `data:${type};base64,${file.toString("base64")}`;
+    imageCache.set(publicPath, uri);
+  }
+  return uri;
 }
 
 /** Davi's mark (see `@/components/brand-mark`) as an inline SVG. */

@@ -60,8 +60,7 @@ export const ptBr: Dictionary = {
     home: {
       lead: "{role} na {company}, construindo produtos de IA generativa e agentes.",
       highlightsTitle: "Destaques",
-      expertsTitle: "Microsoft Certified Expert",
-      expertsDetail: "IA multiagente e agêntica",
+      certifiedTitle: "Microsoft Certified",
     },
     composer: {
       label: "Faça uma pergunta sobre o trabalho do Davi",
@@ -104,12 +103,11 @@ export const ptBr: Dictionary = {
         chip: "Certificações",
         question: "Quais certificações o Davi tem?",
         title: "Certificações",
-        metaTitle: "Certificações Microsoft Expert de Davi Lacerda",
+        metaTitle: "Certificações Microsoft de Davi Lacerda",
         description:
-          "Davi Lacerda tem duas certificações Microsoft de nível Expert, em soluções de IA multiagente e arquitetura de IA agêntica, além de cursos de React.",
-        summary: "Duas credenciais Microsoft Expert, e cursos.",
-        intro:
-          "Duas certificações Microsoft de nível Expert, em IA multiagente e agêntica.",
+          "Davi Lacerda tem três certificações Microsoft: Expert em soluções de IA multiagente e em arquitetura de IA agêntica, e Associate em apps e agentes de IA no Azure. Com os certificados e seus IDs.",
+        summary: "Três certificações Microsoft, e cursos.",
+        intro: "Três certificações Microsoft: duas Expert, uma Associate.",
       },
       skills: {
         chip: "Habilidades",
@@ -184,6 +182,12 @@ export const ptBr: Dictionary = {
       },
       certifications: {
         credentials: "Credenciais",
+        viewFullSize: "Ver em tamanho real",
+        close: "Fechar",
+        certificateAlt: "Certificado {name}, emitido para {person}",
+        copyId: "Copiar ID da credencial",
+        copied: "Copiado",
+        verify: "Verificar",
         issued: "Emitida em {date}",
         courses: "Cursos",
         course: "Curso",
@@ -228,7 +232,8 @@ export const ptBr: Dictionary = {
     labels: {
       award: "Prêmio",
       mainDeveloper: "Principal desenvolvedor",
-      expertLevel: "Nível Expert",
+      level: "Nível {level}",
+      credentialId: "ID da credencial",
       courses: "Cursos",
       stack: "Stack",
       highlights: "Destaques",
@@ -241,7 +246,6 @@ export const ptBr: Dictionary = {
       featured: "Destaque",
       stars: "{count} estrelas",
       issuedBy: "Emitido por {issuer}",
-      viewCredential: "Ver credencial",
       coursework: "Disciplinas relevantes",
       thesis: "TCC",
       languagesSpoken: "Idiomas",
@@ -269,11 +273,13 @@ export const ptBr: Dictionary = {
 
   personal: {
     intro: {
-      title: "Fora do expediente",
+      title: "Oi, eu sou o Davi.",
       description:
         "Textos, experimentos e coisas que eu construo por diversão.",
       // TODO(davi): deixe esta frase com a sua cara (hobbies e a vida longe do teclado).
-      lead: "Oi, eu sou o Davi. O que eu construo e escrevo no meu tempo livre, em {city}.",
+      lead: "Moro em {city} e crio pequenos projetos por diversão. E agora comecei a escrever também.",
+      portraitAlt: "Retrato de Davi Lacerda",
+      interests: "Interesses",
     },
     sections: {
       writing: {

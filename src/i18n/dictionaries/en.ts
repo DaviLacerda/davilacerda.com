@@ -77,9 +77,8 @@ export const en = {
       lead: "{role} at {company}, building generative AI products and agents.",
       /** Screen-reader heading of the overview panels. */
       highlightsTitle: "Highlights",
-      /** Under the oversized "2×". */
-      expertsTitle: "Microsoft Certified Expert",
-      expertsDetail: "Multi-agent and agentic AI",
+      /** Beside the oversized count of certifications ("3×"); the tiers go under it. */
+      certifiedTitle: "Microsoft Certified",
     },
     composer: {
       label: "Ask a question about Davi's work",
@@ -123,12 +122,11 @@ export const en = {
         chip: "Certifications",
         question: "Which certifications does Davi hold?",
         title: "Certifications",
-        metaTitle: "Davi Lacerda's Microsoft Expert certifications",
+        metaTitle: "Davi Lacerda's Microsoft certifications",
         description:
-          "Davi Lacerda holds two Expert-level Microsoft certifications, in multi-agent AI solutions and agentic AI architecture, plus React courses.",
-        summary: "Two Microsoft Expert credentials, and courses.",
-        intro:
-          "Two Expert-level Microsoft certifications, in multi-agent and agentic AI.",
+          "Davi Lacerda holds three Microsoft certifications: Expert in multi-agent AI solutions and in agentic AI architecture, and Associate in Azure AI apps and agents. With the certificates and their IDs.",
+        summary: "Three Microsoft certifications, and courses.",
+        intro: "Three Microsoft certifications: two Expert, one Associate.",
       },
       skills: {
         chip: "Skills",
@@ -204,6 +202,14 @@ export const en = {
       },
       certifications: {
         credentials: "Credentials",
+        /** The link around a certificate's print; opens it full size. */
+        viewFullSize: "View full size",
+        close: "Close",
+        /** Alt text of a print. */
+        certificateAlt: "{name} certificate, issued to {person}",
+        copyId: "Copy credential ID",
+        copied: "Copied",
+        verify: "Verify",
         issued: "Issued {date}",
         courses: "Courses",
         course: "Course",
@@ -249,7 +255,9 @@ export const en = {
     labels: {
       award: "Award",
       mainDeveloper: "Main developer",
-      expertLevel: "Expert level",
+      /** A certification's tier: "Expert level". */
+      level: "{level} level",
+      credentialId: "Credential ID",
       courses: "Courses",
       stack: "Stack",
       highlights: "Highlights",
@@ -262,7 +270,6 @@ export const en = {
       featured: "Featured",
       stars: "{count} stars",
       issuedBy: "Issued by {issuer}",
-      viewCredential: "View credential",
       coursework: "Relevant coursework",
       thesis: "Thesis",
       languagesSpoken: "Languages",
@@ -292,13 +299,16 @@ export const en = {
 
   personal: {
     intro: {
-      title: "Off the clock",
+      title: "Hi, I'm Davi.",
       description: "Writing, experiments and things I build for fun.",
       /**
        * First-person line under the title. `{city}` comes from the profile.
        * TODO(davi): make it yours (hobbies and life away from the keyboard).
        */
-      lead: "Hi, I'm Davi. What I build and write in my own time, from {city}.",
+      lead: "I live in {city}, Brazil, and build small things for fun. Lately, I've started writing too.",
+      portraitAlt: "Portrait of Davi Lacerda",
+      /** Accessible name of the interests row (and its label in Markdown). */
+      interests: "Interests",
     },
     sections: {
       writing: {

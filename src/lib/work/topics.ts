@@ -115,6 +115,8 @@ const keywords: Record<TopicId, [string, number][]> = {
     ["credenciais", 3],
     ["microsoft", 2],
     ["expert", 2],
+    ["associate", 2],
+    ["credential id", 4],
     ["exam", 2],
     ["prova", 1],
     ["course", 2],

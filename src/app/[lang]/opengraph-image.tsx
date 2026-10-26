@@ -12,7 +12,7 @@ import {
 
 /**
  * Social card for the Work page (and the default for every page under
- * /[lang]): the headline over the award and the "2×" Expert panels.
+ * /[lang]): the headline over the award and the "3×" Microsoft Certified panels.
  */
 export const alt = `${profile.name}, ${t(profile.headline, defaultLocale)}`;
 export const size = OG_SIZE;

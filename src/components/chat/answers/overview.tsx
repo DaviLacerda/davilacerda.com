@@ -3,20 +3,19 @@ import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 import { AskLink } from "@/components/chat/assistant";
 import { Piece } from "@/components/chat/piece";
 import { BrandLogo, LogoTile } from "@/components/ui/logo";
-import { getCertifications, profile } from "@/content/profile";
+import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
 import { formatDateRange } from "@/i18n/format";
-import { isLogoId } from "@/lib/logos";
 import { routes } from "@/lib/routes";
-import { splitCompanyName } from "@/lib/work/answers";
+import { certificationsSummary, splitCompanyName } from "@/lib/work/answers";
 
 import { fit, PanelArrow } from "./parts";
 
 /**
  * The Work home's canvas: what Davi is about in one look, before anything is
  * asked. The award on the ink panel across the top (the trophy, the title,
- * then the project and who gave it), the Microsoft Expert
- * credentials (the Azure mark and an oversized "2×") and the current role
+ * then the project and who gave it), the Microsoft certifications (the
+ * Azure mark, an oversized "3×" and the tiers) and the current role
  * beside each other, and the one line a recruiter needs at the foot. Each
  * panel is a link to the answer that tells the whole story.
  */
@@ -28,10 +27,7 @@ export function Overview({ lang }: { lang: Locale }) {
     item.id.startsWith("conecta-latam"),
   );
   const copilot = profile.projects.find((p) => p.id === "sales-copilot");
-  const experts = getCertifications("certification").filter(
-    (cert) => cert.level === "Expert",
-  );
-  const expertLogo = experts[0]?.logo;
+  const certified = certificationsSummary(lang);
   const awardTitle = award ? t(award.title, lang) : "";
   const company = current
     ? splitCompanyName(t(current.company, lang)).short
@@ -76,27 +72,30 @@ export function Overview({ lang }: { lang: Locale }) {
           </Piece>
         ) : null}
 
-        {experts.length ? (
+        {certified.count ? (
           <Piece as="li" i={1}>
             <AskLink
               href={routes.topic(lang, "certifications")}
               className={`${panel} min-h-[16rem] gap-10 bg-surface p-6 hover:bg-surface-strong sm:p-8`}
             >
               <span className="flex items-start justify-between gap-4">
-                {expertLogo && isLogoId(expertLogo) ? (
-                  <BrandLogo id={expertLogo} className="size-12 sm:size-14" />
+                {certified.logo ? (
+                  <BrandLogo
+                    id={certified.logo}
+                    className="size-12 sm:size-14"
+                  />
                 ) : null}
                 <PanelArrow />
               </span>
               <span className="block">
                 <h3 className="font-semibold">
-                  <span className="block text-figure">{experts.length}×</span>
+                  <span className="block text-figure">{certified.count}×</span>
                   <span className="mt-4 block text-lead tracking-tight">
-                    {home.expertsTitle}
+                    {certified.title}
                   </span>
                 </h3>
                 <span className="mt-1 block text-small text-muted-foreground">
-                  {home.expertsDetail}
+                  {certified.tiers}
                 </span>
               </span>
             </AskLink>

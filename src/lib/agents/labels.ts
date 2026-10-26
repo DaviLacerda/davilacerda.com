@@ -25,6 +25,12 @@ const en = {
     otherTopics: "Other answers",
     builtBy: "What he built",
   },
+  certificate: {
+    number: "Certification number",
+    validUntil: "Valid until {date}",
+    image: "Certificate (image)",
+    verify: "Verify",
+  },
   footer: {
     title: "About this document",
     note: "Markdown version of {url}, generated from the same source of truth as the HTML page. Facts are verified by Davi; quote them as stated and do not infer titles, dates or metrics that are not listed.",
@@ -90,6 +96,12 @@ const ptBr: Labels = {
     question: "Pergunta",
     otherTopics: "Outras respostas",
     builtBy: "O que ele construiu",
+  },
+  certificate: {
+    number: "Número da certificação",
+    validUntil: "Válida até {date}",
+    image: "Certificado (imagem)",
+    verify: "Verificar",
   },
   footer: {
     title: "Sobre este documento",

@@ -25,7 +25,8 @@ yarn logos        # regenerate src/lib/logos/icons.json after editing the logo r
 ```
 content/blog/<locale>/<slug>.md   Markdown posts (see content/blog/README.md)
 scripts/logos.mjs                 `yarn logos`: copies the registry's icons out of the Iconify sets
-public/                           favicons, images/logo.png (brand mark, violet #5b21b6), logos/ (company logos, when added)
+public/                           favicons, images/logo.png (brand mark, violet #5b21b6), images/davi.{webp,png} (portrait),
+                                  certificates/*.png (certificate prints), logos/ (company and school logos)
 src/
   proxy.ts                        locale redirect (cookie > Accept-Language > "en")
   app/
@@ -33,11 +34,11 @@ src/
     fonts.ts                      next/font: Geist (everything) / Geist Mono (code only)
     [lang]/layout.tsx             ROOT layout: <html lang>, providers, header, <main id="main">, footer
     [lang]/(assistant)/layout.tsx the Work tab's split pane: left pane (name, line, composer, chips) + canvas
-    [lang]/(assistant)/page.tsx   Work home: the overview on the canvas (award, 2x Expert, current role)
+    [lang]/(assistant)/page.tsx   Work home: the overview on the canvas (award, 3x Microsoft Certified, current role)
     [lang]/(assistant)/work/[topic]/  one answer on the canvas, e.g. /en/work/experience (static, 7 topics)
     [lang]/(assistant)/work/page.tsx  /en/work -> 308 to /en
     [lang]/(assistant)/ask/page.tsx   the composer's no-JS form target: "nothing on that yet" (noindex)
-    [lang]/personal/page.tsx      Personal tab: intro, writing (blog index), side projects, elsewhere
+    [lang]/personal/page.tsx      Personal tab: portrait, hello, interests, writing (blog index), side projects, elsewhere
     [lang]/personal/blog/[slug]/  Blog post
     [lang]/not-found.tsx          localized 404 (the way back and the topics as links)
     [lang]/[...rest]/page.tsx     sends unknown /<lang>/* paths to the 404
@@ -48,11 +49,12 @@ src/
                                   certifications, skills, education, faq, contact) + parts (Panel, fit()...)
     motion/                       motion-provider (LazyMotion + MotionConfig), reveal (scroll entrance), features
     layout/                       site-header, nav-tabs, locale-switcher, theme-toggle, site-footer
-    personal/                     side-projects, elsewhere
+    personal/                     interests, side-projects, elsewhere
     blog/                         post-list, post-header, table-of-contents, author-card, post-pager, rss-link
     providers/                    theme-provider (next-themes), alternate-links (locale switcher targets)
     seo/json-ld.tsx               <JsonLd data={...} />
-    ui/                           container, button, tag, text-link, prose, logo (BrandLogo, LogoTile)
+    ui/                           container, button, tag, text-link, prose, logo (BrandLogo, LogoTile),
+                                  copy-button, image-lightbox
     brand-mark.tsx                Davi's pixel "d" mark (BRAND_MARK geometry, shared with OG/icons)
   config/site.ts                  url, name, theme colors, shared SEO keywords
   content/profile.ts              ALL facts about Davi (typed, bilingual). Single source of truth.
@@ -153,7 +155,7 @@ both fill two lines); put `@container` on an unpadded wrapper, not on the padded
 - Work, from 1024px: two panes. The left column (20rem, 23rem from `xl`) sticks to the top and
   holds the name, one line, the composer and the chips (they wrap). The canvas on the right shows
   the answer large. The home's canvas is the overview: the award on an ink panel across the top,
-  the Azure mark with "2×" Microsoft Certified Expert, the current role, and a contact row.
+  the Azure mark with "3×" Microsoft Certified ("2 Expert, 1 Associate"), the current role, and a contact row.
 - Work, below 1024px: the chat-app pattern. The answer fills the page and the composer plus a
   horizontally scrolling chip row are docked to the bottom (`position: fixed`, frosted
   `bg-background/90` + `backdrop-blur`, safe-area aware with `env(safe-area-inset-bottom)` and
@@ -180,6 +182,12 @@ a monogram on the tile (Algar, Brain, UFU, Rocketseat and Alura are monograms un
 added; see the `TODO(davi)` notes). Only technologies already in `profile.ts` get a logo. On
 an ink panel a tile turns `tone="ink"` (translucent on-ink fill) and the logo keeps its colours.
 
+**Pictures:** the portrait is black and white, its original violet backdrop keyed out, on a
+`bg-surface` disc, so it follows the theme like everything else. Certificate prints are cropped to
+the certificate (transparent rounded corners), served through next/image (AVIF/WebP, `quality={90}`,
+allowed in `next.config.ts` `images.qualities`) and dimmed to 90% brightness in dark mode. No
+labels on top of pictures; captions go under them.
+
 **Icons:** Phosphor, regular weight (bold only on the send arrow), imported per icon from
 `@phosphor-icons/react/dist/ssr/<Name>` (works in server and client components). Always
 `aria-hidden="true"`; the control carries the label.
@@ -198,27 +206,35 @@ Motion (`motion/react`) in small client leaves, loaded through `LazyMotion` (`do
 motivated by a state change; ease-out `cubic-bezier(0.23, 1, 0.32, 1)` for arrivals, never animate
 from `scale(0)`, transform and opacity only.
 
-| What                                   | Where                                      | Timing                                                              |
-| -------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------- |
-| First-paint entrance (`data-enter`)    | globals.css (CSS, works without JS)        | 450ms ease-out, rise 8px, 50ms stagger via `--i`                    |
-| Answer entrance on load (`data-piece`) | globals.css (CSS, works without JS)        | 520ms ease-out, rise 12px out of a 4px blur, 60ms apart via `--p`   |
-| Canvas swap (chip, link or composer)   | `Canvas` + `arrive()` (Motion `animate()`) | 360ms ease-out, same rise and blur, `stagger(0.045)`, interruptible |
-| "Thinking" while the next answer loads | `leave()` on `open()`                      | the answer on screen dims to 0.35 and blurs 2px in 140ms            |
-| Chip pill                              | `Composer` (`layoutId="chip-pill"`)        | spring 0.32s, no bounce, moves on click; instant while typing       |
-| Timeline bars (`data-bar`)             | globals.css (clip-path reveal)             | 640ms ease-out, 140ms apart, on every mount                         |
-| Scroll reveal                          | `<Reveal stagger? enter?>` (`animateMini`) | 500ms ease-out, rise 16px, 60ms stagger, once (Personal, blog)      |
-| Disclosure (`details.disclosure`)      | globals.css (`::details-content`)          | open 240ms, close 160ms, ease-out; caret turns with it              |
-| Header tab pill                        | `NavTabs` (`layoutId`)                     | spring 0.3s, no bounce, moves on click (optimistic)                 |
-| Theme icon swap                        | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur                    |
-| Copy email confirmation                | `CopyEmailButton`                          | 150ms blur crossfade of icon and label, width reserved              |
-| Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                            |
-| Hover fills, arrow nudges, fields      | Tailwind transitions                       | 150ms ease-out                                                      |
+| What                                   | Where                                      | Timing                                                                                                                                            |
+| -------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First-paint entrance (`data-enter`)    | globals.css (CSS, works without JS)        | 450ms ease-out, rise 8px, 50ms stagger via `--i`                                                                                                  |
+| Answer entrance on load (`data-piece`) | globals.css (CSS, works without JS)        | 520ms ease-out, rise 12px out of a 4px blur, 60ms apart via `--p`                                                                                 |
+| Canvas swap (chip, link or composer)   | `Canvas` + `arrive()` (Motion `animate()`) | 360ms ease-out, same rise and blur, `stagger(0.045)`, interruptible                                                                               |
+| "Thinking" while the next answer loads | `leave()` on `open()`                      | the answer on screen dims to 0.35 and blurs 2px in 140ms                                                                                          |
+| Chip pill                              | `Composer` (`layoutId="chip-pill"`)        | spring 0.32s, no bounce, moves on click; instant while typing                                                                                     |
+| Timeline bars (`data-bar`)             | globals.css (clip-path reveal)             | 640ms ease-out, 140ms apart, on every mount                                                                                                       |
+| Scroll reveal                          | `<Reveal stagger? enter?>` (`animateMini`) | 500ms ease-out, rise 16px, 60ms stagger, once (Personal, blog)                                                                                    |
+| Disclosure (`details.disclosure`)      | globals.css (`::details-content`)          | open 240ms, close 160ms, ease-out; caret turns with it                                                                                            |
+| Header tab pill                        | `NavTabs` (`layoutId`)                     | spring 0.3s, no bounce, moves on click (optimistic)                                                                                               |
+| Theme icon swap                        | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur                                                                                                  |
+| Copy confirmation (email, credential)  | `CopyButton` (`CopyEmailButton` wraps it)  | 150ms blur crossfade of icon and label, width reserved                                                                                            |
+| Certificate viewer open / close        | `ImageLightbox` (Motion `animate()`)       | FLIP from the print's own place: spring 0.42s no bounce (close 0.34s), page fades behind in 240ms, caption 140ms later; reduced motion: fade only |
+| Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                                                                                                          |
+| Hover fills, arrow nudges, fields      | Tailwind transitions                       | 150ms ease-out                                                                                                                                    |
 
 The canvas swap is the assistant's signature: a chip click lights its chip at once (optimistic),
 the answer on screen steps back, and when the new route has rendered `Canvas` composes it in
 front of the visitor in its `--p` order (bubble, title, then the pictures). Motion runs it on the
 compositor (opacity, transform, filter); a new swap stops the one in flight, and the inline styles
 are removed afterwards (a lingering `filter` would make every panel a containing block).
+
+The certificate viewer is the other picture moment: the print lifts off the page (it hides and
+the large copy starts at exactly its rect, then grows to the centre), the page fades to the
+surface tone behind it, and Escape, a click anywhere or the close button run it back into its
+slot. It is a native modal `<dialog>` (focus moves to Close and returns to the print; the page is
+inert), and while it is open `html` stops scrolling and keeps the classic scrollbar's width as
+padding (`--scrollbar-gap`), so nothing shifts. Without JavaScript the print's link opens the PNG.
 
 Not animated on purpose: typing and the live match (instant), the locale switch. The CSS
 entrances only play on a full load: `data-nav` is set on `<html>` at the first in-site navigation,
@@ -245,13 +261,16 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 - **Answers** (`src/components/chat/answers/`, server components): `AnswerHeader` (the question as
   a right-aligned bubble, then the `h1#answer-title`) and one component per topic, each a picture
   first, built only from `profile.ts`:
-  - overview (home): award ink panel, Azure mark + "2×" Microsoft Certified Expert, current role
+  - overview (home): award ink panel, Azure mark + "3×" Microsoft Certified with the tiers, current role
     with its tile and "Since Aug 2024", contact row; each panel links to its answer;
   - experience: the career as one bar (Brain, then Algar in ink up to "Today"), one panel per job
     (the current one in ink) with its stack and highlights in a disclosure, then other Algar work;
   - sales-copilot: "Best AI Project in LATAM" filling an ink panel, a facts row (company, year,
     role, access), the three layers it was built in (AI tools in ink) and the stack;
-  - certifications: an oversized "2×", one panel per credential with a large Azure mark, courses;
+  - certifications: an oversized "3×" with the tiers (`certificationsSummary()`), then one panel per
+    credential whose picture is the print of its certificate (the newest across the canvas, the
+    others side by side; a tap opens it in `ImageLightbox`), its tier and date, the credential ID
+    with a copy button and, once `credentialUrl` is set, a Verify link; courses;
   - skills: a logo wall of the stack (`stackLogos()`), then the groups as short inline lists;
   - education: "UFU" set huge on an ink panel, coursework, languages as large type;
   - faq: one disclosure per question; contact: the email as the headline of an ink panel, the two
@@ -277,27 +296,29 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 
 ## Components
 
-| Component                                                              | Notes                                                                                                           |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `<Container as? wide?>`                                                | the 48rem column, or with `wide` the 80rem frame, with the gutter                                               |
-| `<ButtonLink href variant? size?>` / `buttonVariants()`                | `primary` (ink), `quiet` (surface), `raised` (page on a surface), `inverse` / `ghost-inverse` (on an ink panel) |
-| `<TextLink href arrow? newTabLabel?>`                                  | inline link with `link-underline`; external opens a new tab with a Phosphor ↗                                   |
-| `<Tag tone? logo?>` / `<TagList items label? tone? logos?>`            | filled pills, `tone` `page`, `surface` or `ink`; `logos` puts the brand mark before each technology             |
-| `<BrandLogo id label?>` / `<LogoTile logo? name size? tone?>`          | an inline brand logo (server); a tile up to `xl` (64px) with the logo, a `/public` file or a monogram           |
-| `<AssistantProvider>`, `<Canvas reply>`, `<Identity home name lead>`   | the Work tab's shared state, the swapping canvas, the name in the left pane (client)                            |
-| `<Composer action topics strings enterFrom?>`                          | input, live match, chips with the sliding pill; docked below 1024px (client)                                    |
-| `<AskLink href>`                                                       | next/link that calls `open()` on a plain click (client)                                                         |
-| `<Piece i as?>`                                                        | one part of an answer, in entrance order (server or client)                                                     |
-| `<Question text label>` / `<Reply question strings>`                   | the question bubble; the "nothing on that yet" reply (client)                                                   |
-| `<Panel as? tone?>`, `fit()`, `<BlockTitle>`, `<Disclosure>`           | answer building blocks in `answers/parts.tsx` (server)                                                          |
-| `<Reveal as? stagger? enter?>`                                         | scroll entrance below the fold; with `enter`, part of the load entrance (client)                                |
-| `<CopyEmailButton email label copiedLabel variant? size?>`             | copy with a short crossfade confirmation (client)                                                               |
-| `<SocialList lang ids reveal?>` / `<Elsewhere lang>`                   | network rows with logo, name and handle (Contact answer, Personal)                                              |
-| `<Prose html enter?>`                                                  | renders `post.html` with `.markdown`                                                                            |
-| `<BrandMark>`                                                          | the pixel "d" in `currentColor`                                                                                 |
-| `<JsonLd data={node \| node[]}>`                                       | adds `@context`; arrays become one `@graph`                                                                     |
-| `<LocaleAlternates links>`                                             | per-page locale switcher targets                                                                                |
-| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle` | wired in the layout; the header is static (not sticky)                                                          |
+| Component                                                                   | Notes                                                                                                           |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `<Container as? wide?>`                                                     | the 48rem column, or with `wide` the 80rem frame, with the gutter                                               |
+| `<ButtonLink href variant? size?>` / `buttonVariants()`                     | `primary` (ink), `quiet` (surface), `raised` (page on a surface), `inverse` / `ghost-inverse` (on an ink panel) |
+| `<TextLink href arrow? newTabLabel?>`                                       | inline link with `link-underline`; external opens a new tab with a Phosphor ↗                                   |
+| `<Tag tone? logo?>` / `<TagList items label? tone? logos?>`                 | filled pills, `tone` `page`, `surface` or `ink`; `logos` puts the brand mark before each technology             |
+| `<BrandLogo id label?>` / `<LogoTile logo? name size? tone?>`               | an inline brand logo (server); a tile up to `xl` (64px) with the logo, a `/public` file or a monogram           |
+| `<AssistantProvider>`, `<Canvas reply>`, `<Identity home name lead>`        | the Work tab's shared state, the swapping canvas, the name in the left pane (client)                            |
+| `<Composer action topics strings enterFrom?>`                               | input, live match, chips with the sliding pill; docked below 1024px (client)                                    |
+| `<AskLink href>`                                                            | next/link that calls `open()` on a plain click (client)                                                         |
+| `<Piece i as?>`                                                             | one part of an answer, in entrance order (server or client)                                                     |
+| `<Question text label>` / `<Reply question strings>`                        | the question bubble; the "nothing on that yet" reply (client)                                                   |
+| `<Panel as? tone?>`, `fit()`, `<BlockTitle>`, `<Disclosure>`                | answer building blocks in `answers/parts.tsx` (server)                                                          |
+| `<Reveal as? stagger? enter?>`                                              | scroll entrance below the fold; with `enter`, part of the load entrance (client)                                |
+| `<CopyButton value label copiedLabel variant? size? iconOnly?>`             | copy with a short crossfade confirmation (client); `CopyEmailButton` is the email preset                        |
+| `<ImageLightbox src width height alt caption detail? openLabel closeLabel>` | a link around a thumbnail that opens the image in a modal `<dialog>` (client; see Motion)                       |
+| `<Interests lang enter>`                                                    | the Personal tab's interest chips (Phosphor icon + label)                                                       |
+| `<SocialList lang ids reveal?>` / `<Elsewhere lang>`                        | network rows with logo, name and handle (Contact answer, Personal)                                              |
+| `<Prose html enter?>`                                                       | renders `post.html` with `.markdown`                                                                            |
+| `<BrandMark>`                                                               | the pixel "d" in `currentColor`                                                                                 |
+| `<JsonLd data={node \| node[]}>`                                            | adds `@context`; arrays become one `@graph`                                                                     |
+| `<LocaleAlternates links>`                                                  | per-page locale switcher targets                                                                                |
+| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; the header is static (not sticky)                                                          |
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
 `reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, the providers. Pages,
@@ -312,12 +333,16 @@ line and the overview), `location`,
 `experience[]` (`company, role, start, end|null, employmentType, workModel, location, description,
 highlights, stack`), `projects[]` (`kind: "work" | "side"`, `featured`, `role?`, `award?`,
 `repoUrl?`, `liveUrl?`, `stars?`), `skills[]` (groups `llm, rag, ml, backend, frontend, infra`),
-`knowsAbout[]`, `certifications[]` (`kind: "certification" | "course"`, `level?`),
+`knowsAbout[]`, `certifications[]` (`kind: "certification" | "course"`, `level?` ("Expert", "Associate"),
+`credentialId?`, `certificationNumber?`, `expires?`, `credentialUrl?` (the Verify link renders only
+when set), `image?` `{ src, width, height }`: a PNG print cropped to the certificate),
 `education[]` (experience, certifications and education take an optional `logo`: a registry id
 such as `"azure"` or a `/public` path such as `"/logos/algar.svg"`), `achievements[]` (`featured` ones: the Conecta Latam award and the Microsoft
 Expert certifications), `languages[]`, `faq[]` (rendered on the FAQ topic, `/[lang]/work/faq`, and
 used for its FAQPage JSON-LD; the other answers' first paragraphs reuse FAQ answers).
-Helpers: `allSkills()`, `getSocial(id)`, `getCertifications(kind?)`.
+`image` (the portrait, `/images/davi.webp`, with a PNG twin for the OG card) and `interests[]`
+(`{ id, label }`, the Personal chips; inferred from GitHub, see the `TODO(davi)`).
+Helpers: `allSkills()`, `getSocial(id)`, `getCertifications(kind?)`, `certificationTiers()`.
 
 Rules: only verified facts; anything unknown has a `TODO(davi)` comment. No seniority levels or
 formal titles for Algar (the role is "AI Engineer", since Aug 2024). Dates are strings
@@ -386,7 +411,11 @@ export default async function Page({ params }: PageProps) {
 - `/_vercel/insights/script.js` 404s locally (Vercel Analytics only exists on Vercel).
 - Metadata image routes inside a route group get a hashed segment: a Work answer's card is
   `/en/work/<topic>/opengraph-image-<hash>`. The page metadata points at it automatically; never
-  hand-write that URL.
+  hand-write that URL. The Work home declares its card again inside `(assistant)/` (re-exporting
+  `[lang]/opengraph-image`): a page's own `openGraph` metadata replaces the card it would inherit
+  from a parent segment.
+- OG cards read pictures from `public/` with `ogPublicImage()` (PNG or JPEG only: the card
+  renderer draws nothing for WebP); those files are listed in `outputFileTracingIncludes`.
 - Taste inspector rules allowed on purpose (`--allow`): `few-pictures` and `empty-screens` (a
   portfolio without photography), `covered-text` (the docked composer covers the page as it
   scrolls, which is the point), `edge-text` (the docked chip row scrolls sideways), `body-size`
@@ -409,7 +438,7 @@ All of it is static (`force-static` + `generateStaticParams`) except `/mcp`.
 | `/robots.txt`                                                                                                          | RFC 9309. `*` group plus an explicit AI crawler/agent group, both `Allow: /` with `Content-Signal: search=yes, ai-input=yes, ai-train=yes`; `Sitemap:` line.                                                                                   |
 | `/sitemap.xml`                                                                                                         | Every page in every locale (including the seven Work answers) and every post, with `xhtml:link` hreflang (incl. `x-default`) and `lastmod` (last git commit of the profile sources; post `updated ?? date`).                                   |
 | `/manifest.webmanifest`, `/icons/{icon-192,icon-512,maskable-512}.png`                                                 | Web app manifest and generated icons (the brand mark).                                                                                                                                                                                         |
-| `opengraph-image` / `twitter-image`                                                                                    | Monochrome, like the site. Per locale for Work (headline, award ink panel, Azure "2×" panel), each Work answer (question bubble + the answer's picture), Personal and each post (title, description, date, reading time).                      |
+| `opengraph-image` / `twitter-image`                                                                                    | Monochrome, like the site. Per locale for Work (headline, award ink panel, Azure "3×" panel), each Work answer (question bubble + the answer's picture; Certifications shows the newest print), Personal (portrait + hello) and each post.     |
 | `/llms.txt`, `/llms-full.txt`                                                                                          | [llmstxt.org](https://llmstxt.org) index; full text of both profiles, both Personal pages and every post.                                                                                                                                      |
 | `/{lang}.md` (`/{lang}/index.md`), `/{lang}/work/{topic}.md`, `/{lang}/personal.md`, `/{lang}/personal/blog/{slug}.md` | Markdown renditions (Work reads like a résumé; each answer has its own). Also served for `Accept: text/markdown` on the HTML URL and on `/`.                                                                                                   |
 | `/api/profile.json`, `/api/posts.json`, `/api/{lang}/{profile,posts,resume}.json`                                      | JSON (profile localized per language; posts with Markdown URLs).                                                                                                                                                                               |

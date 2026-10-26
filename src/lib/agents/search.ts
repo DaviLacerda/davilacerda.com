@@ -186,6 +186,8 @@ function profileDocuments(lang: Locale): SearchDocument[] {
           cert.level,
           cert.date && formatPartialDate(cert.date, lang),
           cert.description && t(cert.description, lang),
+          cert.credentialId,
+          cert.certificationNumber,
         ]
           .filter(Boolean)
           .join("\n"),

@@ -3,8 +3,8 @@ import "server-only";
 import { getCertifications, profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
 import { formatPartialDate } from "@/i18n/format";
-import { isLogoId } from "@/lib/logos";
 import {
+  certificationsSummary,
   splitCompanyName,
   stackLogos,
   topicCopy,
@@ -21,13 +21,14 @@ import {
   OgTrophy,
   clampText,
   ogColors,
+  ogPublicImage,
 } from "./template";
 
 /*
  * The pictures on the social cards: each Work answer's card shows the same
- * visual as the answer on the page (the award on an ink panel, the Azure mark
- * with an oversized "2×", the career as one bar, the stack as logos, UFU, the
- * email), under the visitor's question. Every size here is in pixels on the
+ * visual as the answer on the page (the award on an ink panel, an oversized
+ * "3×" beside the newest certificate, the career as one bar, the stack as
+ * logos, UFU, the email), under the visitor's question. Every size here is in pixels on the
  * 1200x630 card, inside OgFrame's padding (1056px wide).
  */
 
@@ -106,14 +107,6 @@ function awardData(lang: Locale) {
     : null;
 }
 
-function expertsData() {
-  const experts = getCertifications("certification").filter(
-    (cert) => cert.level === "Expert",
-  );
-  const logo = experts[0]?.logo;
-  return { count: experts.length, logo: logo && isLogoId(logo) ? logo : null };
-}
-
 const display = {
   fontWeight: 600,
   letterSpacing: "-0.05em",
@@ -122,11 +115,10 @@ const display = {
 
 /* ---------------------------------------------------------------- Home */
 
-/** The Work card: the headline, then the award and the "2×" Expert panels. */
+/** The Work card: the headline, then the award and the "3×" Microsoft Certified panels. */
 export function OgHome({ lang }: { lang: Locale }) {
-  const home = getDictionary(lang).chat.home;
   const award = awardData(lang);
-  const experts = expertsData();
+  const certified = certificationsSummary(lang);
   const awardWidth = 520;
 
   return (
@@ -150,16 +142,16 @@ export function OgHome({ lang }: { lang: Locale }) {
             <Lines text={award.title} width={awardWidth} max={60} />
           </OgPanel>
         ) : null}
-        {experts.count > 0 ? (
+        {certified.count > 0 ? (
           <OgPanel tone="surface" style={{ flex: 1 }}>
-            {experts.logo ? (
-              <OgLogo id={experts.logo} size={48} />
+            {certified.logo ? (
+              <OgLogo id={certified.logo} size={48} />
             ) : (
               <div style={{ display: "flex" }} />
             )}
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", ...display, fontSize: 100 }}>
-                {`${experts.count}×`}
+                {`${certified.count}×`}
               </div>
               <div
                 style={{
@@ -169,7 +161,17 @@ export function OgHome({ lang }: { lang: Locale }) {
                   fontWeight: 500,
                 }}
               >
-                {home.expertsTitle}
+                {certified.title}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  marginTop: 4,
+                  fontSize: 22,
+                  color: ogColors.muted,
+                }}
+              >
+                {certified.tiers}
               </div>
             </div>
           </OgPanel>
@@ -199,7 +201,7 @@ function Visual({ topic, lang }: { topic: TopicId; lang: Locale }) {
     case "sales-copilot":
       return <AwardVisual lang={lang} />;
     case "certifications":
-      return <ExpertsVisual lang={lang} />;
+      return <CertificationsVisual lang={lang} />;
     case "experience":
       return <TimelineVisual lang={lang} />;
     case "skills":
@@ -247,47 +249,73 @@ function AwardVisual({ lang }: { lang: Locale }) {
   );
 }
 
-function ExpertsVisual({ lang }: { lang: Locale }) {
-  const home = getDictionary(lang).chat.home;
-  const experts = expertsData();
-  if (experts.count === 0) {
+/** "3×" and the tiers, beside the print of the newest certificate. */
+function CertificationsVisual({ lang }: { lang: Locale }) {
+  const certified = certificationsSummary(lang);
+  const featured = getCertifications("certification").find((cert) =>
+    cert.image?.src.endsWith(".png"),
+  );
+  if (certified.count === 0) {
     return <TitleVisual topic="certifications" lang={lang} />;
   }
+  const printHeight = 330;
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 48 }}>
-      <div
-        style={{ display: "flex", ...display, fontSize: 280, lineHeight: 0.8 }}
-      >
-        {`${experts.count}×`}
-      </div>
-      <div
-        style={{ display: "flex", flexDirection: "column", paddingBottom: 6 }}
-      >
-        {experts.logo ? <OgLogo id={experts.logo} size={84} /> : null}
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+        gap: 40,
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
             display: "flex",
-            marginTop: 28,
-            fontSize: 52,
-            fontWeight: 600,
-            letterSpacing: "-0.035em",
-            lineHeight: 1.05,
-            maxWidth: 560,
+            ...display,
+            fontSize: 220,
+            lineHeight: 0.8,
           }}
         >
-          {home.expertsTitle}
+          {`${certified.count}×`}
         </div>
         <div
           style={{
             display: "flex",
-            marginTop: 12,
+            marginTop: 30,
+            fontSize: 48,
+            fontWeight: 600,
+            letterSpacing: "-0.035em",
+            lineHeight: 1.05,
+          }}
+        >
+          {certified.title}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            marginTop: 10,
             fontSize: 28,
             color: ogColors.muted,
           }}
         >
-          {home.expertsDetail}
+          {certified.tiers}
         </div>
       </div>
+      {featured?.image ? (
+        // eslint-disable-next-line @next/next/no-img-element -- Satori, not the DOM.
+        <img
+          alt=""
+          src={ogPublicImage(featured.image.src)}
+          height={printHeight}
+          width={Math.round(
+            (printHeight * featured.image.width) / featured.image.height,
+          )}
+          style={{ borderRadius: 16 }}
+        />
+      ) : certified.logo ? (
+        <OgLogo id={certified.logo} size={120} />
+      ) : null}
     </div>
   );
 }

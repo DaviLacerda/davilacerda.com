@@ -98,13 +98,26 @@ export type Certification = {
   issuerUrl?: string;
   /** "certification" = formal credential (feature these), "course" = training/bootcamp. */
   kind: "certification" | "course";
-  /** e.g. "Expert" for Microsoft Certified: ... Expert. */
+  /** The tier, as the issuer names it: "Expert" or "Associate" for Microsoft Certified. */
   level?: string;
   /** Logo shown beside it: the product line or the issuer. */
   logo?: LogoSource;
   /** Completion/issue date. Omitted = unknown. */
   date?: PartialDate;
+  /** Expiry date printed on the certificate. Omitted = does not expire, or unknown. */
+  expires?: PartialDate;
+  /** The "Credential ID" printed on the certificate. */
+  credentialId?: string;
+  /** The "Certification number" printed on the certificate. */
+  certificationNumber?: string;
+  /** The issuer's public verification page (e.g. a Microsoft Learn share link). */
   credentialUrl?: string;
+  /**
+   * A print of the certificate in /public, cropped to the certificate itself
+   * (a PNG with transparent rounded corners; next/image serves it as AVIF or
+   * WebP, the OG cards read the PNG).
+   */
+  image?: { src: string; width: number; height: number };
   description?: L10n;
 };
 
@@ -144,6 +157,11 @@ export type SpokenLanguage = {
   level: L10n;
 };
 
+export type Interest = {
+  id: string;
+  label: Localizable;
+};
+
 export type FaqItem = {
   id: string;
   question: L10n;
@@ -177,8 +195,10 @@ export type Profile = {
     timezone: string;
   };
   email: string;
-  /** Path to a portrait in /public, when available. */
+  /** Portrait in /public (schema.org `image`, the Personal tab and its card). */
   image?: string;
+  /** Things Davi likes away from work (the Personal tab). */
+  interests: Interest[];
   /** Open to new roles, and on which terms. */
   availability: { open: boolean; modes: L10n };
   currentEmployer: { name: string; url?: string };
@@ -219,15 +239,15 @@ export const profile: Profile = {
   },
 
   summary: {
-    en: "I'm an AI Engineer at Algar in Uberlândia, Brazil, focused on Generative AI and AI agents. I was the main developer behind Algar's Sales Copilot, designing and building it end to end, from the back end and front end to the AI tools that power it; it won Best AI Project in LATAM at the Conecta Latam awards. My background spans front-end and back-end development, machine learning, UI/UX design and automation, and I hold Microsoft's Expert-level certifications in multi-agent AI solutions and agentic AI architecture. These days I'm most interested in agents, the Model Context Protocol (MCP) and making GenAI dependable in real products.",
+    en: "I'm an AI Engineer at Algar in Uberlândia, Brazil, focused on Generative AI and AI agents. I was the main developer behind Algar's Sales Copilot, designing and building it end to end, from the back end and front end to the AI tools that power it; it won Best AI Project in LATAM at the Conecta Latam awards. My background spans front-end and back-end development, machine learning, UI/UX design and automation, and I hold three Microsoft certifications: Expert in multi-agent AI solutions and in agentic AI architecture, and Associate in Azure AI apps and agents. These days I'm most interested in agents, the Model Context Protocol (MCP) and making GenAI dependable in real products.",
     "pt-br":
-      "Sou Engenheiro de IA na Algar, em Uberlândia, com foco em IA Generativa e agentes de IA. Fui o principal desenvolvedor do Sales Copilot da Algar, que projetei e construí de ponta a ponta, do back-end e do front-end às ferramentas de IA que o fazem funcionar; ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam. Minha experiência passa por desenvolvimento front-end e back-end, machine learning, UI/UX design e automação, e tenho as certificações Microsoft de nível Expert em soluções de IA multiagente e arquitetura de IA agêntica. Hoje me interesso principalmente por agentes, pelo Model Context Protocol (MCP) e por tornar a IA Generativa confiável em produtos reais.",
+      "Sou Engenheiro de IA na Algar, em Uberlândia, com foco em IA Generativa e agentes de IA. Fui o principal desenvolvedor do Sales Copilot da Algar, que projetei e construí de ponta a ponta, do back-end e do front-end às ferramentas de IA que o fazem funcionar; ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam. Minha experiência passa por desenvolvimento front-end e back-end, machine learning, UI/UX design e automação, e tenho três certificações Microsoft: Expert em soluções de IA multiagente e em arquitetura de IA agêntica, e Associate em apps e agentes de IA no Azure. Hoje me interesso principalmente por agentes, pelo Model Context Protocol (MCP) e por tornar a IA Generativa confiável em produtos reais.",
   },
 
   tldr: {
-    en: "Davi Lacerda (Davi Tobias Lacerda) is an AI Engineer based in Uberlândia, Minas Gerais, Brazil. He has worked as an AI Engineer at Algar since August 2024 and was the main developer of Algar's Sales Copilot, which won Best AI Project in LATAM at the Conecta Latam awards. He holds two Expert-level Microsoft certifications (Multi-Agent AI Solutions Expert and Agentic AI Business Solutions Architect), studied Computer Science at the Federal University of Uberlândia (UFU), and works across Generative AI, AI agents, Azure, the AI SDK and full-stack development. He is open to AI Engineer roles, on-site or hybrid in Uberlândia and remote, and can be reached at davi16lacerda@gmail.com.",
+    en: "Davi Lacerda (Davi Tobias Lacerda) is an AI Engineer based in Uberlândia, Minas Gerais, Brazil. He has worked as an AI Engineer at Algar since August 2024 and was the main developer of Algar's Sales Copilot, which won Best AI Project in LATAM at the Conecta Latam awards. He holds three Microsoft certifications (Multi-Agent AI Solutions Expert and Agentic AI Business Solutions Architect, both Expert level, and Azure AI Apps and Agents Developer Associate), studied Computer Science at the Federal University of Uberlândia (UFU), and works across Generative AI, AI agents, Azure, the AI SDK and full-stack development. He is open to AI Engineer roles, on-site or hybrid in Uberlândia and remote, and can be reached at davi16lacerda@gmail.com.",
     "pt-br":
-      "Davi Lacerda (Davi Tobias Lacerda) é Engenheiro de IA em Uberlândia, Minas Gerais, Brasil. Ele atua como Engenheiro de IA na Algar desde agosto de 2024 e foi o principal desenvolvedor do Sales Copilot da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam. Tem duas certificações Microsoft de nível Expert (Multi-Agent AI Solutions Expert e Agentic AI Business Solutions Architect), estudou Ciência da Computação na Universidade Federal de Uberlândia (UFU) e atua com IA Generativa, agentes de IA, Azure, AI SDK e desenvolvimento full-stack. Está aberto a vagas de Engenheiro de IA, presenciais ou híbridas em Uberlândia e remotas, e pode ser contatado em davi16lacerda@gmail.com.",
+      "Davi Lacerda (Davi Tobias Lacerda) é Engenheiro de IA em Uberlândia, Minas Gerais, Brasil. Ele atua como Engenheiro de IA na Algar desde agosto de 2024 e foi o principal desenvolvedor do Sales Copilot da Algar, eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam. Tem três certificações Microsoft (Multi-Agent AI Solutions Expert e Agentic AI Business Solutions Architect, ambas de nível Expert, e Azure AI Apps and Agents Developer Associate), estudou Ciência da Computação na Universidade Federal de Uberlândia (UFU) e atua com IA Generativa, agentes de IA, Azure, AI SDK e desenvolvimento full-stack. Está aberto a vagas de Engenheiro de IA, presenciais ou híbridas em Uberlândia e remotas, e pode ser contatado em davi16lacerda@gmail.com.",
   },
 
   location: {
@@ -242,8 +262,23 @@ export const profile: Profile = {
 
   email: "davi16lacerda@gmail.com",
 
-  // TODO(davi): add a portrait (e.g. /images/davi.jpg) for the hero, OG images and schema.org `image`.
-  image: undefined,
+  // Black and white, with the violet backdrop of the original keyed out so the
+  // portrait sits on the page's own surface tone. A PNG twin
+  // (/images/davi.png) feeds the OG card, whose renderer cannot read WebP.
+  image: "/images/davi.webp",
+
+  // TODO(davi): confirm interests. Inferred from GitHub repos (nba, nba-live,
+  // nba-dashboard; several star-wars repos; randomify; disneyplus-nextjs; Pokémon).
+  interests: [
+    { id: "nba", label: "NBA" },
+    { id: "star-wars", label: "Star Wars" },
+    { id: "disney", label: "Disney" },
+    { id: "pokemon", label: "Pokémon" },
+    {
+      id: "series",
+      label: { en: "Series on shuffle", "pt-br": "Séries no aleatório" },
+    },
+  ],
 
   availability: {
     open: true,
@@ -639,8 +674,16 @@ export const profile: Profile = {
       kind: "certification",
       level: "Expert",
       logo: "azure",
-      date: "2026-10",
-      // TODO(davi): add the credential URL.
+      date: "2026-10-02",
+      expires: "2027-10-02",
+      credentialId: "EC8CEDC7DF459008",
+      certificationNumber: "B66FB6-532437",
+      // TODO(davi): paste Microsoft Learn share link (credentialUrl); the Verify link shows once it is set.
+      image: {
+        src: "/certificates/multi-agent-ai-solutions-expert.png",
+        width: 669,
+        height: 435,
+      },
       description: {
         en: "Expert-level certification in designing and building multi-agent AI solutions.",
         "pt-br":
@@ -655,15 +698,46 @@ export const profile: Profile = {
       kind: "certification",
       level: "Expert",
       logo: "azure",
-      date: "2026-08",
-      // TODO(davi): add the credential URL.
+      date: "2026-08-14",
+      expires: "2027-08-14",
+      credentialId: "FA07966E5B1A461",
+      certificationNumber: "0FE606-E0517X",
+      // TODO(davi): paste Microsoft Learn share link (credentialUrl); the Verify link shows once it is set.
+      image: {
+        src: "/certificates/agentic-ai-business-solutions-architect.png",
+        width: 768,
+        height: 366,
+      },
       description: {
         en: "Expert-level certification in enterprise AI solution architecture: strategy, architecture, implementation, security, governance and business outcomes.",
         "pt-br":
           "Certificação de nível Expert em arquitetura de soluções corporativas de IA: estratégia, arquitetura, implementação, segurança, governança e resultados de negócio.",
       },
     },
-    // TODO(davi): a third certification was announced in June 2026; add its name, issuer and credential URL.
+    {
+      id: "ms-azure-ai-apps-and-agents-developer-associate",
+      name: "Microsoft Certified: Azure AI Apps and Agents Developer Associate",
+      issuer: "Microsoft",
+      issuerUrl: "https://learn.microsoft.com/credentials/",
+      kind: "certification",
+      level: "Associate",
+      logo: "azure",
+      date: "2026-06-23",
+      expires: "2027-06-23",
+      credentialId: "7D5DACB2C80D7C0D",
+      certificationNumber: "5DA4S7-D97848",
+      // TODO(davi): paste Microsoft Learn share link (credentialUrl); the Verify link shows once it is set.
+      image: {
+        src: "/certificates/azure-ai-apps-and-agents-developer-associate.png",
+        width: 923,
+        height: 440,
+      },
+      description: {
+        en: "Associate-level certification in building AI apps and agents on Azure.",
+        "pt-br":
+          "Certificação de nível Associate em construir apps e agentes de IA no Azure.",
+      },
+    },
     {
       id: "rocketseat-ignite-react",
       name: "Ignite: React",
@@ -874,9 +948,9 @@ export const profile: Profile = {
         "pt-br": "Quais certificações Davi tem?",
       },
       answer: {
-        en: "Davi holds two Expert-level Microsoft certifications: Microsoft Certified: Multi-Agent AI Solutions Expert (October 2026) and Microsoft Certified: Agentic AI Business Solutions Architect (August 2026).",
+        en: "Davi holds three Microsoft certifications. Two are Expert level: Microsoft Certified: Multi-Agent AI Solutions Expert (October 2026) and Microsoft Certified: Agentic AI Business Solutions Architect (August 2026). The third is Microsoft Certified: Azure AI Apps and Agents Developer Associate (June 2026).",
         "pt-br":
-          "Davi tem duas certificações Microsoft de nível Expert: Microsoft Certified: Multi-Agent AI Solutions Expert (outubro de 2026) e Microsoft Certified: Agentic AI Business Solutions Architect (agosto de 2026).",
+          "Davi tem três certificações Microsoft. Duas são de nível Expert: Microsoft Certified: Multi-Agent AI Solutions Expert (outubro de 2026) e Microsoft Certified: Agentic AI Business Solutions Architect (agosto de 2026). A terceira é a Microsoft Certified: Azure AI Apps and Agents Developer Associate (junho de 2026).",
       },
     },
     {
@@ -930,4 +1004,22 @@ export function getCertifications(
       (a.kind === b.kind ? 0 : a.kind === "certification" ? -1 : 1) ||
       (b.date ?? "").localeCompare(a.date ?? ""),
   );
+}
+
+const tierOrder = ["Expert", "Associate", "Fundamentals"];
+
+/**
+ * Formal certifications counted by tier, highest first:
+ * [{ level: "Expert", count: 2 }, { level: "Associate", count: 1 }].
+ */
+export function certificationTiers(): { level: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const cert of getCertifications("certification")) {
+    if (cert.level) counts.set(cert.level, (counts.get(cert.level) ?? 0) + 1);
+  }
+  const rank = (level: string) =>
+    tierOrder.includes(level) ? tierOrder.indexOf(level) : tierOrder.length;
+  return [...counts]
+    .map(([level, count]) => ({ level, count }))
+    .sort((a, b) => rank(a.level) - rank(b.level));
 }

@@ -233,7 +233,30 @@ export function personJsonLd(lang: Locale): PersonLeaf {
         name: cert.issuer,
         url: cert.issuerUrl,
       },
+      ...(cert.level ? { educationalLevel: cert.level } : {}),
       ...(cert.date ? { dateCreated: toIsoDate(cert.date) } : {}),
+      ...(cert.expires ? { expires: toIsoDate(cert.expires) } : {}),
+      ...(cert.credentialId
+        ? {
+            identifier: [
+              {
+                "@type": "PropertyValue",
+                propertyID: "Credential ID",
+                value: cert.credentialId,
+              },
+              ...(cert.certificationNumber
+                ? [
+                    {
+                      "@type": "PropertyValue" as const,
+                      propertyID: "Certification number",
+                      value: cert.certificationNumber,
+                    },
+                  ]
+                : []),
+            ],
+          }
+        : {}),
+      ...(cert.image ? { image: absoluteUrl(cert.image.src) } : {}),
       ...(cert.credentialUrl ? { url: cert.credentialUrl } : {}),
     }));
 
