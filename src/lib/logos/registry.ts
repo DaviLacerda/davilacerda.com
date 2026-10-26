@@ -2,7 +2,8 @@
  * Brand and technology logos the site shows, by id. Each entry names an icon
  * from an Iconify set:
  * - `logos:*` (@iconify-json/logos): the brand's own colours.
- * - `simple-icons:*` (@iconify-json/simple-icons): one path in `currentColor`.
+ * - `simple-icons:*` (@iconify-json/simple-icons): one path in `currentColor`,
+ *   or in the entry's `color` (PlayStation blue, Valorant red).
  *
  * The rule, applied everywhere: a logo keeps its brand colours, except marks
  * whose brand colour is black or white (GitHub, Next.js, Vercel, Instagram's
@@ -23,6 +24,11 @@ export type LogoSpec = {
   label: string;
   /** Profile strings that map to this logo. */
   names?: readonly string[];
+  /**
+   * Brand colour for a one-colour (`simple-icons`) mark whose brand colour is
+   * not black or white; without it the mark is `currentColor`.
+   */
+  color?: string;
 };
 
 export const logoRegistry = {
@@ -78,6 +84,19 @@ export const logoRegistry = {
   instagram: { icon: "simple-icons:instagram", label: "Instagram" },
   discord: { icon: "logos:discord-icon", label: "Discord" },
   spotify: { icon: "logos:spotify-icon", label: "Spotify" },
+  // Games (the Personal tab).
+  steam: { icon: "simple-icons:steam", label: "Steam" },
+  playstation: {
+    icon: "simple-icons:playstation",
+    label: "PlayStation",
+    color: "#0070d1",
+  },
+  valorant: {
+    icon: "simple-icons:valorant",
+    label: "Valorant",
+    color: "#ff4655",
+  },
+  ubisoft: { icon: "simple-icons:ubisoft", label: "Ubisoft" },
 } as const satisfies Record<string, LogoSpec>;
 
 export type LogoId = keyof typeof logoRegistry;

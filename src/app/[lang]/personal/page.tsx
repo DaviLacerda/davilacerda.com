@@ -6,14 +6,19 @@ import type { CSSProperties, ReactNode } from "react";
 import { PostList } from "@/components/blog/post-list";
 import { RssLink } from "@/components/blog/rss-link";
 import { Elsewhere } from "@/components/personal/elsewhere";
+import { Games } from "@/components/personal/games";
 import { Interests } from "@/components/personal/interests";
 import { NowPlayingCard } from "@/components/personal/now-playing";
+import { TeamsBoard } from "@/components/personal/teams";
+import { WatchingCards } from "@/components/personal/watching";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/container";
 import { BrandLogo } from "@/components/ui/logo";
+import { teams } from "@/content/personal";
 import { getSocial, profile } from "@/content/profile";
 import { getDictionary, interpolate, isLocale, t } from "@/i18n";
+import { localeMeta } from "@/i18n/config";
 import { getAllPosts } from "@/lib/blog";
 import { routes } from "@/lib/routes";
 import {
@@ -38,16 +43,23 @@ export async function generateMetadata({
     path: "/personal",
     title: dict.meta.personal.title,
     description: dict.meta.personal.description,
-    keywords: ["Blog", "Spotify", "Uberlândia"],
+    keywords: [
+      "Blog",
+      "Spotify",
+      "Uberlândia",
+      ...teams.map((team) => team.name),
+    ],
   });
 }
 
 /**
  * Personal tab: a reading layout about Davi the person, not the job. His
  * portrait (black and white, on the page's own surface tone), a hello, one
- * warm line, his interests as a row of chips and what he is listening to on
- * Spotify (the cover is the one picture in colour); then the writing and
- * where to find him online, one column throughout.
+ * warm line, his interests as a row of chips, and two cards side by side:
+ * what he is listening to on Spotify and what he is watching. Then his
+ * teams (live or last results), where he plays, the writing and where to
+ * find him online, one column throughout. Colour comes only from pictures:
+ * the album cover and the team and game logos.
  */
 export default async function PersonalPage({ params }: PageProps) {
   const { lang } = await params;
@@ -111,7 +123,7 @@ export default async function PersonalPage({ params }: PageProps) {
         <div
           data-enter=""
           style={{ "--i": afterInterests } as CSSProperties}
-          className="mt-4"
+          className="mt-4 grid gap-3 sm:grid-cols-2"
         >
           <NowPlayingCard
             profileUrl={spotify.url}
@@ -121,13 +133,48 @@ export default async function PersonalPage({ params }: PageProps) {
               opensInNewTab: dict.a11y.opensInNewTab,
             }}
             logo={<BrandLogo id="spotify" className="size-6" />}
+            className="sm:w-full"
           />
+          <WatchingCards lang={lang} />
         </div>
       </section>
 
       <PersonalSection
-        id="blog"
+        id="teams"
         enter={afterInterests + 1}
+        title={dict.personal.teams.title}
+      >
+        <TeamsBoard
+          teams={teams.map((team) => ({
+            id: team.id,
+            name: team.name,
+            shortName: team.shortName,
+            sport: team.sport,
+            league: team.league,
+            logo: team.logo,
+            game: null,
+          }))}
+          lang={lang}
+          locale={localeMeta[lang].intl}
+          strings={{
+            ...dict.personal.teams,
+            opensInNewTab: dict.a11y.opensInNewTab,
+          }}
+          enter={afterInterests + 2}
+        />
+      </PersonalSection>
+
+      <PersonalSection
+        id="games"
+        enter={afterInterests + 3}
+        title={dict.personal.games.title}
+      >
+        <Games lang={lang} enter={afterInterests + 4} />
+      </PersonalSection>
+
+      <PersonalSection
+        id="blog"
+        enter={afterInterests + 5}
         title={sections.writing.title}
         aside={
           posts.length > 0 ? (
@@ -135,15 +182,15 @@ export default async function PersonalPage({ params }: PageProps) {
           ) : null
         }
       >
-        <PostList posts={posts} lang={lang} enter={afterInterests + 2} />
+        <PostList posts={posts} lang={lang} enter={afterInterests + 6} />
       </PersonalSection>
 
       <PersonalSection
         id="elsewhere"
-        enter={afterInterests + 3}
+        enter={afterInterests + 7}
         title={sections.elsewhere.title}
       >
-        <Elsewhere lang={lang} enter={afterInterests + 4} />
+        <Elsewhere lang={lang} enter={afterInterests + 8} />
       </PersonalSection>
     </Container>
   );

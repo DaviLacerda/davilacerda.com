@@ -39,11 +39,14 @@ src/
     [lang]/(assistant)/work/[topic]/  one answer on the canvas, e.g. /en/work/experience (static, 7 topics)
     [lang]/(assistant)/work/page.tsx  /en/work -> 308 to /en
     [lang]/(assistant)/ask/page.tsx   the composer's no-JS form target: "nothing on that yet" (noindex)
-    [lang]/personal/page.tsx      Personal tab: portrait, hello, interests, now playing on Spotify, writing (blog index), elsewhere
+    [lang]/personal/page.tsx      Personal tab: portrait, hello, interests, Spotify and watching cards, my teams, games,
+                                  writing (blog index), elsewhere
     [lang]/personal/blog/[slug]/  Blog post
     [lang]/not-found.tsx          localized 404 (the way back and the topics as links)
     [lang]/[...rest]/page.tsx     sends unknown /<lang>/* paths to the 404
     api/now-playing/route.ts      what Davi is listening to on Spotify (dynamic, CDN-cached 30s; see Spotify now playing)
+    api/teams/route.ts            his teams' live, last or next games from ESPN (dynamic, CDN-cached 30s to 10min; see My teams)
+    api/steam/route.ts            Steam presence and recent games (dynamic, CDN-cached 60s; see Games)
   components/
     chat/                         the Work assistant: assistant (provider, Canvas, Identity, AskLink), context,
                                   composer, question, reply, piece, copy-email-button
@@ -51,7 +54,8 @@ src/
                                   certifications, skills, education, faq, contact) + parts (Panel, fit()...)
     motion/                       motion-provider (LazyMotion + MotionConfig), reveal (scroll entrance), features
     layout/                       site-header, nav-tabs, locale-switcher, theme-toggle, site-footer
-    personal/                     interests, now-playing (the Spotify card, client), elsewhere
+    personal/                     interests, now-playing (the Spotify card, client), watching, teams (the scoreboard,
+                                  client), games + steam (the Steam card, client), parts (the cards' anatomy), elsewhere
     blog/                         post-list, post-header, table-of-contents, author-card, post-pager, rss-link
     providers/                    theme-provider (next-themes), alternate-links (locale switcher targets)
     seo/json-ld.tsx               <JsonLd data={...} />
@@ -60,6 +64,7 @@ src/
     brand-mark.tsx                Davi's pixel "d" mark (BRAND_MARK geometry, shared with OG/icons)
   config/site.ts                  url, name, theme colors, shared SEO keywords
   content/profile.ts              ALL facts about Davi (typed, bilingual). Single source of truth.
+  content/personal.ts             the Personal tab's facts that change often: the show, the teams, the game profiles
   i18n/                           config, negotiate, dictionaries/{en,pt-br}.ts, index (t, getDictionary), format (dates)
   lib/
     routes.ts                     URL builders + tab logic. Never hand-write internal paths.
@@ -70,6 +75,9 @@ src/
     work/answers.ts               topic copy, leads and intros, composer/reply strings, stackLogos() (server-only)
     logos/                        brand logo registry, generated icons.json subset, getLogoSvg() (server-only)
     spotify/                      now-playing.ts (Spotify Web API, server-only), types.ts (the JSON shape, shared)
+    teams/                        espn.ts (ESPN site API, server-only), fixtures.ts (mock scenarios), types.ts (shared)
+    steam/                        steam.ts (Steam Web API, server-only), fixtures.ts (mock scenarios), types.ts (shared)
+    mock.ts                       the `?mock=` gate of the Personal tab's live routes (server-only; see My teams)
     seo.ts                        buildMetadata() + JSON-LD builders
     utils.ts                      cn(), absoluteUrl(), isExternalUrl()
 ```
@@ -107,8 +115,8 @@ Import alias: `@/*` -> `src/*`.
 ## Design system
 
 Monochrome, clean and direct. White and near-black with a disciplined grey ramp; hierarchy comes
-from type weight, size and space only. The only colour on the site is a brand's own logo (and the
-album cover on the Spotify card). No self-referential copy (nothing about how the site works or that answers are pre-written): the page
+from type weight, size and space only. The only colour on the site is a brand's own logo (team and
+game logos included) and the album cover on the Spotify card. No self-referential copy (nothing about how the site works or that answers are pre-written): the page
 says what Davi did, in as few words as possible. The long versions live in the machine-readable
 layer (see Agent readiness). The Work tab is a split-pane assistant whose answers are pictures
 first (oversized figures, big logo marks, an ink panel for the headline fact); Personal and the
@@ -181,7 +189,9 @@ both fill two lines); put `@container` on an unpadded wrapper, not on the padded
 builds the SVG on the server and `<BrandLogo>` inlines it: no client JavaScript, no requests.
 Colour rule, the same everywhere: a logo keeps its brand colours, except marks whose brand colour
 is black or white (GitHub, Next.js, Vercel, Instagram's glyph, MCP), which use the simple-icons
-version in `currentColor` so they follow the theme. Logos are decorative next to their name
+version in `currentColor` so they follow the theme. A one-colour mark whose brand colour is neither
+takes it from `color` on its entry (PlayStation blue, Valorant red); Steam and Ubisoft stay in
+`currentColor`. Logos are decorative next to their name
 (`aria-hidden`); a logo standing alone gets `label` (role `img` + `aria-label`). Gradient ids are
 scoped per instance (`scopeSvgIds`). Company and school logos are files: set `logo:
 "/logos/<name>.svg"` on the entry in `profile.ts` and `<LogoTile>` renders it; without one it shows
@@ -196,7 +206,12 @@ allowed in `next.config.ts` `images.qualities`) and dimmed to 90% brightness in 
 labels on top of pictures; captions go under them. The album cover on the Spotify card is the one
 remote picture: a plain `<img>` straight from Spotify's CDN (the ~300px size it already serves; the
 optimizer would only re-encode an ever-changing URL), 8px corners, never cropped, blurred or
-covered (Spotify's design guidelines), with the Spotify logo beside it.
+covered (Spotify's design guidelines), with the Spotify logo beside it. Team logos come from
+ESPN's CDN (`a.espncdn.com/i/teamlogos/...`, allowed in `next.config.ts` `images.remotePatterns`)
+through next/image at 28px, ESPN's `500-dark` file in dark mode; one that fails falls back to the
+light file, then to the team's letters on a small disc. The show on the Watching card is a
+poster only when there is one Davi may use (a `/public` file); otherwise its initials on a dark
+tile, like a title card.
 
 **Icons:** Phosphor, regular weight (bold only on the send arrow), imported per icon from
 `@phosphor-icons/react/dist/ssr/<Name>` (works in server and client components). Always
@@ -232,6 +247,9 @@ from `scale(0)`, transform and opacity only.
 | Certificate viewer open / close        | `ImageLightbox` (Motion `animate()`)       | FLIP from the print's own place: spring 0.42s no bounce (close 0.34s), page fades behind in 240ms, caption 140ms later; reduced motion: fade only |
 | Now playing: song change               | `NowPlayingCard` (`AnimatePresence`)       | new cover and text rise 6px out of a 4px blur in 250ms ease-out once the cover has loaded; the old one blurs out in 150ms; reduced motion: fade   |
 | Now playing: equalizer (`data-eq`)     | globals.css (CSS keyframes)                | four bars, scaleY from the bottom, 0.8s to 1.3s loops out of phase, ease-in-out; reduced motion: still bars of different heights                  |
+| Steam card: game change                | `SteamCard` (`AnimatePresence`)            | as the song change: the new state rises 6px out of a 4px blur in 250ms ease-out, the old one blurs out in 150ms; reduced motion: fade             |
+| Teams: a score changes                 | `Score` in `TeamsBoard` (Motion)           | the new number rolls up from 60% below out of a 3px blur in 280ms ease-out, the old one leaves upward in 180ms, clipped; reduced motion: fade     |
+| Live dot (`data-live`)                 | globals.css (CSS keyframes)                | a ring of the dot's colour grows to 2.75x and fades, 1.6s ease-out loop (live game, playing on Steam); reduced motion: a still dot                |
 | Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                                                                                                          |
 | Hover fills, arrow nudges, fields      | Tailwind transitions                       | 200ms ease-out (never shorter, never a default curve)                                                                                             |
 
@@ -326,6 +344,10 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<ImageLightbox src width height alt caption detail? openLabel closeLabel>` | a link around a thumbnail that opens the image in a modal `<dialog>` (client; see Motion)                       |
 | `<Interests lang enter>`                                                    | the Personal tab's interest chips (Phosphor icon + label)                                                       |
 | `<NowPlayingCard profileUrl handle strings logo>`                           | the Spotify card under the hello (client; see Spotify now playing)                                              |
+| `<WatchingCards lang>`                                                      | the show(s) in `personal.ts` beside the Spotify card: a poster or the title's initials, a link out              |
+| `<TeamsBoard teams lang locale strings enter?>`                             | one card per team under "My teams" (client; see My teams)                                                       |
+| `<Games lang enter?>` / `<SteamCard ...>`                                   | "Games": the Steam card (client; see Games) and a link card per game profile                                    |
+| `cardClass`, `<Tile>`, `<CardText>`, `<CardLink>`, `<LiveDot>`              | `personal/parts.tsx`: the 88px card anatomy the Personal cards share (server or client)                         |
 | `<SocialList lang ids reveal?>` / `<Elsewhere lang>`                        | network rows with logo, name and handle (Contact answer, Personal)                                              |
 | `<Prose html enter?>`                                                       | renders `post.html` with `.markdown`                                                                            |
 | `<BrandMark>`                                                               | the pixel "d" in `currentColor`                                                                                 |
@@ -334,8 +356,8 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; static header, tabs in a round island, theme cycles System, Light, Dark                   |
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
-`reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, the
-providers. Pages, answers and logos stay Server Components.
+`reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, `teams`,
+`steam`, the providers. Pages, answers and logos stay Server Components.
 
 ## Content model (`src/content/profile.ts`)
 
@@ -362,11 +384,19 @@ Rules: only verified facts; anything unknown has a `TODO(davi)` comment. No seni
 formal titles for Algar (the role is "AI Engineer", since Aug 2024). Dates are strings
 (`"YYYY"`, `"YYYY-MM"`, `"YYYY-MM-DD"`); omitted = unknown (render nothing).
 
+**`src/content/personal.ts`** holds the Personal tab's facts that change often, kept apart from the
+profile: `watching[]` (`title`, `year`, `network?`, `url?`, `poster?`), `teams[]` (`id`, `name`,
+`shortName`, `sport` `basketball | football | soccer`, `league` (ESPN slug: `nba`, `nfl`, `bra.1`),
+`espnId`, `logo` `{ light, dark? }` via `espnLogo()`), `steam` (`vanity`, `url`) and
+`gameProfiles[]` (`title`, `handle`, `url`, `logo` (registry id), `label` (bilingual)). The page,
+the Personal Markdown and llms-full read it; its header says how to edit it.
+
 ## Spotify now playing
 
-The Personal tab's one live element: under the hello, a card with what Davi is listening to on
-Spotify (the cover, the song, the artists, and a small equalizer while it plays) or the last song
-played, linking to the track.
+The first of the Personal tab's live elements (the others are My teams and Games): under the
+hello, a card with what Davi is listening to on Spotify (the cover, the song, the artists, and a
+small equalizer while it plays) or the last song played, linking to the track. From 640px it sits
+beside the Watching card.
 
 - **Server:** `src/lib/spotify/now-playing.ts` exchanges `SPOTIFY_REFRESH_TOKEN` (with
   `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`) for an access token at
@@ -389,6 +419,72 @@ played, linking to the track.
   llms.txt, MCP, search or OpenAPI. The Spotify profile is a regular social (Elsewhere, Markdown,
   JSON, `sameAs`).
 - **Setup:** README, "Spotify now playing" (`yarn spotify:token`, `.env.example`).
+
+Beside it, the **Watching** card: the show in `watching` (`personal.ts`), static, linking to a page
+about it. Its status line is "Watching" and the title may take two lines; the network and year
+are in its accessible name. It is a static fact, so the Markdown and llms-full carry it.
+
+## My teams (ESPN)
+
+Under "My teams" on the Personal tab, one card per team in `personal.ts` (Brooklyn Nets,
+Corinthians, Minnesota Vikings; three across from 640px, stacked on a phone): the competition,
+the state of the game, then Davi's team and the opponent with their logos and scores. A card
+with a game links to it on espn.com.
+
+- **Source:** ESPN's public site API (`site.api.espn.com/apis/site/v2/sports/...`), keyless and
+  undocumented. `src/lib/teams/espn.ts` reads each team's schedule (the three teams in parallel):
+  NBA and NFL with the default, regular season (`seasontype=2`) and postseason (`seasontype=3`);
+  soccer through `soccer/all/teams/{id}/schedule` (every competition ESPN has for the club:
+  Brasileirão, Copa do Brasil, Libertadores...) and the league path, each also with
+  `fixture=true` for the games to come. A schedule's status lags, so the latest game that has
+  started is re-read from that day's scoreboard (`dates=YYYYMMDD`, the US Eastern day ESPN groups
+  by). The card shows a live game; else a final from the last 36h (NBA), 48h (soccer) or 72h
+  (NFL), unless the next game starts within 3h; else the next game; else the last result; else
+  nothing. Parsing is defensive (every field optional; scores as strings, numbers or objects;
+  logos only from `a.espncdn.com/i/`; our side found by team id), and a team ESPN cannot answer
+  for comes back with `game: null` without failing the others. Errors are logged as messages.
+- **Caching:** upstream through the Data Cache (`next.revalidate`): schedules 10 minutes, a
+  scoreboard 15 seconds around a game and an hour once it has settled. `/api/teams` is always 200,
+  with `s-maxage` 30s while a game is live, 60s near a start, a fresh result or after a failure,
+  600s otherwise (`teamsMaxAge`), and `stale-while-revalidate` twice that.
+- **Client:** `TeamsBoard` asks once on mount; then every minute only while a game is live (or its
+  start has come) and the tab is visible, and once at the start of a game due within six hours.
+  Hidden tabs stop and catch up on return. Every state has the same size: a skeleton; live (the
+  pulsing dot, "Live", the quarter and clock or the minute); final (with the day, the losing side
+  grey); the next game (day and time in the viewer's time zone, in the page's language); and
+  unavailable (names, logos and a quiet "—"). Without JavaScript: names, logos and the "—". A
+  game going live or ending is announced in a polite live region (never on the first answer).
+- **Mocks:** `?mock=live | final | upcoming | mixed | unavailable` on the page (forwarded to the
+  route by `liveUrl()`) answers from `src/lib/teams/fixtures.ts`, run through the real parser, in
+  `yarn dev` or a production server started with `PERSONAL_MOCKS=1` (`src/lib/mock.ts`). The live
+  site ignores it. Fixtures are API-shaped, including a schedule lagging behind the scoreboard.
+- **Not machine-readable on purpose:** scores are ephemeral. The Markdown and llms-full list the
+  teams and their leagues only.
+- **Change the teams:** edit `teams` in `src/content/personal.ts` (README, "My teams").
+
+## Games (Steam and profiles)
+
+Under "Games": a Steam card and one link card per entry in `gameProfiles` (PlayStation on
+PSNProfiles, Valorant and Rainbow Six Siege on Tracker.gg), two across from 640px, each with its
+brand mark from the logo registry.
+
+- **Steam** (`src/lib/steam/steam.ts`): with `STEAM_API_KEY`, the vanity name becomes a SteamID64
+  (`ResolveVanityURL`, cached a day and in memory; `STEAM_ID` skips it), then
+  `GetPlayerSummaries` (30s), `GetRecentlyPlayedGames` (5 minutes) and `GetOwnedGames` (a day) in
+  parallel; only the summary is required. It answers `ok` (`online`, `playing`, the top three
+  `recent` games by minutes in the last two weeks, `gameCount`), `offline` on any failure (logged
+  without the key) or `unconfigured`. `/api/steam`: `s-maxage=60, stale-while-revalidate=120`,
+  always 200. `SteamCard` asks every minute while the tab is visible (the `NowPlayingCard`
+  pattern): "Playing now" with the live dot, else the most played game of the last two weeks and
+  its time, else "On Steam" with the handle and the size of the library. Unconfigured, offline
+  and no-JS show the profile link. Steam only answers for a public profile with public game
+  details. Mocks: `?mock=playing | recent | idle | offline` (the teams' scenarios map onto them).
+- **Tracker.gg and PSN:** link cards only. Tracker.gg's developer API covers other games (Apex,
+  CS, Division 2, Splitgate), not Valorant or Rainbow Six Siege, and PlayStation has no public
+  API; nothing is scraped.
+- Not in `socials` or `sameAs`: they are game handles, not identity profiles. Presence is
+  ephemeral and stays out of the machine-readable layer; the Markdown and llms-full list the
+  profiles under "Games".
 
 ## Blog (`src/lib/blog.ts`, server-only)
 

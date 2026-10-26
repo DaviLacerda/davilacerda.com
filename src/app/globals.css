@@ -435,6 +435,42 @@
 }
 
 /*
+ * The live dot (`data-live`, Personal tab: a game in progress, a game
+ * running on Steam): a solid ink dot with a ring of the same ink that
+ * swells and fades every 1.6s (transform and opacity only). With reduced
+ * motion it is just the dot.
+ */
+@keyframes live {
+  from {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  to {
+    transform: scale(2.75);
+    opacity: 0;
+  }
+}
+
+[data-live] {
+  position: relative;
+}
+
+[data-live]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-live]::after {
+    animation: live 1.6s var(--ease-out) infinite;
+  }
+}
+
+/*
  * Disclosures (`<details class="disclosure">`): the answer or the list below
  * a summary grows open in 240ms ease-out and folds away faster (160ms), and
  * the caret turns with it. Native <details>, so it works without JavaScript;

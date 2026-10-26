@@ -8,6 +8,7 @@ import { locales } from "@/i18n/config";
 /** Files whose changes count as "the profile changed" (Work and Personal pages). */
 const PROFILE_SOURCES = [
   "src/content/profile.ts",
+  "src/content/personal.ts",
   "src/i18n/dictionaries",
   "src/app/[lang]/page.tsx",
   "src/app/[lang]/work",

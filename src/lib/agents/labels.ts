@@ -61,7 +61,8 @@ const en = {
       "Résumé: experience, projects, skills, certifications, education, awards and FAQ.",
     personalEn: "Personal (English)",
     personalPt: "Pessoal (Português)",
-    personalDesc: "Blog posts and where to find Davi online.",
+    personalDesc:
+      "What Davi is watching, his teams, where he plays, blog posts and where to find him online.",
     topics: "Work answers",
     topicsIntro:
       "The Work tab is a guided assistant over the profile: each suggested question has its own page with a written answer, in both languages (English links below; Portuguese at the same paths under /pt-br).",
