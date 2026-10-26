@@ -20,13 +20,19 @@ const nextConfig: NextConfig = {
     // WebP otherwise. 90 keeps the small print on the certificates crisp.
     formats: ["image/avif", "image/webp"],
     qualities: [75, 90],
-    // Team logos on the Personal tab (ESPN's CDN, 500px PNGs shown at 28px).
+    // Pictures on the Personal tab: team logos (ESPN's CDN), the show's
+    // poster (TVMaze) and the Valorant rank emblem (valorant-api.com).
     remotePatterns: [
       { protocol: "https", hostname: "a.espncdn.com", pathname: "/i/**" },
       {
         protocol: "https",
         hostname: "static.tvmaze.com",
         pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "media.valorant-api.com",
+        pathname: "/competitivetiers/**",
       },
     ],
   },

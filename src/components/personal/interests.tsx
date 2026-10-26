@@ -11,6 +11,8 @@ import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
 import { cn } from "@/lib/utils";
 
+import { tileClass, TileTitle } from "./parts";
+
 /** A quiet picture for each interest in the profile; anything new gets the sparkle. */
 const icons: Record<string, Icon> = {
   nba: BasketballIcon,
@@ -21,9 +23,10 @@ const icons: Record<string, Icon> = {
 };
 
 /**
- * What Davi likes away from work, as a row of chips with a small icon each:
- * a glance, not a paragraph. Part of the Personal tab's first-paint entrance
- * (`data-enter`), one chip after another from `enter`.
+ * What Davi likes away from work: a bento tile with its title and a row of
+ * chips with a small icon each (a glance, not a paragraph). The chips sit
+ * on the page tone, one step from the tile. Part of the first-paint
+ * entrance (`data-enter`) at `enter`.
  */
 export function Interests({
   lang,
@@ -31,7 +34,7 @@ export function Interests({
   className,
 }: {
   lang: Locale;
-  /** Place of the first chip in the entrance (`--i`). */
+  /** Place of the tile in the entrance (`--i`). */
   enter: number;
   className?: string;
 }) {
@@ -39,27 +42,31 @@ export function Interests({
   if (!profile.interests.length) return null;
 
   return (
-    <ul
-      aria-label={dict.personal.intro.interests}
-      className={cn("flex flex-wrap gap-2", className)}
+    <div
+      data-enter=""
+      style={{ "--i": enter } as CSSProperties}
+      className={cn(tileClass, "flex flex-col gap-4", className)}
     >
-      {profile.interests.map((interest, index) => {
-        const InterestIcon = icons[interest.id] ?? SparkleIcon;
-        return (
-          <li
-            key={interest.id}
-            data-enter=""
-            style={{ "--i": enter + index } as CSSProperties}
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-surface pr-4 pl-3.5 text-small"
-          >
-            <InterestIcon
-              aria-hidden="true"
-              className="size-[1.125rem] text-muted-foreground"
-            />
-            {t(interest.label, lang)}
-          </li>
-        );
-      })}
-    </ul>
+      <TileTitle id="interests-title">
+        {dict.personal.intro.interests}
+      </TileTitle>
+      <ul aria-labelledby="interests-title" className="flex flex-wrap gap-2">
+        {profile.interests.map((interest) => {
+          const InterestIcon = icons[interest.id] ?? SparkleIcon;
+          return (
+            <li
+              key={interest.id}
+              className="inline-flex h-9 items-center gap-2 rounded-full bg-background pr-3.5 pl-3 text-small"
+            >
+              <InterestIcon
+                aria-hidden="true"
+                className="size-4 text-muted-foreground"
+              />
+              {t(interest.label, lang)}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

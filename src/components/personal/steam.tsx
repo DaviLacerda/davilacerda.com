@@ -203,14 +203,17 @@ export function SteamCard({
   );
 
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("h-full w-full", className)}>
       <a
         href={profileUrl}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`${label} (${strings.opensInNewTab})`}
         aria-busy={data === null}
-        className={cn(cardClass, "pressable-panel hover:bg-surface-strong")}
+        className={cn(
+          cardClass,
+          "h-full pressable-panel hover:bg-surface-strong",
+        )}
       >
         <Tile>{logo}</Tile>
         <span className="grid min-w-0 flex-1 *:col-start-1 *:row-start-1">

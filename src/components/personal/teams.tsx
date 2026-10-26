@@ -5,15 +5,14 @@ import * as m from "motion/react-m";
 import Image from "next/image";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { Reveal } from "@/components/motion/reveal";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/i18n/config";
 import {
+  articles,
   competitionLabel,
   regulationPeriods,
   TEAMS_PATH,
   type Game,
-  type Side,
   type Sport,
   type TeamLogo,
   type TeamStatus,
@@ -21,7 +20,7 @@ import {
 } from "@/lib/teams/types";
 import { cn } from "@/lib/utils";
 
-import { fill, liveUrl, LiveDot } from "./parts";
+import { fill, fillNodes, liveUrl, LiveDot } from "./parts";
 
 export type TeamsStrings = Dictionary["personal"]["teams"] & {
   opensInNewTab: string;
@@ -34,8 +33,6 @@ type TeamsBoardProps = {
   /** `Intl` locale for dates and times. */
   locale: string;
   strings: TeamsStrings;
-  /** Place in the first-paint entrance (see `Reveal`). */
-  enter?: number;
 };
 
 const MINUTE = 60_000;
@@ -132,25 +129,28 @@ function liveDetail(
   return game.clock ? `${name} ${game.clock}` : name;
 }
 
-/** The status line's right side as text: "Final, yesterday", "Tomorrow, 7:30 PM". */
-function whenText(
+/** "Final, yesterday", "Final, Oct 25". */
+function finalText(
   game: Game,
   now: number,
   locale: string,
   strings: TeamsStrings,
-): string {
+) {
   const start = Date.parse(game.start);
-  if (game.state === "final") {
-    const offset = dayOffset(start, now);
-    const when =
-      offset === 0 || offset === -1
-        ? dayLabel(start, now, locale)
-        : new Intl.DateTimeFormat(locale, {
-            month: "short",
-            day: "numeric",
-          }).format(start);
-    return fill(strings.final, { when });
-  }
+  const offset = dayOffset(start, now);
+  const when =
+    offset === 0 || offset === -1
+      ? dayLabel(start, now, locale)
+      : new Intl.DateTimeFormat(locale, {
+          month: "short",
+          day: "numeric",
+        }).format(start);
+  return fill(strings.final, { when });
+}
+
+/** "Tomorrow, 7:30 PM", "Sun, 1:00 PM" (the viewer's time zone, the page's language). */
+function startText(game: Game, now: number, locale: string): string {
+  const start = Date.parse(game.start);
   const time = new Intl.DateTimeFormat(locale, {
     hour: "numeric",
     minute: "2-digit",
@@ -158,42 +158,104 @@ function whenText(
   return `${capitalize(dayLabel(start, now, locale), locale)}, ${time}`;
 }
 
+type Outcome = keyof TeamsStrings["result"];
+
+/** The game from Davi's team's side: won, lost, drew; live, leading, trailing or tied. */
+function outcomeOf(game: Game): Outcome | null {
+  if (game.state === "final") return game.result;
+  if (game.state !== "live") return null;
+  const ours = Number(game.team.score);
+  const theirs = Number(game.opponent.score);
+  if (game.team.score === null || game.opponent.score === null) return null;
+  if (!Number.isFinite(ours) || !Number.isFinite(theirs)) return null;
+  return ours > theirs ? "leading" : ours < theirs ? "trailing" : "tied";
+}
+
+/** The two scores, the higher first ("136", "109"), as ESPN writes them; null before a score. */
+function scoresOf(game: Game): { high: string; low: string } | null {
+  const ours = game.team.score;
+  const theirs = game.opponent.score;
+  if (ours === null || theirs === null) return null;
+  return Number(ours) >= Number(theirs)
+    ? { high: ours, low: theirs }
+    : { high: theirs, low: ours };
+}
+
+/** The opponent line's template and its values ("at {opponent}", "para o {opponent}, fora de casa"). */
+function againstParts(game: Game, strings: TeamsStrings) {
+  const outcome = outcomeOf(game);
+  const name = game.opponent.name;
+  return {
+    template: strings.against[outcome ?? "upcoming"],
+    values: {
+      venue: strings.venue[game.team.home ? "home" : "away"],
+      ...articles(name),
+    },
+    name,
+  };
+}
+
+/** The card's lines as plain text: for its accessible name and the announcements. */
+function describe(
+  team: TeamStatus,
+  game: Game,
+  now: number,
+  locale: string,
+  strings: TeamsStrings,
+) {
+  const outcome = outcomeOf(game);
+  const scores = scoresOf(game);
+  const result =
+    game.state === "upcoming"
+      ? startText(game, now, locale)
+      : outcome && scores
+        ? fill(strings.result[outcome], scores)
+        : outcome
+          ? strings.resultWord[outcome]
+          : strings.live;
+  const { template, values, name } = againstParts(game, strings);
+  const against = fill(template, {
+    ...values,
+    opponent: game.opponent.fullName || name,
+  });
+  return { result, against, text: `${team.name}, ${result} ${against}` };
+}
+
 /* ------------------------------------------------------------ Board */
 
 /**
- * Live or last results of Davi's teams, under "My teams" on the Personal
- * tab: one card per team (three across from 640px, stacked on a phone) with
- * the competition, the state of the game, and Davi's team and the opponent
- * with their logos and scores.
+ * Live or last results of Davi's teams, inside the "My teams" tile of the
+ * Personal tab: one card per team (stacked on a phone; from 640px a row
+ * each, the team on the left and the game on the right; three across from
+ * 1024px), each told from his team's side. His team leads the card (its logo
+ * large, its name, the competition), then the state of the game, then the
+ * result in words with the higher score first ("Lost 136 to 109"), then the
+ * opponent, small, with its logo and where the game is ("at Pacers").
  *
  * - Data: `/api/teams` once on mount; again every minute only while a game
  *   is live (or its start has come) and the tab is visible, and once at the
  *   start of a game due within six hours. Hidden tabs stop asking and catch
  *   up when they return.
  * - States, all the same size: a skeleton while loading; live (an ink dot
- *   with a soft pulse, "Live", the period and clock); final (with the day;
- *   the losing side in grey); the next game (day and time in the viewer's
- *   time zone and the page's language); and when ESPN cannot be read, the
- *   team and a quiet "—". Without JavaScript: the teams and the "—".
+ *   with a soft pulse, "Live", the period and clock; "Leading 14 to 10");
+ *   final ("Final, yesterday"; "Won 27 to 24"); the next game ("Next game";
+ *   the day and time in the viewer's time zone and the page's language);
+ *   and when ESPN cannot be read, the team and "No game data right now".
+ *   Without JavaScript: the teams and that line.
  * - Motion: a score that changes rolls, the old number leaving upward and
  *   the new one rising out of a 3px blur (280ms ease-out; reduced motion:
  *   a fade). A game going live or ending is announced politely.
  * - Each card links to the game on espn.com when there is one.
  */
-export function TeamsBoard({
-  teams,
-  lang,
-  locale,
-  strings,
-  enter,
-}: TeamsBoardProps) {
+export function TeamsBoard({ teams, lang, locale, strings }: TeamsBoardProps) {
   const [{ data, at, failed, previous }, setState] = useState<State>({
     data: null,
     at: 0,
     failed: false,
     previous: null,
   });
-  const news = previous && data ? announce(previous, data, strings) : "";
+  const news =
+    previous && data ? announce(previous, data, at, locale, strings) : "";
 
   useEffect(() => {
     let active = true;
@@ -216,7 +278,7 @@ export function TeamsBoard({
         if (!Array.isArray(next.teams)) throw new Error("bad answer");
       } catch {
         if (current.signal.aborted) return;
-        // Keep what is on screen; with nothing yet, show the quiet "—".
+        // Keep what is on screen; with nothing yet, say there is no data.
         setState((previous) =>
           previous.data ? previous : { ...previous, failed: true },
         );
@@ -266,16 +328,11 @@ export function TeamsBoard({
 
   return (
     <>
-      <Reveal
-        as="ul"
-        stagger
-        enter={enter}
-        className="mt-4 grid gap-3 sm:grid-cols-3"
-      >
+      <ul className="-mx-2 mt-3 grid gap-1 sm:-mx-3 lg:grid-cols-3 lg:gap-2">
         {teams.map((team) => {
           const shown = data?.teams.find((item) => item.id === team.id);
           return (
-            <li key={team.id}>
+            <li key={team.id} className="min-w-0">
               <TeamCard
                 team={team}
                 game={shown?.game ?? null}
@@ -288,7 +345,7 @@ export function TeamsBoard({
             </li>
           );
         })}
-      </Reveal>
+      </ul>
       <p role="status" className="sr-only">
         {news}
       </p>
@@ -296,10 +353,12 @@ export function TeamsBoard({
   );
 }
 
-/** "Brooklyn Nets game is live", "Final: Brooklyn Nets 109, Indiana Pacers 136"; empty when nothing changed. */
+/** "Brooklyn Nets game is live", "Final: Brooklyn Nets, Lost 136 to 109 at Indiana Pacers"; empty when nothing changed. */
 function announce(
   previous: TeamsResponse,
   next: TeamsResponse,
+  now: number,
+  locale: string,
   strings: TeamsStrings,
 ): string {
   const lines: string[] = [];
@@ -314,20 +373,13 @@ function announce(
       before.id === game.id
     ) {
       lines.push(
-        fill(strings.ended, { score: scoreLine(team, game, strings) }),
+        fill(strings.ended, {
+          result: describe(team, game, now, locale, strings).text,
+        }),
       );
     }
   }
   return lines.join(". ");
-}
-
-function scoreLine(team: TeamStatus, game: Game, strings: TeamsStrings) {
-  return fill(strings.score, {
-    team: team.name,
-    teamScore: game.team.score ?? "",
-    opponent: game.opponent.fullName || game.opponent.name,
-    opponentScore: game.opponent.score ?? "",
-  });
 }
 
 /* ------------------------------------------------------------- Card */
@@ -350,98 +402,138 @@ function TeamCard({
   now: number;
 }) {
   const competition = competitionLabel(game?.competition ?? team.league, lang);
-  const ours: Side = game
-    ? { ...game.team, name: team.shortName, fullName: team.name }
-    : {
-        name: team.shortName,
-        fullName: team.name,
-        logo: team.logo,
-        score: null,
-        home: true,
-      };
-  const loser =
-    game?.state === "final" && game.result !== "draw"
-      ? game.result === "win"
-        ? "opponent"
-        : "team"
-      : null;
+  const logo = game?.team.logo ?? team.logo;
+  const outcome = game ? outcomeOf(game) : null;
+  const scores = game ? scoresOf(game) : null;
 
-  let status: ReactNode;
-  let statusText: string;
+  let status: ReactNode = null;
+  let statusText = "";
+  let result: ReactNode = null;
+  let against: ReactNode = null;
+  let label = `${team.name}, ${competition}`;
+
   if (mode === "loading") {
-    statusText = "";
     status = (
+      <span
+        aria-hidden="true"
+        className="inline-block h-3 w-20 rounded-full bg-surface-strong noscript:hidden"
+      />
+    );
+    result = (
       <>
         <span
           aria-hidden="true"
-          className="h-3 w-16 rounded-full bg-surface-strong noscript:hidden"
+          className="block h-6 w-44 max-w-full rounded-full bg-surface-strong noscript:hidden"
         />
-        <Unavailable
-          label={strings.unavailable}
-          className="hidden noscript:inline"
-        />
+        <span className="hidden text-body font-normal text-muted-foreground noscript:block">
+          {strings.unavailable}
+        </span>
       </>
     );
+    against = (
+      <span
+        aria-hidden="true"
+        className="inline-block h-3 w-28 rounded-full bg-surface-strong noscript:hidden"
+      />
+    );
   } else if (!game) {
-    statusText = strings.unavailable;
-    status = <Unavailable label={strings.unavailable} />;
-  } else if (game.state === "live") {
-    const detail = liveDetail(game, team.sport, strings);
-    statusText = detail ? `${strings.live}, ${detail}` : strings.live;
-    status = (
-      <span className="flex shrink-0 items-center gap-2 font-medium">
-        <LiveDot />
-        {strings.live}
-        {detail ? (
-          <span className="font-normal text-muted-foreground tabular-nums">
-            {detail}
-          </span>
-        ) : null}
+    result = (
+      <span className="text-body font-normal text-muted-foreground">
+        {strings.unavailable}
       </span>
     );
+    label = `${label}: ${strings.unavailable}`;
   } else {
-    statusText = whenText(game, now, locale, strings);
-    status = (
-      <span className="shrink-0 text-muted-foreground">{statusText}</span>
-    );
-  }
+    if (game.state === "live") {
+      const detail = liveDetail(game, team.sport, strings);
+      statusText = detail ? `${strings.live}, ${detail}` : strings.live;
+      status = (
+        <span className="flex items-center gap-2 font-medium text-foreground">
+          <LiveDot />
+          {strings.live}
+          {detail ? (
+            <span className="font-normal text-muted-foreground tabular-nums">
+              {detail}
+            </span>
+          ) : null}
+        </span>
+      );
+    } else if (game.state === "final") {
+      statusText = finalText(game, now, locale, strings);
+      status = statusText;
+    } else {
+      statusText = strings.next;
+      status = statusText;
+    }
 
-  const matchup = game
-    ? game.state === "upcoming"
-      ? fill(strings.matchup, {
-          team: team.name,
-          opponent: game.opponent.fullName || game.opponent.name,
-        })
-      : scoreLine(team, game, strings)
-    : team.name;
-  const label = `${competition}: ${matchup}. ${statusText}`;
+    result =
+      game.state === "upcoming"
+        ? startText(game, now, locale)
+        : outcome && scores
+          ? fillNodes(strings.result[outcome], {
+              high: <Score value={scores.high} />,
+              low: <Score value={scores.low} />,
+            })
+          : outcome
+            ? strings.resultWord[outcome]
+            : strings.live;
+
+    const parts = againstParts(game, strings);
+    against = fillNodes(parts.template, {
+      ...parts.values,
+      opponent: (
+        <span className="whitespace-nowrap">
+          <TeamMark
+            logo={game.opponent.logo}
+            name={game.opponent.name}
+            mark={game.opponent.abbreviation}
+            size="inline"
+          />
+          {parts.name}
+        </span>
+      ),
+    });
+
+    const text = describe(team, game, now, locale, strings);
+    label = `${text.text}. ${competition}, ${statusText}`;
+  }
 
   const body = (
     <>
-      <span className="flex h-5 items-center justify-between gap-3 text-small leading-5">
-        <span className="min-w-0 truncate text-muted-foreground">
-          {competition}
-        </span>
-        {status}
-      </span>
-      <span className="mt-3 grid min-h-16 content-center gap-2">
-        <Row side={ours} muted={loser === "team"} strong />
-        {game ? (
-          <Row side={game.opponent} muted={loser === "opponent"} />
-        ) : mode === "loading" ? (
-          <span
-            aria-hidden="true"
-            className="flex h-7 items-center gap-3 noscript:hidden"
-          >
-            <span className="size-7 rounded-full bg-surface-strong" />
-            <span className="h-3.5 w-20 rounded-full bg-surface-strong" />
+      <span className="flex items-center gap-4">
+        <TeamMark
+          logo={logo}
+          name={team.shortName}
+          mark={game?.team.abbreviation}
+          size="hero"
+        />
+        <span className="min-w-0">
+          <span className="block truncate text-lead leading-6 font-semibold tracking-[-0.015em]">
+            {team.name}
           </span>
-        ) : null}
+          <span className="block truncate text-small leading-5 text-muted-foreground">
+            {competition}
+          </span>
+        </span>
+      </span>
+      <span className="mt-6 block min-w-0 sm:mt-0 lg:mt-6">
+        <span className="flex h-5 items-center text-small leading-5 text-muted-foreground">
+          {status}
+        </span>
+        <span className="mt-1 block text-[clamp(1.25rem,1rem+0.6vw,1.5rem)] leading-tight font-semibold tracking-[-0.02em] tabular-nums">
+          {result}
+        </span>
+        <span className="mt-1.5 block min-h-5 truncate text-small leading-5 text-muted-foreground">
+          {against}
+        </span>
       </span>
     </>
   );
 
-  const className = "block rounded-surface bg-surface p-4";
+  // Stacked on a phone and in the three columns from 1024px; in between, a
+  // row: the team on the left, the game on the right.
+  const className =
+    "block h-full rounded-surface p-3 sm:grid sm:grid-cols-2 sm:items-center sm:gap-6 sm:p-4 lg:block";
   return game?.url ? (
     <a
       href={game.url}
@@ -464,46 +556,6 @@ function TeamCard({
   );
 }
 
-function Unavailable({
-  label,
-  className,
-}: {
-  label: string;
-  className?: string;
-}) {
-  return (
-    <span className={cn("shrink-0 text-muted-foreground", className)}>
-      <span aria-hidden="true">—</span>
-      <span className="sr-only">{label}</span>
-    </span>
-  );
-}
-
-function Row({
-  side,
-  muted = false,
-  strong = false,
-}: {
-  side: Side;
-  muted?: boolean;
-  strong?: boolean;
-}) {
-  return (
-    <span
-      className={cn(
-        "flex h-7 items-center gap-3",
-        muted && "text-muted-foreground",
-      )}
-    >
-      <TeamMark logo={side.logo} name={side.name} mark={side.abbreviation} />
-      <span className={cn("min-w-0 flex-1 truncate", strong && "font-medium")}>
-        {side.name}
-      </span>
-      {side.score !== null ? <Score value={side.score} /> : null}
-    </span>
-  );
-}
-
 /** A score that rolls when it changes: the old number leaves upward, the new one rises out of a blur. */
 function Score({ value }: { value: string }) {
   const reduce = useReducedMotion();
@@ -513,7 +565,7 @@ function Score({ value }: { value: string }) {
     filter: "blur(0px)",
   };
   return (
-    <span className="grid justify-items-end overflow-hidden text-lead leading-7 font-semibold tabular-nums *:col-start-1 *:row-start-1">
+    <span className="inline-grid overflow-hidden align-top *:col-start-1 *:row-start-1">
       <AnimatePresence initial={false}>
         <m.span
           key={value}
@@ -548,6 +600,17 @@ function Score({ value }: { value: string }) {
 
 /* ------------------------------------------------------------- Logos */
 
+const markSizes = {
+  /** Davi's team, leading its card. */
+  hero: { box: "size-12 sm:size-14", px: 56, letters: "text-small" },
+  /** The opponent, inline in its line. */
+  inline: {
+    box: "mr-1.5 inline-grid size-5 align-[-0.3125rem]",
+    px: 20,
+    letters: "text-[0.5rem]",
+  },
+} as const;
+
 /**
  * A team logo from ESPN's CDN through the image optimizer, the dark variant
  * in dark mode (only the visible one loads: both are lazy). If a file fails,
@@ -557,17 +620,26 @@ function TeamMark({
   logo,
   name,
   mark,
+  size,
 }: {
   logo: TeamLogo | null;
   name: string;
   mark?: string;
+  size: keyof typeof markSizes;
 }) {
+  const { box, px, letters: text } = markSizes[size];
   const letters = (mark ?? name.charAt(0)).slice(0, 3).toUpperCase();
-  if (!logo) return <Monogram letters={letters} />;
+  if (!logo) return <Monogram letters={letters} className={cn(box, text)} />;
   return (
-    <span aria-hidden="true" className="size-7 shrink-0">
+    <span aria-hidden="true" className={cn("shrink-0", box)}>
       <span className="contents dark:hidden">
-        <LogoImage key={logo.light} src={logo.light} letters={letters} />
+        <LogoImage
+          key={logo.light}
+          src={logo.light}
+          letters={letters}
+          px={px}
+          text={text}
+        />
       </span>
       <span className="hidden dark:contents">
         <LogoImage
@@ -575,6 +647,8 @@ function TeamMark({
           src={logo.dark ?? logo.light}
           fallback={logo.light}
           letters={letters}
+          px={px}
+          text={text}
         />
       </span>
     </span>
@@ -585,21 +659,26 @@ function LogoImage({
   src,
   fallback,
   letters,
+  px,
+  text,
 }: {
   src: string;
   fallback?: string;
   letters: string;
+  px: number;
+  text: string;
 }) {
   const [current, setCurrent] = useState(src);
   const [failed, setFailed] = useState(false);
-  if (failed) return <Monogram letters={letters} />;
+  if (failed)
+    return <Monogram letters={letters} className={cn("size-full", text)} />;
   return (
     <Image
       src={current}
       alt=""
-      width={28}
-      height={28}
-      className="size-7 object-contain"
+      width={px}
+      height={px}
+      className="size-full object-contain"
       onError={() => {
         if (fallback && current !== fallback) setCurrent(fallback);
         else setFailed(true);
@@ -608,11 +687,20 @@ function LogoImage({
   );
 }
 
-function Monogram({ letters }: { letters: string }) {
+function Monogram({
+  letters,
+  className,
+}: {
+  letters: string;
+  className?: string;
+}) {
   return (
     <span
       aria-hidden="true"
-      className="grid size-7 shrink-0 place-items-center rounded-full bg-background text-[0.625rem] leading-none font-semibold text-muted-foreground"
+      className={cn(
+        "grid shrink-0 place-items-center rounded-full bg-background leading-none font-semibold text-muted-foreground",
+        className,
+      )}
     >
       {letters}
     </span>

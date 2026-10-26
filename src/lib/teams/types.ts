@@ -96,6 +96,36 @@ export function competitionLabel(slug: string, lang: Locale): string {
   return (slug.split(".").at(-1) ?? slug).replaceAll("_", " ").toUpperCase();
 }
 
+/**
+ * Opponents that take "a" in Portuguese ("perdeu para a Chapecoense"); any
+ * other takes "o" ("o Palmeiras", "o Pacers"). By ESPN's short name.
+ */
+const feminine = new Set(
+  [
+    "Chapecoense",
+    "Ponte Preta",
+    "Portuguesa",
+    "Ferroviária",
+    "Inter de Limeira",
+    "Juazeirense",
+    "Aparecidense",
+    "Tuna Luso",
+    "Caldense",
+    "Desportiva",
+    "Universidad Católica",
+    "Universidad de Chile",
+    "LDU Quito",
+    "Liga de Quito",
+  ].map((name) => name.toLocaleLowerCase("pt-BR")),
+);
+
+/** The Portuguese articles for an opponent: `{ o: "a", do: "da" }` for "Chapecoense". */
+export function articles(name: string): { o: string; do: string } {
+  return feminine.has(name.toLocaleLowerCase("pt-BR"))
+    ? { o: "a", do: "da" }
+    : { o: "o", do: "do" };
+}
+
 /** Regulation periods: after these, a live period is overtime (or extra time). */
 export const regulationPeriods: Record<Sport, number> = {
   basketball: 4,

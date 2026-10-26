@@ -12,8 +12,9 @@
  *   open site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/<abbr>
  *   (football/nfl for the NFL) and read `team.id`. Scores come from ESPN's
  *   public site API through `/api/teams` (see ARCHITECTURE.md, "My teams").
- * - Games: Steam needs `STEAM_API_KEY` for the live part (see README); the
- *   other profiles are links.
+ * - Games: Steam needs `STEAM_API_KEY` for the live part, Valorant
+ *   `HENRIK_API_KEY` and Rainbow Six Siege `R6DATA_API_KEY` for their rank
+ *   and stats (see README, "Games"); without a key a game is a link card.
  */
 import type { Localizable } from "@/i18n";
 import type { LogoId } from "@/lib/logos/registry";
@@ -112,6 +113,30 @@ export const teams: Team[] = [
 
 /* ------------------------------------------------------------------- Games */
 
+/**
+ * Where a game's rank and stats come from (`/api/trackers`, see
+ * `src/lib/trackers`). Each needs its own key; without it the card is a link.
+ */
+export type GameStats =
+  | {
+      /** HenrikDev's Valorant API (api.henrikdev.xyz), `HENRIK_API_KEY`. */
+      source: "henrikdev";
+      /** Riot ID, split at the "#": davi#XVI -> "davi", "XVI". */
+      name: string;
+      tag: string;
+      /** Riot region (affinity) of the account: "br", "latam", "na", "eu", "ap", "kr". */
+      region: string;
+      platform: "pc" | "console";
+    }
+  | {
+      /** R6Data's API (public-api.arenyze.com), `R6DATA_API_KEY`. */
+      source: "r6data";
+      /** Ubisoft name, exactly as in game. */
+      name: string;
+      /** "uplay" (PC), "psn" or "xbl". */
+      platformType: "uplay" | "psn" | "xbl";
+    };
+
 export type GameProfile = {
   id: string;
   /** The game or platform. */
@@ -123,6 +148,8 @@ export type GameProfile = {
   url: string;
   /** What the link opens, on the card's first line. */
   label: Localizable;
+  /** Rank and stats on the card, when the source's key is set. */
+  stats?: GameStats;
 };
 
 /** Steam: live status and hours through `/api/steam` once `STEAM_API_KEY` is set; a profile link otherwise. */
@@ -132,7 +159,10 @@ export const steam = {
   url: "https://steamcommunity.com/id/davi16lacerda/",
 } as const;
 
-/** Profiles without a public API: link cards to their stats pages. */
+/**
+ * Game profiles: link cards to their stats pages. Valorant and Rainbow Six
+ * Siege also show rank, K/D and win rate when their key is set.
+ */
 export const gameProfiles: GameProfile[] = [
   {
     id: "playstation",
@@ -149,6 +179,13 @@ export const gameProfiles: GameProfile[] = [
     logo: "valorant",
     url: "https://tracker.gg/valorant/profile/riot/davi%23XVI/overview",
     label: { en: "Stats on Tracker.gg", "pt-br": "Estatísticas no Tracker.gg" },
+    stats: {
+      source: "henrikdev",
+      name: "davi",
+      tag: "XVI",
+      region: "br",
+      platform: "pc",
+    },
   },
   {
     id: "r6",
@@ -157,5 +194,6 @@ export const gameProfiles: GameProfile[] = [
     logo: "ubisoft",
     url: "https://r6.tracker.network/r6siege/profile/ubi/Hydroon./overview",
     label: { en: "Stats on Tracker.gg", "pt-br": "Estatísticas no Tracker.gg" },
+    stats: { source: "r6data", name: "Hydroon.", platformType: "uplay" },
   },
 ];

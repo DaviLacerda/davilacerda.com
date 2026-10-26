@@ -142,8 +142,9 @@
   --text-small: clamp(0.875rem, 0.85rem + 0.1vw, 0.9375rem);
   --text-small--line-height: 1.5;
 
-  /* Reading column (Personal, posts) and the wide frame (header, Work, footer). */
+  /* Reading column (posts, 404), the Personal tab's bento and the wide frame (header, Work, footer). */
   --container-column: 48rem;
+  --container-bento: 64rem;
   --container-wide: 80rem;
 
   --radius-panel: 1.75rem;
@@ -162,6 +163,15 @@
   width: 100%;
   margin-inline: auto;
   max-width: calc(var(--container-column) + 2 * var(--gutter));
+  padding-inline: var(--gutter);
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+}
+
+/* The Personal tab: its bento grid, the writing and the links. <Container bento>. */
+@utility container-bento {
+  width: 100%;
+  margin-inline: auto;
+  max-width: calc(var(--container-bento) + 2 * var(--gutter));
   padding-inline: var(--gutter);
   --gutter: clamp(1rem, 4vw, 2.5rem);
 }

@@ -24,8 +24,9 @@ yarn typecheck  # TypeScript
 
 The Personal tab shows what Davi is listening to on Spotify (or the last song played). The page
 asks `/api/now-playing` every 30 seconds while it is open, and that route asks the Spotify Web API
-with a refresh token. Without the three variables below the card is a link to the Spotify profile
-and the route answers `{"status":"unconfigured"}`, so local builds and previews work as they are.
+with a refresh token. Without the three variables below the tile shows the Spotify logo,
+`@dlacerda9` and "Listen on Spotify", linking to the profile, and the route answers
+`{"status":"unconfigured"}`, so local builds and previews work as they are.
 
 One-time setup:
 
@@ -54,7 +55,7 @@ Responses are cached on the CDN for 30 seconds. To revoke access, remove the app
 
 ## Currently watching
 
-The Watching card on the Personal tab reads `watching` in
+The Watching tile on the Personal tab reads `watching` in
 [`src/content/personal.ts`](src/content/personal.ts). To change the show, edit its one entry:
 
 ```ts
@@ -63,8 +64,8 @@ The Watching card on the Personal tab reads `watching` in
 
 The poster comes from [TVMaze](https://www.tvmaze.com/api) by the title (no key, cached for a day). To use your own image instead, add `poster: "/images/watching/<file>"`.
 
-`url` (a page about the show) and `network` are optional. Without a `poster` the card sets the
-title's initials on a dark tile; to show a poster, put a file you are allowed to use in `public/`
+`url` (a page about the show) and `network` are optional. Without a poster the tile sets the
+title's initials on a dark card; to show a poster, put a file you are allowed to use in `public/`
 (2:3, e.g. `public/images/watching/show.webp`) and add `poster: "/images/watching/show.webp"`.
 The Personal Markdown and `/llms-full.txt` follow on the next build.
 
@@ -82,22 +83,57 @@ To add or change a team, copy an entry and set:
   `football/nfl/teams/min`) and read `team.id`;
 - `logo`: `espnLogo("nba", "bkn")`, `espnLogo("nfl", "min")` or `espnLogo("soccer", "874")`.
 
+Each card is told from Davi's team's side: the team first (big logo, name, competition), then
+the result in words ("Lost 136 to 109", "Perdeu de 136 a 109"; live, "Leading 14 to 10"), then
+the opponent and where it was played ("vs Pacers" at home, "at Lions" away). In Portuguese a club
+whose name is feminine ("a Chapecoense", "da Ponte Preta") must be in the list in `articles()` in
+[`src/lib/teams/types.ts`](src/lib/teams/types.ts).
+
 Check it with `curl https://davilacerda.com/api/teams`. When ESPN cannot be read the cards show
-the names, logos and a quiet dash. To preview every state locally, open
+the teams and "No game data right now". To preview every state locally, open
 `/en/personal?mock=live` (or `final`, `upcoming`, `mixed`, `unavailable`) under `yarn dev`, or
 under `yarn start` started with `PERSONAL_MOCKS=1`; the live site ignores `?mock=`.
 
 ## Games
 
-The "Games" section has a Steam card and link cards for PlayStation (PSNProfiles), Valorant and
-Rainbow Six Siege (Tracker.gg); the handles are in `steam` and `gameProfiles` in
-[`src/content/personal.ts`](src/content/personal.ts).
+The Games tile has Valorant and Rainbow Six Siege (rank, K/D, win rate and level, linking to
+Tracker.gg), a Steam card and PlayStation (PSNProfiles); the handles are in `steam` and
+`gameProfiles` in [`src/content/personal.ts`](src/content/personal.ts). Every key is optional:
+without one, that row is a link to the profile, as before.
 
-| Card                        | Shows                                                                  | Setup                      |
-| --------------------------- | ---------------------------------------------------------------------- | -------------------------- |
-| Steam                       | playing now, the last two weeks, library size; without the key, a link | `STEAM_API_KEY` (optional) |
-| Valorant, Rainbow Six Siege | a link to Tracker.gg (its developer API does not cover these games)    | none                       |
-| PlayStation                 | a link to PSNProfiles (PlayStation has no public API)                  | none                       |
+| Card              | Shows                                                                   | Setup                       |
+| ----------------- | ----------------------------------------------------------------------- | --------------------------- |
+| Valorant          | rank with its emblem, RR, K/D and win rate (last 20 competitive), level | `HENRIK_API_KEY` (optional) |
+| Rainbow Six Siege | rank, RP, K/D, win rate and level for this season                       | `R6DATA_API_KEY` (optional) |
+| Steam             | playing now, the last two weeks, library size                           | `STEAM_API_KEY` (optional)  |
+| PlayStation       | a link to PSNProfiles (PlayStation has no public API)                   | none                        |
+
+Tracker.gg has no embed for a website (only stream overlays) and its API does not cover these
+two games, so the stats come from two community APIs built on the official data; nothing is
+scraped. Riot ID `davi#XVI` (region `br`) and Ubisoft name `Hydroon.` are the `stats` entries in
+`gameProfiles`.
+
+Valorant, optional:
+
+1. Open the HenrikDev dashboard at
+   [api.henrikdev.xyz/dashboard](https://api.henrikdev.xyz/dashboard/) and sign in.
+2. Choose "API Keys" in the sidebar and fill out "Generate New Key" (a basic key is plenty: the
+   site asks a few times an hour, whatever the traffic). Copy the key.
+3. In Vercel, add `HENRIK_API_KEY` (Sensitive) for Production and Preview and redeploy.
+
+Rainbow Six Siege, optional:
+
+1. Create an account at [r6.arenyze.com](https://r6.arenyze.com) (R6Data, by Arenyze; plans at
+   [r6.arenyze.com/pricing](https://r6.arenyze.com/pricing)).
+2. Create an API key in the dashboard at [r6.arenyze.com/dashboard](https://r6.arenyze.com/dashboard)
+   and copy it. The site asks once every 30 minutes.
+3. In Vercel, add `R6DATA_API_KEY` (Sensitive) for Production and Preview and redeploy (the
+   page reserves room for the stats of the games whose key is set at build time).
+
+Check them with `curl https://davilacerda.com/api/trackers`: `ok` for a game means it works,
+`offline` means the API refused or could not find the player (check the function logs),
+`unconfigured` means its key is missing. Responses are cached on the CDN for 10 minutes. Preview
+them locally with `/en/personal?mock=ranked` (or any team scenario; `offline` shows the links).
 
 Steam, optional:
 

@@ -42,14 +42,15 @@ src/
     [lang]/(assistant)/work/[topic]/  one answer on the canvas, e.g. /en/work/experience (static, 7 topics)
     [lang]/(assistant)/work/page.tsx  /en/work -> 308 to /en
     [lang]/(assistant)/ask/page.tsx   the composer's no-JS form target: "nothing on that yet" (noindex)
-    [lang]/personal/page.tsx      Personal tab: portrait, hello, interests, Spotify and watching cards, my teams, games,
-                                  writing (blog index), elsewhere
+    [lang]/personal/page.tsx      Personal tab: a bento grid (hello with the portrait, Spotify, watching, interests, my
+                                  teams, games), then writing (blog index) and elsewhere
     [lang]/personal/blog/[slug]/  Blog post
     [lang]/not-found.tsx          localized 404 (the way back and the topics as links)
     [lang]/[...rest]/page.tsx     sends unknown /<lang>/* paths to the 404
     api/now-playing/route.ts      what Davi is listening to on Spotify (dynamic, CDN-cached 30s; see Spotify now playing)
     api/teams/route.ts            his teams' live, last or next games from ESPN (dynamic, CDN-cached 30s to 10min; see My teams)
     api/steam/route.ts            Steam presence and recent games (dynamic, CDN-cached 60s; see Games)
+    api/trackers/route.ts         Valorant and Rainbow Six Siege rank and stats (dynamic, CDN-cached 10min; see Games)
   components/
     chat/                         the Work assistant: assistant (provider, Canvas, Identity, AskLink), context,
                                   composer, question, reply, piece, copy-email-button
@@ -57,8 +58,9 @@ src/
                                   certifications, skills, education, faq, contact) + parts (Panel, fit()...)
     motion/                       motion-provider (LazyMotion + MotionConfig), reveal (scroll entrance), features
     layout/                       site-header, nav-tabs, locale-switcher, theme-toggle, site-footer
-    personal/                     interests, now-playing (the Spotify card, client), watching, teams (the scoreboard,
-                                  client), games + steam (the Steam card, client), parts (the cards' anatomy), elsewhere
+    personal/                     interests, now-playing (the Spotify tile, client), watching, teams (the scoreboard,
+                                  client), games + steam (the Steam card, client) + trackers (rank and stats, client),
+                                  parts (the tiles' and cards' anatomy), elsewhere
     blog/                         post-list, post-header, table-of-contents, author-card, post-pager, rss-link
     providers/                    theme-provider (next-themes), alternate-links (locale switcher targets)
     seo/json-ld.tsx               <JsonLd data={...} />
@@ -81,6 +83,8 @@ src/
     spotify/                      now-playing.ts (Spotify Web API, server-only), types.ts (the JSON shape, shared)
     teams/                        espn.ts (ESPN site API, server-only), fixtures.ts (mock scenarios), types.ts (shared)
     steam/                        steam.ts (Steam Web API, server-only), fixtures.ts (mock scenarios), types.ts (shared)
+    trackers/                     valorant.ts (HenrikDev), r6.ts (R6Data), trackers.ts (both, server-only), json.ts
+                                  (parsing helpers), fixtures.ts (mock scenarios), types.ts (shared)
     mock.ts                       the `?mock=` gate of the Personal tab's live routes (server-only; see My teams)
     seo.ts                        buildMetadata() + JSON-LD builders
     utils.ts                      cn(), absoluteUrl(), isExternalUrl()
@@ -120,11 +124,12 @@ Import alias: `@/*` -> `src/*`.
 
 Monochrome, clean and direct. White and near-black with a disciplined grey ramp; hierarchy comes
 from type weight, size and space only. The only colour on the site is a brand's own logo (team and
-game logos included) and the album cover on the Spotify card. No self-referential copy (nothing about how the site works or that answers are pre-written): the page
+game logos and Valorant's rank emblems included), the album cover on the Spotify tile and the
+show's poster. No self-referential copy (nothing about how the site works or that answers are pre-written): the page
 says what Davi did, in as few words as possible. The long versions live in the machine-readable
 layer (see Agent readiness). The Work tab is a split-pane assistant whose answers are pictures
-first (oversized figures, big logo marks, an ink panel for the headline fact); Personal and the
-blog are a reading layout. Tokens are CSS variables in `src/app/globals.css` (`:root` = light,
+first (oversized figures, big logo marks, an ink panel for the headline fact); Personal is a bento
+grid of surface tiles over a reading layout, and the blog is a reading layout. Tokens are CSS variables in `src/app/globals.css` (`:root` = light,
 `.dark` = dark; next-themes toggles the class, system preference by default) mapped to Tailwind
 colors:
 
@@ -168,9 +173,18 @@ headline of an ink panel is sized to its container with `fit()` (`answers/parts.
 size from the text length, clamped, so "Best AI Project in LATAM" and its longer Portuguese title
 both fill two lines); put `@container` on an unpadded wrapper, not on the padded panel.
 
-**Layout:** `--container-wide: 80rem` (header, footer and the Work tab) and `--container-column:
-48rem` (Personal, posts, 404), both with a `clamp(1rem, 4vw, 2.5rem)` gutter (`--gutter`), via
-`<Container wide?>`.
+**Layout:** `--container-wide: 80rem` (header, footer and the Work tab), `--container-bento:
+64rem` (the Personal tab) and `--container-column: 48rem` (posts, 404), all with a
+`clamp(1rem, 4vw, 2.5rem)` gutter (`--gutter`), via `<Container wide? bento?>`.
+
+- Personal: a bento grid of `bg-surface` tiles (`tileClass`: `rounded-panel`, 20 to 24px of
+  padding; one gap, 12px, 16px from 640px; fills only). Two columns on a phone: the hello, the
+  interests, My teams and Games span both, Spotify and the show sit side by side. Twelve from
+  640px: the hello across, Spotify and the interests stacked beside the show, which spans two
+  rows. From 1024px the hello takes eight columns and the show stands tall beside it, Spotify and
+  the interests under the hello. My teams and Games run across the grid; Writing and Elsewhere
+  follow as plain sections. A tile's title is small and muted (`TileTitle`), never an eyebrow;
+  rows inside a tile are unfilled and take `surface-strong` on hover.
 
 - Work, from 1024px: two panes. The left column (20rem, 23rem from `xl`) sticks to the top and
   holds the name, one line, the composer and the chips (they wrap). The canvas on the right shows
@@ -184,8 +198,8 @@ both fill two lines); put `@container` on an unpadded wrapper, not on the padded
   under it. On an answer the name steps aside so the question starts at the top. Answers always
   appear above the input, never under it.
 - Radii: controls are fully round (chips, buttons, tabs, the composer, the question bubble);
-  answer panels `rounded-panel` (28px), hovered rows `rounded-surface` (20px), logo tiles
-  `rounded-tile` (14px).
+  answer panels and the Personal tiles `rounded-panel` (28px), hovered rows `rounded-surface`
+  (20px), logo tiles `rounded-tile` (14px).
 
 **Logos** (`src/lib/logos/`): brand marks from `@iconify-json/logos` (full colour) and
 `@iconify-json/simple-icons` (single colour), listed in `registry.ts` (`id`, Iconify `icon`,
@@ -210,13 +224,15 @@ the certificate (transparent rounded corners), served through next/image (AVIF/W
 allowed in `next.config.ts` `images.qualities`) and dimmed to 90% brightness in dark mode. No
 labels on top of pictures; captions go under them. The album cover on the Spotify card is the one
 remote picture: a plain `<img>` straight from Spotify's CDN (the ~300px size it already serves; the
-optimizer would only re-encode an ever-changing URL), 8px corners, never cropped, blurred or
-covered (Spotify's design guidelines), with the Spotify logo beside it. Team logos come from
-ESPN's CDN (`a.espncdn.com/i/teamlogos/...`, allowed in `next.config.ts` `images.remotePatterns`)
-through next/image at 28px, ESPN's `500-dark` file in dark mode; one that fails falls back to the
-light file, then to the team's letters on a small disc. The show on the Watching card is a
-poster only when there is one Davi may use (a `/public` file); otherwise its initials on a dark
-tile, like a title card.
+optimizer would only re-encode an ever-changing URL), 10px corners, never cropped, blurred or
+covered (Spotify's design guidelines), with the Spotify logo beside it (on a phone, leading the
+status line under it). Team logos come from ESPN's CDN (`a.espncdn.com/i/teamlogos/...`, allowed
+in `next.config.ts` `images.remotePatterns`) through next/image: Davi's team at 48 to 56px, the
+opponent at 20px inline; ESPN's `500-dark` file in dark mode; one that fails falls back to the
+light file, then to the team's letters on a disc. The show's poster (TVMaze, or a `/public`
+file) stands at 2:3 with 10px corners, never cropped; without one, the title's initials on a dark
+tile, like a title card. Valorant's rank emblem comes from `media.valorant-api.com/competitivetiers/`
+(also in `remotePatterns`) at 44px; Siege has no emblem source, so its row keeps the game's mark.
 
 **Icons:** Phosphor, regular weight (bold only on the send arrow), imported per icon from
 `@phosphor-icons/react/dist/ssr/<Name>` (works in server and client components). Always
@@ -255,6 +271,7 @@ from `scale(0)`, transform and opacity only.
 | Brand mark draw (`data-brand-draw`)    | `BrandMark draw` (CSS, inline script)      | first load of a session only: the "d" is written by a pen mask, bowl, stem, flag, 900ms `cubic-bezier(0.45, 0, 0.25, 1)`; reduced motion: none    |
 | Brand mark hover                       | `brand-mark.module.css`                    | the "d" straightens 7° and lifts 1px, 200ms ease-out; pointer devices only, none with reduced motion                                              |
 | Steam card: game change                | `SteamCard` (`AnimatePresence`)            | as the song change: the new state rises 6px out of a 4px blur in 250ms ease-out, the old one blurs out in 150ms; reduced motion: fade             |
+| Tracker stats arrive                   | `TrackerCards` (`AnimatePresence`)         | the rank and figures replace the skeleton like a song change: rise 6px out of a 4px blur in 250ms ease-out; reduced motion: fade                  |
 | Teams: a score changes                 | `Score` in `TeamsBoard` (Motion)           | the new number rolls up from 60% below out of a 3px blur in 280ms ease-out, the old one leaves upward in 180ms, clipped; reduced motion: fade     |
 | Live dot (`data-live`)                 | globals.css (CSS keyframes)                | a ring of the dot's colour grows to 2.75x and fades, 1.6s ease-out loop (live game, playing on Steam); reduced motion: a still dot                |
 | Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                                                                                                          |
@@ -373,7 +390,7 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 
 | Component                                                                   | Notes                                                                                                           |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `<Container as? wide?>`                                                     | the 48rem column, or with `wide` the 80rem frame, with the gutter                                               |
+| `<Container as? wide? bento?>`                                              | the 48rem column, with `wide` the 80rem frame, with `bento` the 64rem Personal grid; always with the gutter     |
 | `<ButtonLink href variant? size?>` / `buttonVariants()`                     | `primary` (ink), `quiet` (surface), `raised` (page on a surface), `inverse` / `ghost-inverse` (on an ink panel) |
 | `<TextLink href arrow? newTabLabel?>`                                       | inline link with `link-underline`; external opens a new tab with a Phosphor ↗                                   |
 | `<Tag tone? logo?>` / `<TagList items label? tone? logos?>`                 | filled pills, `tone` `page`, `surface` or `ink`; `logos` puts the brand mark before each technology             |
@@ -388,22 +405,23 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<Reveal as? stagger? enter?>`                                              | scroll entrance below the fold; with `enter`, part of the load entrance (client)                                |
 | `<CopyButton value label copiedLabel variant? size? iconOnly?>`             | copy with a short crossfade confirmation (client); `CopyEmailButton` is the email preset                        |
 | `<ImageLightbox src width height alt caption detail? openLabel closeLabel>` | a link around a thumbnail that opens the image in a modal `<dialog>` (client; see Motion)                       |
-| `<Interests lang enter>`                                                    | the Personal tab's interest chips (Phosphor icon + label)                                                       |
-| `<NowPlayingCard profileUrl handle strings logo>`                           | the Spotify card under the hello (client; see Spotify now playing)                                              |
-| `<WatchingCards lang>`                                                      | the show(s) in `personal.ts` beside the Spotify card: a poster or the title's initials, a link out              |
-| `<TeamsBoard teams lang locale strings enter?>`                             | one card per team under "My teams" (client; see My teams)                                                       |
-| `<Games lang enter?>` / `<SteamCard ...>`                                   | "Games": the Steam card (client; see Games) and a link card per game profile                                    |
-| `cardClass`, `<Tile>`, `<CardText>`, `<CardLink>`, `<LiveDot>`              | `personal/parts.tsx`: the 88px card anatomy the Personal cards share (server or client)                         |
+| `<Interests lang enter? className?>`                                        | the Interests tile: chips with a Phosphor icon and a label                                                      |
+| `<NowPlayingCard profileUrl handle strings logo mark enter? className?>`    | the Spotify tile (client; see Spotify now playing)                                                              |
+| `<WatchingTile lang enter? className?>`                                     | the tall Watching tile: the first show in `personal.ts`, its poster or initials, a link out                     |
+| `<TeamsBoard teams lang locale strings>`                                    | one card per team inside the My teams tile (client; see My teams)                                               |
+| `<Games lang>` / `<SteamCard ...>` / `<TrackerCards ...>`                   | the Games tile's rows: Valorant and Siege with their stats (client), Steam (client), PlayStation (see Games)    |
+| `tileClass`, `tileLinkClass`, `<TileTitle>`                                 | `personal/parts.tsx`: a bento tile's fill, radius and padding; a tile that is one link; a tile's small title    |
+| `cardClass`, `<Tile>`, `<CardText>`, `<CardLink>`, `<LiveDot>`, `fillNodes` | `personal/parts.tsx`: the 88px row anatomy inside the tiles; `fillNodes` fills a template with elements         |
 | `<SocialList lang ids reveal?>` / `<Elsewhere lang>`                        | network rows with logo, name and handle (Contact answer, Personal)                                              |
 | `<Prose html enter?>`                                                       | renders `post.html` with `.markdown`                                                                            |
 | `<BrandMark draw?>`                                                         | the calligraphic "d" in `currentColor`, sized by height; `draw` (header only) writes it on once per session     |
 | `<JsonLd data={node \| node[]}>`                                            | adds `@context`; arrays become one `@graph`                                                                     |
 | `<LocaleAlternates links>`                                                  | per-page locale switcher targets                                                                                |
-| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; static header, tabs in a round island, theme cycles System, Light, Dark                   |
+| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; static header, tabs in a round island, theme cycles System, Light, Dark                    |
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
 `reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, `teams`,
-`steam`, the providers. Pages, answers and logos stay Server Components.
+`steam`, `trackers`, the providers. Pages, answers and logos stay Server Components.
 
 ## Content model (`src/content/profile.ts`)
 
@@ -440,15 +458,17 @@ formal titles for Algar (the role is "AI Engineer", since Aug 2024). Dates are s
 profile: `watching[]` (`title`, `year`, `network?`, `url?`, `poster?`), `teams[]` (`id`, `name`,
 `shortName`, `sport` `basketball | football | soccer`, `league` (ESPN slug: `nba`, `nfl`, `bra.1`),
 `espnId`, `logo` `{ light, dark? }` via `espnLogo()`), `steam` (`vanity`, `url`) and
-`gameProfiles[]` (`title`, `handle`, `url`, `logo` (registry id), `label` (bilingual)). The page,
-the Personal Markdown and llms-full read it; its header says how to edit it.
+`gameProfiles[]` (`title`, `handle`, `url`, `logo` (registry id), `label` (bilingual), `stats?`:
+where the rank and stats come from, `{ source: "henrikdev", name, tag, region, platform }` for
+Valorant or `{ source: "r6data", name, platformType }` for Siege). The page, the Personal
+Markdown and llms-full read it; its header says how to edit it.
 
 ## Spotify now playing
 
-The first of the Personal tab's live elements (the others are My teams and Games): under the
-hello, a card with what Davi is listening to on Spotify (the cover, the song, the artists, and a
-small equalizer while it plays) or the last song played, linking to the track. From 640px it sits
-beside the Watching card.
+The first of the Personal tab's live elements (the others are My teams and Games): a tile of the
+bento grid with what Davi is listening to on Spotify (the cover, the song, the artists, and a
+small equalizer while it plays) or the last song played, linking to the track. It sits under the
+hello, beside the Watching tile on a phone and beside the interests from 1024px.
 
 - **Server:** `src/lib/spotify/now-playing.ts` exchanges `SPOTIFY_REFRESH_TOKEN` (with
   `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`) for an access token at
@@ -462,28 +482,47 @@ beside the Watching card.
   always 200, so builds and previews never depend on Spotify.
 - **Client:** `NowPlayingCard` fetches it on mount and every 30 seconds while the tab is visible
   (a `visibilitychange` listener stops it when hidden and catches up on return; no scroll
-  listeners). One card of fixed size (88px) in every state, so nothing shifts: a skeleton, the
-  song, or, for `offline` and `unconfigured`, "On Spotify" and the handle linking to the profile
-  (also what renders without JavaScript, via the `noscript:` variant). A song change is
-  announced in a polite live region (not the first one). The Spotify logo comes from the server
-  as a prop, so the logo registry stays out of the client bundle.
+  listeners). The tile keeps its size in every state (at least 13rem tall, the grid row decides
+  the rest), so nothing shifts: a skeleton, the song, or, for `offline` and `unconfigured`, a
+  deliberate profile tile: the Spotify mark large on a page-tone square, "On Spotify", the handle
+  and "Listen on Spotify" (a pill from 640px), linking to the profile (also what renders without
+  JavaScript, via the `noscript:` variant). A song change is announced in a polite live region
+  (not the first one). The Spotify logo (`logo`, 16 to 24px) and mark (`mark`, 40px) come from the
+  server as props, so the logo registry stays out of the client bundle.
 - **Not machine-readable on purpose:** the song is ephemeral, so it is not in the Markdown,
   llms.txt, MCP, search or OpenAPI. The Spotify profile is a regular social (Elsewhere, Markdown,
   JSON, `sameAs`).
 - **Setup:** README, "Spotify now playing" (`yarn spotify:token`, `.env.example`).
 
-Beside it, the **Watching** card: the show in `watching` (`personal.ts`), static, linking to a page
-about it. Its poster comes from TVMaze (`api.tvmaze.com/singlesearch/shows?q=<title>`, no key,
-`revalidate` one day, 4s timeout, only `static.tvmaze.com` images); a `poster` file in `/public`
-wins, and any failure falls back to the title's initials. Its status line is "Watching" and the
-title may take two lines; the network and year are in its accessible name. It is a static fact, so the Markdown and llms-full carry it.
+Beside it, the **Watching** tile: the first show in `watching` (`personal.ts`), static, linking to
+a page about it. It is the grid's tall tile (two rows from 640px; beside the hello from 1024px):
+the poster on top (two thirds of the tile's width on a phone, 12rem from 640px, the full width
+from 1024px), then "Watching", the title (up to three lines) and the network and year. The poster
+comes from TVMaze (`api.tvmaze.com/singlesearch/shows?q=<title>`, no key, `revalidate` one day,
+4s timeout, the `original` image, only `static.tvmaze.com`); a `poster` file in `/public` wins,
+and any failure falls back to the title's initials. It is a static fact, so the Markdown and
+llms-full carry it.
 
 ## My teams (ESPN)
 
-Under "My teams" on the Personal tab, one card per team in `personal.ts` (Brooklyn Nets,
-Corinthians, Minnesota Vikings; three across from 640px, stacked on a phone): the competition,
-the state of the game, then Davi's team and the opponent with their logos and scores. A card
-with a game links to it on espn.com.
+The My teams tile of the Personal tab runs across the grid with one card per team in
+`personal.ts` (Brooklyn Nets, Corinthians, Minnesota Vikings): stacked on a phone, a row each
+from 640px (the team on the left, the game on the right), three across from 1024px. Each card is
+told from Davi's side, so it is clear which team is his and how it went:
+
+1. His team leads: its logo large (48 to 56px), its name, the competition under it.
+2. The state: "Live" with the pulsing dot and the clock, "Final, yesterday", or "Next game".
+3. The result in words, with the higher score first: "Lost 136 to 109", "Won 27 to 24",
+   "Draw, 1 to 1"; live, "Leading 14 to 10", "Trailing 88 to 84", "Tied 0 to 0"; for a game to
+   come, its day and time. In Portuguese: "Perdeu de 136 a 109", "Ganhou de 2 a 1",
+   "Empatou em 1 a 1", "Ganhando de...", "Perdendo de...".
+4. The opponent, small, with its logo and where the game is: "vs Pacers" at home, "at Lions"
+   away; in Portuguese the phrase follows the result, "para o Pacers, em casa", "do Palmeiras,
+   fora de casa", "com o...", "contra o...", with the article from `articles()` in
+   `src/lib/teams/types.ts` ("a Chapecoense", "da Ponte Preta"; add a feminine club there).
+
+A card with a game links to it on espn.com; its accessible name is the whole sentence ("Brooklyn
+Nets, Lost 136 to 109 vs Indiana Pacers. NBA, Final, yesterday").
 
 - **Source:** ESPN's public site API (`site.api.espn.com/apis/site/v2/sports/...`), keyless and
   undocumented. `src/lib/teams/espn.ts` reads each team's schedule (the three teams in parallel):
@@ -504,10 +543,11 @@ with a game links to it on espn.com.
 - **Client:** `TeamsBoard` asks once on mount; then every minute only while a game is live (or its
   start has come) and the tab is visible, and once at the start of a game due within six hours.
   Hidden tabs stop and catch up on return. Every state has the same size: a skeleton; live (the
-  pulsing dot, "Live", the quarter and clock or the minute); final (with the day, the losing side
-  grey); the next game (day and time in the viewer's time zone, in the page's language); and
-  unavailable (names, logos and a quiet "—"). Without JavaScript: names, logos and the "—". A
-  game going live or ending is announced in a polite live region (never on the first answer).
+  pulsing dot, "Live", the quarter and clock or the minute, "Leading..."); final (with the day,
+  "Won..."); the next game (day and time in the viewer's time zone, in the page's language); and
+  unavailable (the team and "No game data right now"). Without JavaScript: the teams and that
+  line. A game going live or ending is announced in a polite live region (never on the first
+  answer).
 - **Mocks:** `?mock=live | final | upcoming | mixed | unavailable` on the page (forwarded to the
   route by `liveUrl()`) answers from `src/lib/teams/fixtures.ts`, run through the real parser, in
   `yarn dev` or a production server started with `PERSONAL_MOCKS=1` (`src/lib/mock.ts`). The live
@@ -516,11 +556,38 @@ with a game links to it on espn.com.
   teams and their leagues only.
 - **Change the teams:** edit `teams` in `src/content/personal.ts` (README, "My teams").
 
-## Games (Steam and profiles)
+## Games (trackers, Steam and profiles)
 
-Under "Games": a Steam card and one link card per entry in `gameProfiles` (PlayStation on
-PSNProfiles, Valorant and Rainbow Six Siege on Tracker.gg), two across from 640px, each with its
-brand mark from the logo registry.
+The Games tile runs across the grid under My teams: Valorant and Rainbow Six Siege with their
+rank and stats, then the Steam card and PlayStation, two across from 640px, each with its brand
+mark from the logo registry.
+
+- **Valorant and Siege** (`src/lib/trackers/`): Tracker.gg has no website embed (its overlays are
+  for OBS) and its developer API does not cover these games, and Riot's and Ubisoft's own APIs are
+  closed to a personal site, so each comes from a keyed community API that reads the official
+  data. Nothing is scraped.
+  - Valorant, `HENRIK_API_KEY` (HenrikDev, `api.henrikdev.xyz`, header `Authorization`):
+    `GET /valorant/v3/mmr/{region}/{platform}/{name}/{tag}` (the rank, RR; required; 10 minutes),
+    `/valorant/v1/stored-matches/{region}/{name}/{tag}?mode=competitive` (the last 20
+    competitive matches: K/D and win rate; 30 minutes) and `/valorant/v2/account/{name}/{tag}`
+    (the level; 6 hours). Without the matches the win rate comes from the act's games. The rank
+    emblem is valorant-api.com's `competitivetiers` image for the tier.
+  - Siege, `R6DATA_API_KEY` (R6Data by Arenyze, `public-api.arenyze.com/r6/api`, header
+    `api-key`): `GET /v2/profile?nameOnPlatform=...&platformType=uplay` (30 minutes): the level
+    and Ubisoft's ranked board for the latest season (rank, RP, kills and deaths, wins, losses
+    and abandons).
+  - `getTrackers()` asks both in parallel (6s timeouts, through the Data Cache) and answers per
+    game `ok` (`rank` `{ tier, division, icon }`, `points` RR or RP, `kd`, `winRate`, `level`,
+    `scope`: the last N matches or this season), `offline` (logged without the URL or key) or
+    `unconfigured`. `/api/trackers`: `s-maxage=600, stale-while-revalidate=3600`, always 200.
+  - `TrackerCards` asks once on mount. A game whose key is set (`trackersConfigured()`, read on
+    the server at build) holds a skeleton of its stats from the first paint, so nothing moves;
+    then the rank (the emblem in the tile, else the game's logo), the points, three figures (K/D,
+    win rate, level) and what they cover ("Last 20 competitive matches", "This season"). Without
+    the key, while offline and without JavaScript, the row is the Tracker.gg link it always was.
+    The whole row links to Tracker.gg in every state. Mocks (`src/lib/trackers/fixtures.ts`, API-shaped,
+    through the real parsers): `?mock=ranked`, and any team or Steam scenario, shows ranked
+    stats; `offline` and `unavailable` show the links.
 
 - **Steam** (`src/lib/steam/steam.ts`): with `STEAM_API_KEY`, the vanity name becomes a SteamID64
   (`ResolveVanityURL`, cached a day and in memory; `STEAM_ID` skips it), then
@@ -533,11 +600,9 @@ brand mark from the logo registry.
   its time, else "On Steam" with the handle and the size of the library. Unconfigured, offline
   and no-JS show the profile link. Steam only answers for a public profile with public game
   details. Mocks: `?mock=playing | recent | idle | offline` (the teams' scenarios map onto them).
-- **Tracker.gg and PSN:** link cards only. Tracker.gg's developer API covers other games (Apex,
-  CS, Division 2, Splitgate), not Valorant or Rainbow Six Siege, and PlayStation has no public
-  API; nothing is scraped.
-- Not in `socials` or `sameAs`: they are game handles, not identity profiles. Presence is
-  ephemeral and stays out of the machine-readable layer; the Markdown and llms-full list the
+- **PSN:** a link card to PSNProfiles. PlayStation has no public API; nothing is scraped.
+- Not in `socials` or `sameAs`: they are game handles, not identity profiles. Presence, ranks
+  and stats are ephemeral and stay out of the machine-readable layer; the Markdown and llms-full list the
   profiles under "Games".
 
 ## Blog (`src/lib/blog.ts`, server-only)

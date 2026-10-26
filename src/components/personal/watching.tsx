@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
 
 import { watching, type Watching } from "@/content/personal";
 import {
@@ -7,8 +8,9 @@ import {
   type Dictionary,
   type Locale,
 } from "@/i18n";
+import { cn } from "@/lib/utils";
 
-import { CardLink, CardText, cardClass, Tile } from "./parts";
+import { tileClass, tileLinkClass } from "./parts";
 
 /** "Georgie & Mandy's First Marriage" -> "G&M": the first three words' initials, an "&" kept as is. */
 function initials(title: string): string {
@@ -23,29 +25,40 @@ function initials(title: string): string {
 }
 
 /**
- * What Davi is watching, beside the Spotify card and in its shape: the
- * poster (or, without one, the title's initials on a dark tile like a
- * title card: ink in light mode, the black page tone in dark), "Watching" and the title on up to two lines. Where and when
- * it first aired go into its accessible name. Static: the show is one line
- * in `src/content/personal.ts`.
+ * What Davi is watching: a tall tile of the Personal tab's bento grid. The
+ * poster stands at the top (2:3, never cropped; without one, the title's
+ * initials on a dark card like a title card: ink in light mode, the black
+ * page tone in dark), "Watching", the title and where and when it first
+ * aired at the bottom. Static: the show is one line in
+ * `src/content/personal.ts`; with two shows, the first one is the tile.
  */
-export async function WatchingCards({ lang }: { lang: Locale }) {
+export async function WatchingTile({
+  lang,
+  enter,
+  className,
+}: {
+  lang: Locale;
+  /** Place of the tile in the first-paint entrance (`--i`). */
+  enter?: number;
+  className?: string;
+}) {
+  const show = watching[0];
+  if (!show) return null;
   const dict = getDictionary(lang);
-  const posters = await Promise.all(
-    watching.map((show) => show.poster ?? fetchPoster(show.title)),
-  );
-  return watching.map((show, i) => (
+  const poster = show.poster ?? (await fetchPoster(show.title));
+  return (
     <WatchingCard
-      key={show.title}
-      show={{ ...show, poster: posters[i] }}
+      show={{ ...show, poster }}
       dict={dict}
+      enter={enter}
+      className={className}
     />
-  ));
+  );
 }
 
 /**
  * The show's poster from TVMaze (no key), looked up by title and cached for
- * a day. Any failure leaves the card on the title's initials.
+ * a day. Any failure leaves the tile on the title's initials.
  */
 async function fetchPoster(title: string): Promise<string | undefined> {
   try {
@@ -57,14 +70,26 @@ async function fetchPoster(title: string): Promise<string | undefined> {
     const show = (await res.json()) as {
       image?: { medium?: string; original?: string } | null;
     };
-    const src = show.image?.medium ?? show.image?.original;
+    // The original (about 680px wide) stays sharp at the tile's size; the
+    // image optimizer serves it resized.
+    const src = show.image?.original ?? show.image?.medium;
     return src?.startsWith("https://static.tvmaze.com/") ? src : undefined;
   } catch {
     return undefined;
   }
 }
 
-function WatchingCard({ show, dict }: { show: Watching; dict: Dictionary }) {
+function WatchingCard({
+  show,
+  dict,
+  enter,
+  className,
+}: {
+  show: Watching;
+  dict: Dictionary;
+  enter?: number;
+  className?: string;
+}) {
   const details = [show.network, show.year].filter(Boolean).join(", ");
   const label = interpolate(dict.personal.watching.label, {
     title: show.title,
@@ -76,27 +101,61 @@ function WatchingCard({ show, dict }: { show: Watching; dict: Dictionary }) {
         <Image
           src={show.poster}
           alt=""
-          width={44}
-          height={64}
-          sizes="2.75rem"
-          className="h-16 w-11 shrink-0 rounded-[6px] bg-surface-strong object-cover"
+          width={256}
+          height={384}
+          sizes="(min-width: 1024px) 16rem, (min-width: 640px) 12rem, 6rem"
+          className="aspect-[2/3] w-2/3 shrink-0 rounded-[10px] bg-surface-strong object-cover sm:w-48 lg:w-full"
         />
       ) : (
-        <Tile className="bg-ink text-[1.0625rem] font-semibold tracking-[-0.02em] text-on-ink dark:bg-background dark:text-foreground">
+        <span
+          aria-hidden="true"
+          className="grid aspect-[2/3] w-2/3 shrink-0 place-items-center rounded-[10px] bg-ink text-[1.375rem] font-semibold tracking-[-0.02em] text-on-ink sm:w-48 sm:text-[2rem] lg:w-full lg:text-[2.75rem] dark:bg-background dark:text-foreground"
+        >
           {initials(show.title)}
-        </Tile>
+        </span>
       )}
-      <CardText status={dict.personal.watching.status} title={show.title} />
+      <span className="min-w-0">
+        <span className="block text-small leading-5 text-muted-foreground">
+          {dict.personal.watching.status}
+        </span>
+        <span className="mt-0.5 line-clamp-3 leading-[1.375rem] font-medium">
+          {show.title}
+        </span>
+        {details ? (
+          <span className="mt-1 block truncate text-small leading-5 text-muted-foreground">
+            {details}
+          </span>
+        ) : null}
+      </span>
     </>
   );
 
-  return show.url ? (
-    <CardLink href={show.url} label={`${label} (${dict.a11y.opensInNewTab})`}>
-      {content}
-    </CardLink>
-  ) : (
-    <div role="group" aria-label={label} className={cardClass}>
-      {content}
+  const tile = cn(
+    tileClass,
+    "flex h-full flex-col justify-between gap-5 p-4 sm:p-6",
+  );
+  const entrance =
+    enter === undefined
+      ? {}
+      : { "data-enter": "", style: { "--i": enter } as CSSProperties };
+
+  return (
+    <div {...entrance} className={cn("min-w-0", className)}>
+      {show.url ? (
+        <a
+          href={show.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${label} (${dict.a11y.opensInNewTab})`}
+          className={cn(tile, tileLinkClass)}
+        >
+          {content}
+        </a>
+      ) : (
+        <div role="group" aria-label={label} className={tile}>
+          {content}
+        </div>
+      )}
     </div>
   );
 }

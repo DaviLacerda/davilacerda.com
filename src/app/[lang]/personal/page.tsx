@@ -9,8 +9,9 @@ import { Elsewhere } from "@/components/personal/elsewhere";
 import { Games } from "@/components/personal/games";
 import { Interests } from "@/components/personal/interests";
 import { NowPlayingCard } from "@/components/personal/now-playing";
+import { tileClass, TileTitle } from "@/components/personal/parts";
 import { TeamsBoard } from "@/components/personal/teams";
-import { WatchingCards } from "@/components/personal/watching";
+import { WatchingTile } from "@/components/personal/watching";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/container";
@@ -29,6 +30,7 @@ import {
   profilePageJsonLd,
   websiteJsonLd,
 } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 
 type PageProps = { params: Promise<{ lang: string }> };
 
@@ -53,13 +55,20 @@ export async function generateMetadata({
 }
 
 /**
- * Personal tab: a reading layout about Davi the person, not the job. His
- * portrait (black and white, on the page's own surface tone), a hello, one
- * warm line, his interests as a row of chips, and two cards side by side:
- * what he is listening to on Spotify and what he is watching. Then his
- * teams (live or last results), where he plays, the writing and where to
- * find him online, one column throughout. Colour comes only from pictures:
- * the album cover and the team and game logos.
+ * Personal tab: Davi the person, not the job, as a bento grid of tiles of
+ * mixed sizes (one radius, one gap, fills only). The hello with his
+ * portrait (black and white, on the page's tone) is the large tile; beside
+ * it the show he is watching stands tall with its poster; under the hello,
+ * what he is listening to on Spotify and his interests. Then his teams
+ * across the grid (each told from his team's side), and where he plays.
+ * Under the grid, the writing and where to find him online. Colour comes
+ * only from pictures: the album cover, the poster, and the team, game and
+ * rank marks.
+ *
+ * Grid: two columns on a phone (the hello, the interests, the teams and the
+ * games span both; Spotify and the show sit side by side), twelve from
+ * 640px (the hello across, Spotify and the interests stacked beside the
+ * show), and from 1024px the hello takes eight columns of the first row.
  */
 export default async function PersonalPage({ params }: PageProps) {
   const { lang } = await params;
@@ -69,10 +78,9 @@ export default async function PersonalPage({ params }: PageProps) {
   const posts = getAllPosts(lang);
   const city = t(profile.location.city, lang);
   const spotify = getSocial("spotify");
-  const afterInterests = 3 + profile.interests.length;
 
   return (
-    <Container className="pt-12 sm:pt-20">
+    <Container bento className="pt-8 sm:pt-14">
       <JsonLd
         data={[
           personJsonLd(lang),
@@ -90,91 +98,90 @@ export default async function PersonalPage({ params }: PageProps) {
         ]}
       />
 
-      <section aria-labelledby="personal-title">
-        {profile.image ? (
-          <div data-enter="" style={{ "--i": 0 } as CSSProperties}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-12 sm:gap-4">
+        <section
+          aria-labelledby="personal-title"
+          data-enter=""
+          style={{ "--i": 0 } as CSSProperties}
+          className={cn(
+            tileClass,
+            "col-span-2 flex flex-col justify-between gap-10 p-6 sm:col-span-12 sm:p-8 lg:col-span-8",
+          )}
+        >
+          {profile.image ? (
             <Image
               src={profile.image}
               width={304}
               height={304}
               alt={intro.portraitAlt}
               priority
-              sizes="(min-width: 640px) 8.5rem, 6.5rem"
-              className="size-26 rounded-full bg-surface sm:size-34"
+              sizes="(min-width: 640px) 6rem, 5rem"
+              className="size-20 rounded-full bg-background sm:size-24"
             />
+          ) : null}
+          <div>
+            <h1 id="personal-title" className="text-hero text-display">
+              {intro.title}
+            </h1>
+            <p className="mt-4 max-w-[36ch] text-lead text-muted-foreground">
+              {interpolate(intro.lead, { city })}
+            </p>
           </div>
-        ) : null}
-        <h1
-          id="personal-title"
-          data-enter=""
-          style={{ "--i": 1 } as CSSProperties}
-          className="mt-8 text-hero text-display sm:mt-10"
-        >
-          {intro.title}
-        </h1>
-        <p
-          data-enter=""
-          style={{ "--i": 2 } as CSSProperties}
-          className="mt-4 max-w-[40ch] text-lead text-muted-foreground"
-        >
-          {interpolate(intro.lead, { city })}
-        </p>
-        <Interests lang={lang} enter={3} className="mt-8" />
-        <div
-          data-enter=""
-          style={{ "--i": afterInterests } as CSSProperties}
-          className="mt-4 grid gap-3 sm:grid-cols-2"
-        >
-          <NowPlayingCard
-            profileUrl={spotify.url}
-            handle={spotify.handle}
-            strings={{
-              ...dict.personal.listening,
-              opensInNewTab: dict.a11y.opensInNewTab,
-            }}
-            logo={<BrandLogo id="spotify" className="size-6" />}
-            className="sm:w-full"
-          />
-          <WatchingCards lang={lang} />
-        </div>
-      </section>
+        </section>
 
-      <PersonalSection
-        id="teams"
-        enter={afterInterests + 1}
-        title={dict.personal.teams.title}
-      >
-        <TeamsBoard
-          teams={teams.map((team) => ({
-            id: team.id,
-            name: team.name,
-            shortName: team.shortName,
-            sport: team.sport,
-            league: team.league,
-            logo: team.logo,
-            game: null,
-          }))}
-          lang={lang}
-          locale={localeMeta[lang].intl}
+        <NowPlayingCard
+          profileUrl={spotify.url}
+          handle={spotify.handle}
           strings={{
-            ...dict.personal.teams,
+            ...dict.personal.listening,
             opensInNewTab: dict.a11y.opensInNewTab,
           }}
-          enter={afterInterests + 2}
+          logo={<BrandLogo id="spotify" className="size-4 sm:size-6" />}
+          mark={<BrandLogo id="spotify" className="size-10" />}
+          enter={1}
+          className="col-span-1 sm:col-span-6 lg:col-span-4 lg:col-start-1 lg:row-start-2"
         />
-      </PersonalSection>
 
-      <PersonalSection
-        id="games"
-        enter={afterInterests + 3}
-        title={dict.personal.games.title}
-      >
-        <Games lang={lang} enter={afterInterests + 4} />
-      </PersonalSection>
+        <WatchingTile
+          lang={lang}
+          enter={2}
+          className="col-span-1 sm:col-span-6 sm:row-span-2 lg:col-span-4 lg:col-start-9 lg:row-start-1"
+        />
+
+        <Interests
+          lang={lang}
+          enter={3}
+          className="col-span-2 sm:col-span-6 lg:col-span-4 lg:col-start-5 lg:row-start-2"
+        />
+
+        <Tile id="teams" enter={4} title={dict.personal.teams.title}>
+          <TeamsBoard
+            teams={teams.map((team) => ({
+              id: team.id,
+              name: team.name,
+              shortName: team.shortName,
+              sport: team.sport,
+              league: team.league,
+              logo: team.logo,
+              game: null,
+            }))}
+            lang={lang}
+            locale={localeMeta[lang].intl}
+            strings={{
+              ...dict.personal.teams,
+              opensInNewTab: dict.a11y.opensInNewTab,
+            }}
+          />
+        </Tile>
+
+        <Tile id="games" enter={5} title={dict.personal.games.title}>
+          <Games lang={lang} />
+        </Tile>
+      </div>
 
       <PersonalSection
         id="blog"
-        enter={afterInterests + 5}
+        enter={6}
         title={sections.writing.title}
         aside={
           posts.length > 0 ? (
@@ -182,17 +189,46 @@ export default async function PersonalPage({ params }: PageProps) {
           ) : null
         }
       >
-        <PostList posts={posts} lang={lang} enter={afterInterests + 6} />
+        <PostList posts={posts} lang={lang} enter={7} />
       </PersonalSection>
 
       <PersonalSection
         id="elsewhere"
-        enter={afterInterests + 7}
+        enter={8}
         title={sections.elsewhere.title}
       >
-        <Elsewhere lang={lang} enter={afterInterests + 8} />
+        <Elsewhere lang={lang} enter={9} />
       </PersonalSection>
     </Container>
+  );
+}
+
+/** A full-width tile of the grid with its own small title (`h2`): My teams, Games. */
+function Tile({
+  id,
+  enter,
+  title,
+  children,
+}: {
+  id: string;
+  /** Place in the entrance (see `Reveal`). */
+  enter: number;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <Reveal
+      as="section"
+      id={id}
+      aria-labelledby={`${id}-title`}
+      enter={enter}
+      className={cn(tileClass, "col-span-2 scroll-mt-8 sm:col-span-12")}
+    >
+      <TileTitle as="h2" id={`${id}-title`}>
+        {title}
+      </TileTitle>
+      {children}
+    </Reveal>
   );
 }
 

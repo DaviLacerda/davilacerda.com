@@ -327,6 +327,8 @@ export const en = {
       recent: "Last played",
       /** The card when nothing can be shown: a link to the profile. */
       onSpotify: "On Spotify",
+      /** The profile link's call to action on that card. */
+      listen: "Listen on Spotify",
       /** The card's accessible name: "Listening now on Spotify: Song, Artist". */
       label: "{status} on Spotify: {title}, {artists}",
       /** Announced politely when the song changes while the page is open. */
@@ -352,14 +354,49 @@ export const en = {
       halftime: "Halftime",
       shootout: "Penalties",
       delayed: "Delayed",
-      /** What the quiet "—" means when ESPN cannot be reached. */
+      /** Status of a card whose game is still to come. */
+      next: "Next game",
+      /** When ESPN cannot be reached. */
       unavailable: "No game data right now",
-      /** Parts of a card's accessible name. */
-      matchup: "{team} vs {opponent}",
-      score: "{team} {teamScore}, {opponent} {opponentScore}",
+      /**
+       * The game from Davi's team's side, the higher score first: "Lost 136
+       * to 109". Live: leading, trailing or tied.
+       */
+      result: {
+        win: "Won {high} to {low}",
+        loss: "Lost {high} to {low}",
+        draw: "Draw, {high} to {low}",
+        leading: "Leading {high} to {low}",
+        trailing: "Trailing {high} to {low}",
+        tied: "Tied {high} to {low}",
+      },
+      /** The same without a score (ESPN sent none). */
+      resultWord: {
+        win: "Won",
+        loss: "Lost",
+        draw: "Draw",
+        leading: "Leading",
+        trailing: "Trailing",
+        tied: "Tied",
+      },
+      /**
+       * The opponent line under the result: `{venue}` is "vs" at home and
+       * "at" away; `{o}` and `{do}` are Portuguese articles (unused here).
+       */
+      against: {
+        win: "{venue} {opponent}",
+        loss: "{venue} {opponent}",
+        draw: "{venue} {opponent}",
+        leading: "{venue} {opponent}",
+        trailing: "{venue} {opponent}",
+        tied: "{venue} {opponent}",
+        upcoming: "{venue} {opponent}",
+      },
+      venue: { home: "vs", away: "at" },
       /** Announced politely while the page is open. */
       started: "{team} game is live",
-      ended: "Final: {score}",
+      /** `{result}` is "Brooklyn Nets, lost 136 to 109 at Pacers". */
+      ended: "Final: {result}",
     },
     /** Steam (live with STEAM_API_KEY) and links to the other game profiles. */
     games: {
@@ -375,6 +412,31 @@ export const en = {
       changed: "Now playing on Steam: {game}",
       /** A link card's accessible name: "Valorant, davi#XVI: Stats on Tracker.gg". */
       profile: "{title}, {handle}: {label}",
+      /** Rank and stats on the Valorant and Rainbow Six Siege cards (/api/trackers). */
+      stats: {
+        kd: "K/D",
+        winRate: "Win rate",
+        level: "Level",
+        /** What K/D and win rate cover. */
+        matches: "Last {count} competitive matches",
+        season: "This season",
+      },
+      /** Rank names, by group; the division follows as the game writes it ("Gold 2", "Platinum III"). */
+      ranks: {
+        unranked: "Unranked",
+        iron: "Iron",
+        bronze: "Bronze",
+        silver: "Silver",
+        gold: "Gold",
+        platinum: "Platinum",
+        diamond: "Diamond",
+        ascendant: "Ascendant",
+        immortal: "Immortal",
+        radiant: "Radiant",
+        copper: "Copper",
+        emerald: "Emerald",
+        champion: "Champion",
+      },
     },
     sections: {
       writing: {
