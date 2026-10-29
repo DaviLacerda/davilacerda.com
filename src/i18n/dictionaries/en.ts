@@ -120,7 +120,7 @@ export const en = {
         chip: "Sales Copilot",
         question: "What is the Sales Copilot?",
         title: "Sales Copilot",
-        metaTitle: "Sales Copilot, Best AI Project in LATAM",
+        metaTitle: "What is the Sales Copilot Davi built?",
         description:
           "The AI copilot Davi Lacerda built end to end for Algar's sales teams: it listens to calls and suggests arguments and offers in real time. Named Best AI Project in LATAM at the Conecta Latam awards.",
         summary: "The award-winning copilot he built end to end.",
