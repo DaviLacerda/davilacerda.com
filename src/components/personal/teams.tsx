@@ -15,8 +15,6 @@ import {
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/i18n/config";
 import type { AsciiScene } from "@/lib/ascii/types";
-import { cueSfx, hushSfx, playSfx, unlockAudio } from "@/lib/sfx/player";
-import type { SfxId } from "@/lib/sfx/types";
 import {
   articles,
   competitionLabel,
@@ -32,7 +30,6 @@ import { cn } from "@/lib/utils";
 
 import { AsciiBackdrop } from "./ascii-backdrop";
 import { fill, fillNodes, liveUrl, LiveDot } from "./parts";
-import { useSoundsOn } from "./sound-toggle";
 
 export type TeamsStrings = Dictionary["personal"]["teams"] & {
   opensInNewTab: string;
@@ -42,8 +39,6 @@ export type TeamsStrings = Dictionary["personal"]["teams"] & {
 export type BoardTeam = TeamStatus & {
   /** The ASCII animation behind the card. */
   ascii?: AsciiScene;
-  /** The sound on hover, focus or tap, when sounds are on. */
-  sfx?: SfxId;
 };
 
 type TeamsBoardProps = {
@@ -267,8 +262,7 @@ function describe(
  *   a fade). A game going live or ending is announced politely.
  * - Each card links to the game on espn.com when there is one.
  * - Behind each card, its team's ASCII animation (`AsciiBackdrop`), calm,
- *   livelier while the card is hovered, focused or tapped; with the sounds
- *   on (`SoundToggle`), the same moments play the team's sound.
+ *   livelier while the card is hovered, focused or tapped.
  */
 export function TeamsBoard({ teams, lang, locale, strings }: TeamsBoardProps) {
   const [{ data, at, failed, previous }, setState] = useState<State>({
@@ -412,13 +406,10 @@ const TAP_MS = 1600;
 
 /**
  * A card's hover, focus and tap: `active` while pointed at (mouse or pen),
- * focused from the keyboard, or for a moment after a tap; and the team's
- * sound at those moments when sounds are on. Hover and focus cue the sound
- * after a short dwell and stop it on leaving; a tap plays it at once (the tap
- * is the gesture that lets audio start), and the card still opens the game.
+ * focused from the keyboard, or for a moment after a tap (the card still
+ * opens the game).
  */
-function useCardMoments(sound: SfxId | undefined) {
-  const soundsOn = useSoundsOn();
+function useCardMoments() {
   const [active, setActive] = useState(false);
   const tap = useRef<number | undefined>(undefined);
 
@@ -427,12 +418,10 @@ function useCardMoments(sound: SfxId | undefined) {
   function start() {
     window.clearTimeout(tap.current);
     setActive(true);
-    if (soundsOn && sound) cueSfx(sound);
   }
 
   function end() {
     setActive(false);
-    hushSfx();
   }
 
   return {
@@ -453,10 +442,6 @@ function useCardMoments(sound: SfxId | undefined) {
         setActive(true);
         window.clearTimeout(tap.current);
         tap.current = window.setTimeout(() => setActive(false), TAP_MS);
-        if (soundsOn && sound) {
-          unlockAudio();
-          playSfx(sound);
-        }
       },
     },
   };
@@ -479,7 +464,7 @@ function TeamCard({
   strings: TeamsStrings;
   now: number;
 }) {
-  const { active, handlers } = useCardMoments(team.sfx);
+  const { active, handlers } = useCardMoments();
   const competition = competitionLabel(game?.competition ?? team.league, lang);
   const logo = game?.team.logo ?? team.logo;
   const outcome = game ? outcomeOf(game) : null;

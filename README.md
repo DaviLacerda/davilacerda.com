@@ -82,8 +82,7 @@ To add or change a team, copy an entry and set:
   `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/bkn` (or
   `football/nfl/teams/min`) and read `team.id`;
 - `logo`: `espnLogo("nba", "bkn")`, `espnLogo("nfl", "min")` or `espnLogo("soccer", "874")`;
-- `ascii` (optional): the animation behind the card, `basketball`, `soccer` or `longship`;
-- `sfx` (optional): its sound, `court`, `crowd` or `horn`.
+- `ascii` (optional): the animation behind the card, `basketball`, `soccer` or `longship`.
 
 Each card is told from Davi's team's side: the team first (big logo, name, competition), then
 the result in words ("Lost 136 to 109", "Perdeu de 136 a 109"; live, "Leading 14 to 10"), then
@@ -93,10 +92,7 @@ whose name is feminine ("a Chapecoense", "da Ponte Preta") must be in the list i
 
 Behind each card runs a faint ASCII animation of its sport (a hoop and a dribbling ball, a goal
 with its stand, a longship on the swell), livelier while the card is pointed at, focused or
-tapped, and still with reduced motion. The speaker beside "My teams" turns on a short sound per
-team (a possession on court, a crowd chanting, a war horn), off by default and remembered in the
-browser. The sounds are synthesized in the browser (Web Audio), not recordings. See ARCHITECTURE.md,
-"My teams", to add a scene or a sound.
+tapped, and still with reduced motion. See ARCHITECTURE.md, "My teams", to add a scene.
 
 Check it with `curl https://davilacerda.com/api/teams`. When ESPN cannot be read the cards show
 the teams and "No game data right now". To preview every state locally, open

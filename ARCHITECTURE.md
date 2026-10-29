@@ -59,7 +59,7 @@ src/
     motion/                       motion-provider (LazyMotion + MotionConfig), reveal (scroll entrance), features
     layout/                       site-header, nav-tabs, locale-switcher, theme-toggle, site-footer
     personal/                     interests, now-playing (the Spotify tile, client), watching, teams (the scoreboard,
-                                  client) + ascii-backdrop (a card's ASCII animation, client) + sound-toggle (client),
+                                  client) + ascii-backdrop (a card's ASCII animation, client),
                                   games + steam (the Steam card, client) + trackers (rank and stats, client),
                                   parts (the tiles' and cards' anatomy), elsewhere
     blog/                         post-list, post-header, table-of-contents, author-card, post-pager, rss-link
@@ -86,8 +86,6 @@ src/
     ascii/                        the team cards' ASCII animations (client): field.ts (cells and drawing), renderer.ts
                                   (glyphs on a canvas), ticker.ts (one rAF loop), backdrop.ts (runs a scene),
                                   scenes/ (basketball, soccer, longship), types.ts (see My teams)
-    sfx/                          the team cards' synthesized sounds (Web Audio, no files): dsp.ts, court.ts, crowd.ts,
-                                  horn.ts, index.ts (sounds, output, voice), player.ts (client), preference.ts (the toggle)
     steam/                        steam.ts (Steam Web API, server-only), fixtures.ts (mock scenarios), types.ts (shared)
     trackers/                     valorant.ts (HenrikDev), r6.ts (R6Data), trackers.ts (both, server-only), json.ts
                                   (parsing helpers), fixtures.ts (mock scenarios), types.ts (shared)
@@ -283,7 +281,6 @@ from `scale(0)`, transform and opacity only.
 | Live dot (`data-live`)                 | globals.css (CSS keyframes)                | a ring of the dot's colour grows to 2.75x and fades, 1.6s ease-out loop (live game, playing on Steam); reduced motion: a still dot                |
 | Teams: ASCII backdrop                  | `AsciiBackdrop` (canvas, `src/lib/ascii`)  | an ASCII scene per team, 12fps; hovered, focused or tapped: livelier, up to 20fps (in 250ms, out 900ms); reduced motion: one still frame          |
 | Teams: backdrop opacity                | `AsciiBackdrop` (`data-active`)            | 30% to 50% in 300ms ease-out while the card is lively                                                                                             |
-| Sound toggle icon swap                 | `SoundToggle`                              | as the theme icon swap: 200ms ease-out, the old icon shrinks to 0.6 into a 4px blur; reduced motion: a crossfade                                  |
 | Press feedback                         | `pressable` / `pressable-panel`            | scale 0.97 (panels 0.99), 120ms ease-out                                                                                                          |
 | Hover fills, arrow nudges, fields      | Tailwind transitions                       | 200ms ease-out (never shorter, never a default curve)                                                                                             |
 
@@ -419,7 +416,7 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<NowPlayingCard profileUrl handle strings logo mark enter? className?>`    | the Spotify tile (client; see Spotify now playing)                                                              |
 | `<WatchingTile lang enter? className?>`                                     | the tall Watching tile: the first show in `personal.ts`, its poster or initials, a link out                     |
 | `<TeamsBoard teams lang locale strings>`                                    | one card per team inside the My teams tile (client; see My teams)                                               |
-| `<AsciiBackdrop scene active>` / `<SoundToggle label>`                      | a team card's ASCII animation; the speaker that turns the cards' sounds on (client; see My teams)               |
+| `<AsciiBackdrop scene active>`                                              | a team card's ASCII animation (client; see My teams)                                                            |
 | `<Games lang>` / `<SteamCard ...>` / `<TrackerCards ...>`                   | the Games tile's rows: Valorant and Siege with their stats (client), Steam (client), PlayStation (see Games)    |
 | `tileClass`, `tileLinkClass`, `<TileTitle>`                                 | `personal/parts.tsx`: a bento tile's fill, radius and padding; a tile that is one link; a tile's small title    |
 | `cardClass`, `<Tile>`, `<CardText>`, `<CardLink>`, `<LiveDot>`, `fillNodes` | `personal/parts.tsx`: the 88px row anatomy inside the tiles; `fillNodes` fills a template with elements         |
@@ -432,7 +429,7 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
 `reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, `teams`,
-`steam`, `trackers`, `ascii-backdrop`, `sound-toggle`, the providers. Pages, answers and logos stay Server Components.
+`steam`, `trackers`, `ascii-backdrop`, the providers. Pages, answers and logos stay Server Components.
 
 ## Content model (`src/content/profile.ts`)
 
@@ -468,8 +465,8 @@ formal titles for Algar (the role is "AI Engineer", since Aug 2024). Dates are s
 **`src/content/personal.ts`** holds the Personal tab's facts that change often, kept apart from the
 profile: `watching[]` (`title`, `year`, `network?`, `url?`, `poster?`), `teams[]` (`id`, `name`,
 `shortName`, `sport` `basketball | football | soccer`, `league` (ESPN slug: `nba`, `nfl`, `bra.1`),
-`espnId`, `logo` `{ light, dark? }` via `espnLogo()`, `ascii?` `basketball | soccer | longship` and
-`sfx?` `court | crowd | horn`: the card's animation and sound), `steam` (`vanity`, `url`) and
+`espnId`, `logo` `{ light, dark? }` via `espnLogo()`, `ascii?` `basketball | soccer | longship`:
+the card's animation), `steam` (`vanity`, `url`) and
 `gameProfiles[]` (`title`, `handle`, `url`, `logo` (registry id), `label` (bilingual), `stats?`:
 where the rank and stats come from, `{ source: "henrikdev", name, tag, region, platform }` for
 Valorant or `{ source: "r6data", name, platformType }` for Siege). The page, the Personal
@@ -602,33 +599,6 @@ so it stays under the text and inside the corners), decorative (`aria-hidden`, n
 in `text-foreground` at 30% opacity, 50% while lively; it fills the box the content already sized,
 so nothing shifts. A new scene: a file in `scenes/`, its name in `AsciiScene` (`types.ts`) and in
 `scenes/index.ts`.
-
-**Sounds.** Off by default. The speaker at the end of the My teams title (`SoundToggle`, a toggle
-button with `aria-pressed`, "Team sounds" / "Sons dos times"; hidden without JavaScript) turns them
-on, and the choice is kept in localStorage (`team-sounds`, in step across tabs). Each team picks
-one with `sfx`; all are synthesized with the Web Audio API in `src/lib/sfx` (oscillators, seeded
-noise, filters, a generated reverb; no recordings, nothing copied):
-
-- `court` (Nets): two dribbles (a falling thump, the ball's hollow ring, the slap on wood), a
-  sneaker squeak, the swish of the net and the buzzer (two tones beating), in a gym's short echo.
-- `crowd` (Corinthians): a stadium roar swelling into a four-syllable chant (seven voices through
-  vowel formants, o, i, i, a, the last one held and falling), the surdo on three beats and hands
-  clapping, in a big open room.
-- `horn` (Vikings): one long war-horn blast, Gjallarhorn style: detuned sawtooths on a low D with a
-  sub octave, a scoop into pitch, a slow swell, a low-pass that opens as it swells, a growing
-  vibrato, breath, and a hall.
-
-Each lasts at most two seconds with its tail (`voice()` closes its gain over the last 100ms
-whatever the sound does) and goes through one output: a low level, then a limiter. Rendered
-offline they peak around -11 dBFS, without clipping. Browsers let a page start audio only after a
-gesture, so turning the toggle on creates the AudioContext; if it was left on, the page's first
-click, key or tap does (`armUnlock()`); hovering alone never starts audio. With sounds on,
-pointing at a card (mouse or pen) or focusing it from the keyboard cues its sound after 120ms (a
-quick sweep across the cards plays nothing); leaving or blurring fades it out in 150ms; a new
-sound fades the last one out first, so two never overlap. On a touch screen a tap plays it at
-once and still opens the game, as before (scrolling over a card plays nothing); with sounds off a
-tap only wakes the animation. A new sound: a file in `src/lib/sfx` (a `Sound`), its name in
-`SfxId` and in `sounds` (`index.ts`); render it with an OfflineAudioContext to check it.
 
 ## Games (trackers, Steam and profiles)
 

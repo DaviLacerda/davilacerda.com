@@ -10,7 +10,6 @@ import { Games } from "@/components/personal/games";
 import { Interests } from "@/components/personal/interests";
 import { NowPlayingCard } from "@/components/personal/now-playing";
 import { tileClass, TileTitle } from "@/components/personal/parts";
-import { SoundToggle } from "@/components/personal/sound-toggle";
 import { TeamsBoard } from "@/components/personal/teams";
 import { WatchingTile } from "@/components/personal/watching";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -155,12 +154,7 @@ export default async function PersonalPage({ params }: PageProps) {
           className="col-span-2 sm:col-span-6 lg:col-span-4 lg:col-start-5 lg:row-start-2"
         />
 
-        <Tile
-          id="teams"
-          enter={4}
-          title={dict.personal.teams.title}
-          aside={<SoundToggle label={dict.personal.teams.sound} />}
-        >
+        <Tile id="teams" enter={4} title={dict.personal.teams.title}>
           <TeamsBoard
             teams={teams.map((team) => ({
               id: team.id,
@@ -170,7 +164,6 @@ export default async function PersonalPage({ params }: PageProps) {
               league: team.league,
               logo: team.logo,
               ascii: team.ascii,
-              sfx: team.sfx,
               game: null,
             }))}
             lang={lang}
@@ -223,7 +216,7 @@ function Tile({
   /** Place in the entrance (see `Reveal`). */
   enter: number;
   title: string;
-  /** A small control at the end of the title's line (the teams' sound toggle). */
+  /** A small control at the end of the title's line . */
   aside?: ReactNode;
   children: ReactNode;
 }) {
