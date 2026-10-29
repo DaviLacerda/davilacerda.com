@@ -14,6 +14,7 @@ import { siteConfig } from "@/config/site";
 import { allSkills, profile, type FaqItem } from "@/content/profile";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { toIsoDate } from "@/i18n/format";
+import { profileLastModified } from "@/lib/agents/dates";
 import { markdownPathFor } from "@/lib/agents/discovery";
 import type { PostMeta } from "@/lib/blog";
 import { routes } from "@/lib/routes";
@@ -78,8 +79,9 @@ export type OgImage = {
 export type PageMetadataInput = {
   lang: Locale;
   /**
-   * Page title. The root layout template renders it as "<title> | Davi Lacerda".
-   * Omit on the Work (home) page to use the dictionary's default title.
+   * Page title. The root layout template renders it as "<title> | Davi Lacerda",
+   * unless it already contains the site name. Omit on the Work (home) page to
+   * use the dictionary's default title.
    */
   title?: string;
   description: string;
@@ -129,8 +131,13 @@ export function buildMetadata(input: PageMetadataInput): Metadata {
   const paths = input.alternates ?? localizedPaths(input.path ?? "/");
   const selfPath = paths[lang] ?? `/${lang}`;
   const url = absoluteUrl(selfPath);
+  // A title that already names Davi ("Davi Lacerda's work experience") skips
+  // the " | Davi Lacerda" suffix instead of repeating the name.
+  const namesSite = title?.includes(dict.meta.siteName) ?? false;
   const fullTitle = title
-    ? `${title} | ${dict.meta.siteName}`
+    ? namesSite
+      ? title
+      : `${title} | ${dict.meta.siteName}`
     : dict.meta.defaultTitle;
   const meta = localeMeta[lang];
   const alternateLocale = locales
@@ -168,7 +175,10 @@ export function buildMetadata(input: PageMetadataInput): Metadata {
         : { ...base, type: "website" };
 
   return {
-    title: title ?? { absolute: dict.meta.defaultTitle },
+    title:
+      title && !namesSite
+        ? title
+        : { absolute: title ?? dict.meta.defaultTitle },
     description,
     keywords: [...new Set([...siteConfig.keywords, ...keywords])],
     alternates: {
@@ -272,6 +282,15 @@ export function personJsonLd(lang: Locale): PersonLeaf {
     email: `mailto:${profile.email}`,
     jobTitle: t(profile.headline, lang),
     description: t(profile.tldr, lang),
+    hasOccupation: {
+      "@type": "Occupation",
+      name: t(profile.headline, lang),
+      occupationLocation: {
+        "@type": "City",
+        name: `${profile.location.city}, ${profile.location.region}, ${t(profile.location.country, lang)}`,
+      },
+      skills: allSkills(),
+    },
     worksFor: {
       "@type": "Organization",
       "@id": jsonLdIds.employer,
@@ -349,6 +368,7 @@ export function profilePageJsonLd(
     name: options.name ?? dict.meta.defaultTitle,
     description: options.description ?? dict.meta.description,
     inLanguage: localeMeta[lang].htmlLang,
+    dateModified: profileLastModified(),
     isPartOf: { "@id": jsonLdIds.website },
     mainEntity: { "@id": jsonLdIds.person },
     about: { "@id": jsonLdIds.person },

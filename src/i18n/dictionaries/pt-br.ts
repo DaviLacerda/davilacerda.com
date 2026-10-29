@@ -10,7 +10,7 @@ export const ptBr: Dictionary = {
     work: {
       title: "Engenheiro de IA",
       description:
-        "Pergunte sobre o trabalho de Davi Lacerda: experiência na Algar, o premiado Sales Copilot, certificações Microsoft Expert, habilidades, formação e contato.",
+        "Davi Lacerda é Engenheiro de IA na Algar e constrói IA generativa e agentes. Principal desenvolvedor do premiado Sales Copilot, 3× Microsoft Certified.",
     },
     personal: {
       title: "Pessoal",
@@ -64,6 +64,7 @@ export const ptBr: Dictionary = {
       lead: "{role} na {company}, construindo produtos de IA generativa e agentes.",
       highlightsTitle: "Destaques",
       certifiedTitle: "Microsoft Certified",
+      aboutTitle: "Sobre o Davi",
     },
     composer: {
       label: "Faça uma pergunta sobre o trabalho do Davi",
@@ -118,7 +119,7 @@ export const ptBr: Dictionary = {
         title: "Habilidades e stack",
         metaTitle: "Habilidades e stack de Davi Lacerda",
         description:
-          "Com o que Davi Lacerda trabalha: LLMs e agentes, RAG, machine learning, back-end, front-end, cloud e entrega.",
+          "Com o que Davi Lacerda trabalha: modelos da OpenAI, Anthropic e Google Gemini, agentes de IA e RAG no Azure (além de GCP e AWS), machine learning e o stack completo.",
         summary: "LLMs, agentes, RAG e todo o stack ao redor.",
         intro:
           "IA Generativa e agentes no Azure, em TypeScript e Python, com todo o stack ao redor.",
@@ -140,7 +141,7 @@ export const ptBr: Dictionary = {
         title: "Perguntas frequentes",
         metaTitle: "Perguntas sobre Davi Lacerda",
         description:
-          "Respostas curtas sobre Davi Lacerda: o que ele faz, o stack, o Sales Copilot, o Billy, certificações, onde mora, formação e como falar com ele.",
+          "Respostas curtas sobre Davi Lacerda: o que ele faz, o stack, os modelos de IA e nuvens que usa, agentes em produção, MCP, resultados, certificações e contato.",
         summary: "Respostas curtas para o que recrutadores mais perguntam.",
         intro: "Respostas curtas para o que recrutadores mais perguntam.",
       },
@@ -431,6 +432,7 @@ export const ptBr: Dictionary = {
 
   footer: {
     rights: "Todos os direitos reservados.",
+    updated: "atualizado em {date}",
   },
 
   notFound: {

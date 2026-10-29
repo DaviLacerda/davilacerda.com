@@ -19,7 +19,7 @@ export const en = {
     work: {
       title: "AI Engineer",
       description:
-        "Ask about Davi Lacerda's work: experience at Algar, the award-winning Sales Copilot, Microsoft Expert certifications, skills, education and contact.",
+        "Davi Lacerda is an AI Engineer at Algar, Brazil, building generative AI and agents. Main developer of the award-winning Sales Copilot, 3× Microsoft Certified.",
     },
     personal: {
       title: "Personal",
@@ -82,6 +82,8 @@ export const en = {
       highlightsTitle: "Highlights",
       /** Beside the oversized count of certifications ("3×"); the tiers go under it. */
       certifiedTitle: "Microsoft Certified",
+      /** Heading of the factual paragraph under the panels (the profile's TL;DR). */
+      aboutTitle: "About Davi",
     },
     composer: {
       label: "Ask a question about Davi's work",
@@ -137,7 +139,7 @@ export const en = {
         title: "Skills and stack",
         metaTitle: "Davi Lacerda's skills and tech stack",
         description:
-          "What Davi Lacerda works with: LLMs and agents, RAG, machine learning, back end, front end, cloud and delivery.",
+          "What Davi Lacerda works with: models from OpenAI, Anthropic and Google Gemini, AI agents and RAG on Azure (plus GCP and AWS), machine learning and the full stack.",
         summary: "LLMs, agents, RAG and the full stack around them.",
         intro:
           "Generative AI and agents on Azure, in TypeScript and Python, with the full stack around them.",
@@ -159,7 +161,7 @@ export const en = {
         title: "Common questions",
         metaTitle: "Questions about Davi Lacerda",
         description:
-          "Short answers about Davi Lacerda: what he does, his stack, the Sales Copilot, Billy, certifications, location, education and how to reach him.",
+          "Short answers about Davi Lacerda: what he does, his stack, the AI models and clouds he uses, agents in production, MCP, results, certifications and contact.",
         summary: "Short answers to what recruiters ask most.",
         intro: "Short answers to what recruiters ask most.",
       },
@@ -498,6 +500,8 @@ export const en = {
 
   footer: {
     rights: "All rights reserved.",
+    /** After the copyright: "© 2026 Davi Lacerda, updated October 29, 2026". */
+    updated: "updated {date}",
   },
 
   notFound: {

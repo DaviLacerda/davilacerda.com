@@ -11,7 +11,7 @@ import { Piece } from "@/components/chat/piece";
 import { Question } from "@/components/chat/question";
 import { getDictionary, type Locale } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { topicCopy } from "@/lib/work/answers";
+import { topicCopy, topicLead } from "@/lib/work/answers";
 import type { TopicId } from "@/lib/work/topics";
 
 /*
@@ -23,7 +23,12 @@ import type { TopicId } from "@/lib/work/topics";
 
 export type Tone = "page" | "surface" | "ink";
 
-/** The question bubble and the answer's title, the first two pieces of every answer. */
+/**
+ * The question bubble, the answer's title and the answer in words: the first
+ * pieces of every answer. The lead is `topicLead()`, the factual paragraph
+ * the Markdown, llms.txt and MCP serve, so search and answer engines reading
+ * the HTML find the answer right under the heading, before the picture.
+ */
 export function AnswerHeader({
   topic,
   lang,
@@ -46,6 +51,13 @@ export function AnswerHeader({
         className="mt-6 text-answer outline-none sm:mt-8"
       >
         {copy.title}
+      </Piece>
+      <Piece
+        i={1}
+        as="p"
+        className="mt-4 max-w-[62ch] text-muted-foreground sm:mt-5"
+      >
+        {topicLead(topic, lang)}
       </Piece>
     </>
   );

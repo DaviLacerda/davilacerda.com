@@ -77,6 +77,17 @@ export async function generateMetadata({
       ],
       apple: "/apple-touch-icon.png",
     },
+    // Search Console and Bing Webmaster Tools tokens (see .env.example), so
+    // Google and Bing visibility can be measured separately. Unset, nothing
+    // renders; DNS verification works too and needs neither.
+    verification: {
+      ...(process.env.GOOGLE_SITE_VERIFICATION
+        ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+        : {}),
+      ...(process.env.BING_SITE_VERIFICATION
+        ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } }
+        : {}),
+    },
     robots: {
       index: true,
       follow: true,

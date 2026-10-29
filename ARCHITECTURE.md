@@ -350,8 +350,9 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
   effects). `AskLink` is the next/link every chip and in-answer link uses: a plain click calls
   `open()` first.
 - **Answers** (`src/components/chat/answers/`, server components): `AnswerHeader` (the question as
-  a right-aligned bubble, then the `h1#answer-title`) and one component per topic, each a picture
-  first, built only from `profile.ts`:
+  a right-aligned bubble, then the `h1#answer-title`, then `topicLead()` as a muted paragraph: the
+  answer in words, for search and answer engines reading the HTML) and one component per topic,
+  each a picture first, built only from `profile.ts`:
   - overview (home): award ink panel, Azure mark + "3×" Microsoft Certified with the tiers, current role
     with its tile and "Since Aug 2024", contact row ("Open to talk", `work.hero.talk`); each panel
     links to its answer;
@@ -671,6 +672,13 @@ mark from the logo registry.
   `blogPostingJsonLd(post, { image?, translations? })`, `faqPageJsonLd(lang, items?)`.
   Render with `<JsonLd data={[personJsonLd(lang), websiteJsonLd(lang), profilePageJsonLd(lang)]} />`.
 - Helpers: `localizedPaths("/personal")`, `hreflangAlternates(paths)`, `jsonLdIds`.
+- A `title` that already contains "Davi Lacerda" is used as is (no " | Davi Lacerda" suffix).
+- The plan behind it (intents per page, content checks, third-party sources, how to measure
+  Google and AI apart) is `docs/seo-aeo.md`. Visible text that serves it: the lead under every
+  answer's title, "About Davi" (the TL;DR) under the Work home's panels, and the footer's
+  "updated <date>" (`siteLastModified()`; the ProfilePage `dateModified` is `profileLastModified()`).
+- Search Console and Bing verification tags render only when `GOOGLE_SITE_VERIFICATION` /
+  `BING_SITE_VERIFICATION` are set (`.env.example`).
 
 ## Page conventions
 
@@ -750,6 +758,7 @@ All of it is static (`force-static` + `generateStaticParams`) except `/mcp`.
 | `/.well-known/mcp/server-card.json`, `/.well-known/mcp.json`                                                           | MCP server card (SEP-1649 draft): transport, capabilities, tools with JSON Schemas, resources, prompts.                                                                                                                                        |
 | `/.well-known/agent-skills/index.json`, `.../about-davi-lacerda/SKILL.md`                                              | Agent Skills discovery index (v0.2.0, with `sha256` digest) and the skill itself.                                                                                                                                                              |
 | `/.well-known/ai-catalog.json` (`ard.json` alias), `/.well-known/poppy.json`                                           | Agent Resource Discovery catalog; Poppy manifest.                                                                                                                                                                                              |
+| `/5f678da5ce371dccaeef34024244e9db.txt`                                                                                | IndexNow key. `yarn indexnow` (`scripts/indexnow.mjs`) submits the sitemap URLs whose `lastmod` is recent; `.github/workflows/indexnow.yml` runs it after each successful production deployment.                                               |
 
 Every HTML page also carries:
 

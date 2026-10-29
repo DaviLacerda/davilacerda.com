@@ -10,10 +10,9 @@ const PROFILE_SOURCES = [
   "src/content/profile.ts",
   "src/content/personal.ts",
   "src/i18n/dictionaries",
-  "src/app/[lang]/page.tsx",
-  "src/app/[lang]/work",
+  "src/app/[lang]/(assistant)",
   "src/app/[lang]/personal/page.tsx",
-  "src/components/chat/answers.tsx",
+  "src/components/chat/answers",
   "src/lib/work",
 ].map((file) => `:(literal)${file}`); // "[lang]" would otherwise be a glob
 
@@ -50,4 +49,15 @@ export function profileLastModified(): string {
     ? fromGit
     : (latestPostDate() ?? new Date().toISOString().slice(0, 10));
   return cached;
+}
+
+/**
+ * When the site's content last changed: the newer of the profile and the
+ * newest post, "YYYY-MM-DD". The footer shows it as "updated ...", so people
+ * and answer engines can tell the facts are current.
+ */
+export function siteLastModified(): string {
+  const profileDate = profileLastModified();
+  const postDate = latestPostDate();
+  return postDate && postDate > profileDate ? postDate : profileDate;
 }

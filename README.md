@@ -165,6 +165,14 @@ publishes `/llms.txt`, `/llms-full.txt`, JSON and JSON Resume under `/api` and `
 read-only MCP server at `/mcp`, and discovery documents under `/.well-known` (API catalog, MCP
 server card, agent skill). See "Agent readiness" in [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Search and answer engines
+
+[docs/seo-aeo.md](docs/seo-aeo.md) is the SEO and AEO plan: which page answers which question,
+the content checks, the work outside the site, and how to measure Google and AI answers apart.
+After a production deployment, `.github/workflows/indexnow.yml` runs `yarn indexnow` to tell
+Bing and the other IndexNow engines which pages changed. Search Console and Bing Webmaster Tools
+verification tokens are optional (`.env.example`).
+
 ## Project structure
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for folders, design tokens, components and conventions.

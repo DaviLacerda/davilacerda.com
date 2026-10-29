@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { locales } from "@/i18n";
-import { latestPostDate, profileLastModified } from "@/lib/agents/dates";
+import { profileLastModified, siteLastModified } from "@/lib/agents/dates";
 import { getAllPosts, getPostAlternates } from "@/lib/blog";
 import { routes } from "@/lib/routes";
 import { hreflangAlternates, localizedPaths } from "@/lib/seo";
@@ -15,8 +15,7 @@ import { topicIds } from "@/lib/work/topics";
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const profileUpdated = profileLastModified();
-  const personalUpdated =
-    [profileUpdated, latestPostDate() ?? ""].sort().at(-1) ?? profileUpdated;
+  const personalUpdated = siteLastModified();
 
   const pages: MetadataRoute.Sitemap = locales.flatMap((lang) => [
     {

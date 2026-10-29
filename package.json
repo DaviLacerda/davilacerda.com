@@ -16,7 +16,8 @@
     "format:check": "prettier --check .",
     "logos": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/logos.mjs",
     "brand": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/brand.mjs",
-    "spotify:token": "node scripts/spotify-refresh-token.mjs"
+    "spotify:token": "node scripts/spotify-refresh-token.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@iconify/utils": "^3.1.7",
