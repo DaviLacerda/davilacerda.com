@@ -20,6 +20,29 @@ yarn lint       # ESLint
 yarn typecheck  # TypeScript
 ```
 
+## Projects
+
+The Projects tab (`/en/projects`) and each project's page (`/en/projects/<id>`) come from
+`projects` in `src/content/profile.ts`. To add a project, add one entry there: its `id` (also the
+URL), a one-line `summary`, its result (`metric`, or `award` with the `achievement` it refers to),
+`results` for more figures, `press` for every article that covered it (outlet, headline as
+published, URL, date, language) and its `stack`. Give it a `story` (the problem, what it does and,
+if you like, how it's built part by part) and it gets its own page. The tab, the page, the social
+cards, the sitemap, the structured data and the Markdown versions follow on their own.
+
+Only add facts that can be checked: the figures as stated in the CV, the articles as published.
+
+**Demo video.** To show a demo on a project's page, add these files and deploy:
+
+```
+public/work/<id>/demo.mp4    required (H.264)
+public/work/<id>/demo.webm   optional, smaller (VP9 or AV1), served first
+public/work/<id>/demo.png    the poster, the first frame; its size sets the player's shape
+```
+
+For the Sales Copilot that is `public/work/sales-copilot/`. The player appears under the result
+(no autoplay, nothing loads until it is played). Without the files the page shows no player.
+
 ## Spotify now playing
 
 The Personal tab shows what Davi is listening to on Spotify (or the last song played). The page

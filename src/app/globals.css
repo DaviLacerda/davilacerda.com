@@ -481,6 +481,66 @@
 }
 
 /*
+ * Figures that count up (`data-count`, the Projects tab's results, see
+ * `Figure`): the digits are a CSS counter fed by a registered integer, so
+ * the number can count from zero on the very first paint, without
+ * JavaScript and without first flashing its final value. 1.4s on the fluid
+ * curve: most of the way in the first half, then it settles. The final
+ * figure sits invisible in the same grid cell (`::after`), so the box is
+ * exactly its width from the start and the count, right-aligned in it,
+ * moves nothing around it. On the first load it plays with the entrance;
+ * below the fold `Figure` holds it at zero (`wait`) and starts it on view
+ * (`go`). Reduced motion: the final number, still.
+ */
+@property --count {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes count {
+  from {
+    --count: 0;
+  }
+}
+
+[data-count] {
+  --count: var(--count-to);
+  counter-reset: count var(--count);
+  display: inline-grid;
+  justify-items: end;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-count]::before,
+[data-count]::after {
+  grid-area: 1 / 1;
+}
+
+[data-count]::before {
+  content: attr(data-prefix) counter(count) attr(data-suffix);
+}
+
+[data-count]::after {
+  content: attr(data-prefix) attr(data-count) attr(data-suffix);
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-nav]) [data-count]:not([data-count-state]) {
+    animation: count 1400ms var(--ease-fluid) 200ms both;
+  }
+
+  [data-count][data-count-state="wait"] {
+    --count: 0;
+  }
+
+  [data-count][data-count-state="go"] {
+    animation: count 1400ms var(--ease-fluid) both;
+  }
+}
+
+/*
  * Disclosures (`<details class="disclosure">`): the answer or the list below
  * a summary grows open in 240ms ease-out and folds away faster (160ms), and
  * the caret turns with it. Native <details>, so it works without JavaScript;

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { siteConfig } from "@/config/site";
-import { getCertifications, profile } from "@/content/profile";
+import { getCertifications, getProjectPages, profile } from "@/content/profile";
 import {
   getDictionary,
   localeMeta,
@@ -30,6 +30,7 @@ export function profileJson(lang: Locale) {
       self: absoluteUrl(agentPaths.profileJson(lang)),
       html: absoluteUrl(routes.work(lang)),
       markdown: absoluteUrl(markdownPath({ kind: "work", lang })),
+      projects: absoluteUrl(markdownPath({ kind: "projects", lang })),
       jsonResume: absoluteUrl(agentPaths.resume(lang)),
       alternates: Object.fromEntries(
         otherLocales(lang).map((other) => [
@@ -167,8 +168,14 @@ export function jsonResume(lang: Locale) {
         project.award && t(project.award, lang),
         project.metric &&
           `${project.metric.value} ${t(project.metric.label, lang)}`,
+        ...(project.results ?? []).map(
+          (result) => `${t(result.value, lang)} ${t(result.label, lang)}`,
+        ),
       ].filter((value): value is string => Boolean(value)),
       keywords: project.stack,
+      ...(project.story
+        ? { url: absoluteUrl(routes.project(lang, project.id)) }
+        : {}),
       ...(project.year ? { startDate: project.year } : {}),
       ...(project.role ? { roles: [t(project.role, lang)] } : {}),
       ...(project.context ? { entity: project.context } : {}),
@@ -300,6 +307,32 @@ export function openApiDocument(): JsonValue {
         "Work page (résumé) as Markdown",
         "text/markdown",
         { parameters: [langParam] },
+      ),
+      "/{lang}/projects.md": getOperation(
+        "getProjectsMarkdown",
+        "Projects (results, awards, press coverage) as Markdown",
+        "text/markdown",
+        { parameters: [langParam] },
+      ),
+      "/{lang}/projects/{slug}.md": getOperation(
+        "getProjectMarkdown",
+        "One project's page as Markdown",
+        "text/markdown",
+        {
+          parameters: [
+            langParam,
+            {
+              name: "slug",
+              in: "path",
+              required: true,
+              description: "Project id, listed in /{lang}/projects.md.",
+              schema: {
+                type: "string",
+                enum: getProjectPages().map((project) => project.id),
+              },
+            },
+          ],
+        },
       ),
       "/{lang}/personal.md": getOperation(
         "getPersonalMarkdown",

@@ -12,6 +12,11 @@ export const ptBr: Dictionary = {
       description:
         "Pergunte sobre o trabalho de Davi Lacerda: experiência na Algar, o premiado Sales Copilot, certificações Microsoft Expert, habilidades, formação e contato.",
     },
+    projects: {
+      title: "Projetos",
+      description:
+        "O que Davi Lacerda construiu com IA na Algar, e os resultados: o Sales Copilot, Melhor Projeto de IA da América Latina, o Billy, que reduziu em 96% o tempo de revisão manual de faturas, e a imprensa que os cobriu.",
+    },
     personal: {
       title: "Pessoal",
       description:
@@ -40,6 +45,7 @@ export const ptBr: Dictionary = {
 
   nav: {
     work: "Trabalho",
+    projects: "Projetos",
     personal: "Pessoal",
     blog: "Blog",
     contact: "Contato",
@@ -273,6 +279,32 @@ export const ptBr: Dictionary = {
       "Conecta Latam",
       "Melhor Projeto de IA da América Latina",
     ],
+  },
+
+  projects: {
+    title: "Projetos",
+    lead: "O que construí com IA na Algar, e os resultados.",
+    press: "Na mídia",
+    pressNote: "Matérias sobre o projeto, com as manchetes originais.",
+    language: { "pt-BR": "Português", en: "Inglês" },
+    all: "Todos os projetos",
+    next: "Próximo projeto",
+    result: "Resultado",
+    open: "Ver a página do projeto",
+    award: "Prêmio",
+    facts: {
+      company: "Empresa",
+      year: "Ano",
+      role: "Função",
+      access: "Acesso",
+    },
+    problem: "O problema",
+    solution: "O que ele faz",
+    build: "Como foi construído",
+    demo: "Demonstração: {name}",
+    metaTitle: "{name}, {result}",
+    metaDescription: "{summary} {result}. Na mídia: {outlets}.",
+    metaDescriptionNoPress: "{summary} {result}.",
   },
 
   personal: {

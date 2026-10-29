@@ -4,8 +4,12 @@ import { siteConfig } from "@/config/site";
 import { gameProfiles, steam, teams, watching } from "@/content/personal";
 import {
   getCertifications,
+  getPressOutlets,
+  getProjectPage,
+  getProjectPages,
   profile,
   type Certification,
+  type PressLink,
   type Project,
 } from "@/content/profile";
 import {
@@ -19,6 +23,7 @@ import {
 } from "@/i18n";
 import { formatDate, formatDateRange, formatPartialDate } from "@/i18n/format";
 import { getPostTranslations } from "@/lib/blog";
+import { headlineText, projectHeadline, projectMeta } from "@/lib/projects";
 import { routes } from "@/lib/routes";
 import { competitionLabel } from "@/lib/teams/types";
 import { absoluteUrl } from "@/lib/utils";
@@ -167,15 +172,31 @@ function factsList(lang: Locale): string {
     .join("\n");
 }
 
-function projectBlock(project: Project, lang: Locale): string {
-  const dict = getDictionary(lang);
-  const labels = dict.work.labels;
-  const meta = dot(
+/** "Algar · Main developer · 2025 · Private" */
+function projectMetaLine(project: Project, lang: Locale): string {
+  const labels = getDictionary(lang).work.labels;
+  return dot(
     project.context,
     project.role && t(project.role, lang),
     project.year && formatPartialDate(project.year, lang),
     project.isPrivate && labels.privateProject,
   );
+}
+
+/** An article as a list item: headline, outlet, date and language. */
+function pressLine(item: PressLink, lang: Locale, about?: string): string {
+  return `- ${link(item.title, item.url)} (${dot(
+    item.outlet,
+    formatPartialDate(item.date, lang),
+    item.lang,
+    about,
+  )})`;
+}
+
+function projectBlock(project: Project, lang: Locale): string {
+  const dict = getDictionary(lang);
+  const labels = dict.work.labels;
+  const meta = projectMetaLine(project, lang);
   return blocks(
     `### ${t(project.name, lang)}`,
     meta && `*${meta}*`,
@@ -188,12 +209,14 @@ function projectBlock(project: Project, lang: Locale): string {
     project.press?.length
       ? [
           `**${dict.chat.answers.press.title}:**`,
-          ...project.press.map(
-            (item) =>
-              `- ${link(item.title, item.url)} (${dot(item.outlet, formatPartialDate(item.date, lang), item.lang)})`,
-          ),
+          ...project.press.map((item) => pressLine(item, lang)),
         ].join("\n")
       : null,
+    project.story &&
+      `${getAgentLabels(lang).project.page}: ${link(
+        t(project.name, lang),
+        markdownPath({ kind: "project", lang, slug: project.id }),
+      )}`,
   );
 }
 
@@ -485,6 +508,170 @@ export function topicMarkdown(lang: Locale, topic: TopicId): string {
   );
 }
 
+/* -------------------------------------------------------------- Projects */
+
+/** The award (with its event, date, category and source) or the headline figure, then any other results. */
+function projectResults(project: Project, lang: Locale): string {
+  const dict = getDictionary(lang);
+  const labels = getAgentLabels(lang).project;
+  const headline = projectHeadline(project, lang);
+  const lines: string[] = [];
+  if (headline?.kind === "award") {
+    const meta = dot(
+      headline.event ?? headline.issuer,
+      headline.date && formatPartialDate(headline.date, lang),
+    );
+    const more = headline.url
+      ? ` ${link(dict.common.learnMore, headline.url)}`
+      : "";
+    lines.push(
+      `- **${dict.projects.award}:** ${headline.title}${meta ? ` (${meta})` : ""}.${more}`,
+    );
+    if (headline.category) {
+      lines.push(`- **${labels.category}:** ${headline.category}`);
+    }
+  } else if (headline) {
+    lines.push(`- **${labels.result}:** ${headlineText(headline)}`);
+  }
+  for (const result of project.results ?? []) {
+    lines.push(
+      `- **${labels.result}:** ${t(result.value, lang)} ${t(result.label, lang)}`,
+    );
+  }
+  return lines.join("\n");
+}
+
+/** Links to the other project pages, each with its headline. */
+function projectLinks(lang: Locale, except?: string): string {
+  return getProjectPages()
+    .filter((project) => project.id !== except)
+    .map((project) => {
+      const headline = headlineText(projectHeadline(project, lang));
+      return `- ${link(
+        t(project.name, lang),
+        markdownPath({ kind: "project", lang, slug: project.id }),
+      )}${headline ? `: ${headline}` : ""}`;
+    })
+    .join("\n");
+}
+
+/**
+ * The Projects tab: every outlet that covered a project, then each project
+ * told by its result (projects with a page link to it).
+ */
+export function projectsMarkdown(lang: Locale): string {
+  const dict = getDictionary(lang);
+  const labels = getAgentLabels(lang);
+  const page: PageRef = { kind: "projects", lang };
+  const htmlPath = routes.projects(lang);
+
+  // Every article once, newest first, each with the project it covers.
+  const press = getPressOutlets()
+    .flatMap((outlet) => outlet.articles)
+    .sort((x, y) => y.date.localeCompare(x.date))
+    .map((article) =>
+      pressLine(
+        article,
+        lang,
+        interpolate(labels.project.about_project, {
+          name: t(article.project.name, lang),
+        }),
+      ),
+    );
+
+  return blocks(
+    frontmatter({
+      title: `${dict.meta.projects.title} | ${dict.meta.siteName}`,
+      description: dict.meta.projects.description,
+      url: absoluteUrl(htmlPath),
+      lang: localeMeta[lang].htmlLang,
+      updated: profileLastModified(),
+      alternates: alternateMarkdownUrls(page),
+    }),
+    `# ${interpolate(labels.projectsTitle, { name: profile.name })}`,
+    `> ${dict.meta.projects.description}`,
+    press.length > 0 && blocks(`## ${dict.projects.press}`, press.join("\n")),
+    ...profile.projects.map((project) => {
+      const meta = projectMetaLine(project, lang);
+      return blocks(
+        `## ${t(project.name, lang)}`,
+        meta && `*${meta}*`,
+        projectResults(project, lang),
+        t(project.description, lang),
+        project.stack.length > 0 &&
+          `**${dict.work.labels.stack}:** ${project.stack.join(", ")}`,
+        project.story &&
+          `${labels.project.page}: ${link(
+            t(project.name, lang),
+            markdownPath({ kind: "project", lang, slug: project.id }),
+          )}`,
+      );
+    }),
+    documentFooter(page, htmlPath),
+  );
+}
+
+/** One project's page: its result, the problem, what it does, how it's built and its press. */
+export function projectMarkdown(lang: Locale, project: Project): string {
+  const dict = getDictionary(lang);
+  const p = dict.projects;
+  const labels = getAgentLabels(lang);
+  const page: PageRef = { kind: "project", lang, slug: project.id };
+  const htmlPath = routes.project(lang, project.id);
+  const meta = projectMeta(project, lang);
+  const story = project.story;
+  const others = projectLinks(lang, project.id);
+
+  return blocks(
+    frontmatter({
+      title: `${meta.title} | ${dict.meta.siteName}`,
+      description: meta.description,
+      author: profile.name,
+      url: absoluteUrl(htmlPath),
+      lang: localeMeta[lang].htmlLang,
+      updated: profileLastModified(),
+      keywords: meta.keywords,
+      alternates: alternateMarkdownUrls(page),
+    }),
+    `# ${t(project.name, lang)}`,
+    project.summary && `> ${t(project.summary, lang)}`,
+    `*${projectMetaLine(project, lang)}*`,
+    projectResults(project, lang),
+    `## ${labels.project.about}`,
+    t(project.description, lang),
+    // As on the page: the press right after the result.
+    project.press?.length
+      ? blocks(
+          `## ${p.press}`,
+          p.pressNote,
+          project.press.map((item) => pressLine(item, lang)).join("\n"),
+        )
+      : null,
+    story && `## ${p.problem}`,
+    story && t(story.problem, lang),
+    story && `## ${p.solution}`,
+    story &&
+      t(story.solution, lang)
+        .map((item) => `- ${item}`)
+        .join("\n"),
+    `## ${p.build}`,
+    story?.build?.length
+      ? story.build
+          .map(
+            (layer) =>
+              `- **${t(layer.part, lang)}:** ${layer.stack.join(", ")}`,
+          )
+          .join("\n")
+      : null,
+    project.stack.length > 0 &&
+      `**${dict.work.labels.stack}:** ${project.stack.join(", ")}`,
+    others && `## ${labels.project.otherProjects}`,
+    others,
+    `${p.all}: ${link(dict.meta.projects.title, markdownPath({ kind: "projects", lang }))} · ${labels.post.aboutAuthor}: ${link(profile.name, markdownPath({ kind: "work", lang }))}`,
+    documentFooter(page, htmlPath),
+  );
+}
+
 /* --------------------------------------------------------- Personal page */
 
 function postListItem(post: RawPost): string {
@@ -638,6 +825,11 @@ export function pageMarkdown(page: PageRef): string | null {
   if (page.kind === "work") return workMarkdown(page.lang);
   if (page.kind === "topic") return topicMarkdown(page.lang, page.topic);
   if (page.kind === "personal") return personalMarkdown(page.lang);
+  if (page.kind === "projects") return projectsMarkdown(page.lang);
+  if (page.kind === "project") {
+    const project = getProjectPage(page.slug);
+    return project ? projectMarkdown(page.lang, project) : null;
+  }
   const post = getRawPost(page.lang, page.slug);
   return post ? postMarkdown(post) : null;
 }
@@ -667,9 +859,14 @@ export function llmsTxt(): string {
     [
       `- ${link(labels.workEn, markdownPath({ kind: "work", lang: "en" }))}: ${labels.workDesc}`,
       `- ${link(labels.workPt, markdownPath({ kind: "work", lang: "pt-br" }))}: ${getDictionary("pt-br").meta.work.description}`,
+      `- ${link(labels.projectsEn, markdownPath({ kind: "projects", lang: "en" }))}: ${labels.projectsDesc}`,
+      `- ${link(labels.projectsPt, markdownPath({ kind: "projects", lang: "pt-br" }))}: ${getDictionary("pt-br").meta.projects.description}`,
       `- ${link(labels.personalEn, markdownPath({ kind: "personal", lang: "en" }))}: ${labels.personalDesc}`,
       `- ${link(labels.personalPt, markdownPath({ kind: "personal", lang: "pt-br" }))}: ${getDictionary("pt-br").meta.personal.description}`,
     ].join("\n"),
+    `## ${labels.projects}`,
+    labels.projectsIntro,
+    projectLinks("en"),
     `## ${labels.topics}`,
     labels.topicsIntro,
     topicLinks("en"),
@@ -704,6 +901,16 @@ export function llmsFullTxt(): string {
       url: markdownPath({ kind: "work", lang }),
       body: workMarkdown(lang),
     })),
+    ...locales.flatMap((lang) => [
+      {
+        url: markdownPath({ kind: "projects", lang }),
+        body: projectsMarkdown(lang),
+      },
+      ...getProjectPages().map((project) => ({
+        url: markdownPath({ kind: "project", lang, slug: project.id }),
+        body: projectMarkdown(lang, project),
+      })),
+    ]),
     ...locales.map((lang) => ({
       url: markdownPath({ kind: "personal", lang }),
       body: personalMarkdown(lang),
@@ -719,7 +926,7 @@ export function llmsFullTxt(): string {
   const header = blocks(
     `# ${profile.name}: full context`,
     `> ${t(profile.tldr, "en")}`,
-    `This file concatenates every Markdown page of ${siteConfig.url} (profile and personal pages in English and Brazilian Portuguese, then every blog post). Each section starts with its source URL. Index: ${absoluteUrl(agentPaths.llms)}. Last updated: ${profileLastModified()}.`,
+    `This file concatenates every Markdown page of ${siteConfig.url} (profile, projects and personal pages in English and Brazilian Portuguese, then every blog post). Each section starts with its source URL. Index: ${absoluteUrl(agentPaths.llms)}. Last updated: ${profileLastModified()}.`,
   );
 
   return `${[
