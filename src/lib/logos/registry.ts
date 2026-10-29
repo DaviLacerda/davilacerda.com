@@ -7,8 +7,9 @@
  *
  * The rule, applied everywhere: a logo keeps its brand colours, except marks
  * whose brand colour is black or white (GitHub, GitHub Copilot, LangChain,
- * Next.js, Vercel, Instagram's glyph, MCP), which take the ink colour so they
- * flip with the theme.
+ * Next.js, Vercel, Instagram's glyph, MCP, OpenAI, Anthropic) or near-black
+ * (AWS, whose wordmark would vanish on the dark theme), which take the ink
+ * colour so they flip with the theme.
  *
  * `names` are the strings used in `src/content/profile.ts` (stacks and skill
  * lists) that should show this logo; matching ignores case.
@@ -39,6 +40,32 @@ export const logoRegistry = {
     names: ["Azure", "Microsoft Azure", "Azure OpenAI", "Azure AI Foundry"],
   },
   microsoft: { icon: "logos:microsoft-icon", label: "Microsoft" },
+  // Model providers and the other clouds (Azure stays the main one).
+  openai: {
+    icon: "simple-icons:openai",
+    label: "OpenAI",
+    names: ["OpenAI", "OpenAI GPT"],
+  },
+  anthropic: {
+    icon: "simple-icons:anthropic",
+    label: "Anthropic",
+    names: ["Anthropic", "Anthropic Claude"],
+  },
+  gemini: {
+    icon: "logos:google-gemini-icon",
+    label: "Gemini",
+    names: ["Google Gemini", "Gemini"],
+  },
+  gcp: {
+    icon: "logos:google-cloud",
+    label: "Google Cloud",
+    names: ["Google Cloud (GCP)", "Google Cloud", "GCP"],
+  },
+  aws: {
+    icon: "simple-icons:amazonwebservices",
+    label: "AWS",
+    names: ["Amazon Web Services (AWS)", "Amazon Web Services", "AWS"],
+  },
   vercel: { icon: "simple-icons:vercel", label: "Vercel", names: ["Vercel"] },
   python: { icon: "logos:python", label: "Python", names: ["Python"] },
   typescript: {

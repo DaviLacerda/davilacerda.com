@@ -175,11 +175,15 @@ export function timezoneOffset(lang: Locale): string {
 }
 
 /**
- * Logo wall order: the platform first, then languages, the AI tooling,
- * frameworks, data and tools. The first eight are the skills card's row.
+ * Logo wall order: the platform first, the model providers, then languages,
+ * the AI tooling, frameworks, data, the other clouds and tools. The first
+ * eight are the skills card's row.
  */
 const WALL_ORDER: LogoId[] = [
   "azure",
+  "openai",
+  "anthropic",
+  "gemini",
   "python",
   "typescript",
   "mcp",
@@ -194,6 +198,8 @@ const WALL_ORDER: LogoId[] = [
   "tailwind",
   "postgresql",
   "supabase",
+  "gcp",
+  "aws",
   "vercel",
   "java",
   "spring",

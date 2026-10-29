@@ -612,7 +612,8 @@ export const profile: Profile = {
   // development, machine learning, UI/UX design, automation, FinOps, Agile, MCP (interest).
   // Davi's CV (October 2026) adds the agent frameworks, Azure OpenAI and AI Foundry,
   // Copilot Studio and Power Automate, LLM-as-a-judge, Claude Code and GitHub Copilot,
-  // scikit-learn, Svelte and .NET (the Sales Copilot).
+  // scikit-learn, Svelte and .NET (the Sales Copilot). Davi (October 2026): models from
+  // OpenAI, Anthropic and Google (Gemini); Azure is his main cloud, and he also knows GCP and AWS.
   skills: [
     {
       id: "llm",
@@ -623,6 +624,9 @@ export const profile: Profile = {
         "Multi-agent systems",
         "Azure OpenAI",
         "Azure AI Foundry",
+        "OpenAI GPT",
+        "Anthropic Claude",
+        "Google Gemini",
         "AI SDK",
         "Mastra",
         "LangGraph",
@@ -689,6 +693,8 @@ export const profile: Profile = {
       title: { en: "Cloud & tooling", "pt-br": "Cloud e ferramentas" },
       skills: [
         "Microsoft Azure",
+        "Google Cloud (GCP)",
+        "Amazon Web Services (AWS)",
         "Copilot Studio",
         "Power Automate",
         "RPA",
@@ -963,9 +969,57 @@ export const profile: Profile = {
         "pt-br": "Qual é o stack de tecnologia do Davi?",
       },
       answer: {
-        en: "Generative AI and AI agents on Azure OpenAI and Azure AI Foundry, built with Mastra, LangGraph, CrewAI and the AI SDK, in TypeScript and Python, and evaluated with LLM-as-a-judge benchmarks; Copilot Studio and Power Automate for agents inside Microsoft 365; full-stack web development with Next.js, React, Svelte and .NET; and AI-assisted engineering with Claude Code, GitHub Copilot and MCP.",
+        en: "Generative AI and AI agents on Azure OpenAI and Azure AI Foundry, with models from OpenAI (GPT), Anthropic (Claude) and Google (Gemini), built with Mastra, LangGraph, CrewAI and the AI SDK, in TypeScript and Python, and evaluated with LLM-as-a-judge benchmarks; Copilot Studio and Power Automate for agents inside Microsoft 365; full-stack web development with Next.js, React, Svelte and .NET; and AI-assisted engineering with Claude Code, GitHub Copilot and MCP. Azure is his main cloud; he also works with Google Cloud (GCP) and AWS.",
         "pt-br":
-          "IA Generativa e agentes de IA no Azure OpenAI e no Azure AI Foundry, construídos com Mastra, LangGraph, CrewAI e AI SDK, em TypeScript e Python, e avaliados com benchmarks de LLM como juiz (LLM-as-a-judge); Copilot Studio e Power Automate para agentes dentro do Microsoft 365; desenvolvimento web full-stack com Next.js, React, Svelte e .NET; e engenharia assistida por IA com Claude Code, GitHub Copilot e MCP.",
+          "IA Generativa e agentes de IA no Azure OpenAI e no Azure AI Foundry, com modelos da OpenAI (GPT), da Anthropic (Claude) e do Google (Gemini), construídos com Mastra, LangGraph, CrewAI e AI SDK, em TypeScript e Python, e avaliados com benchmarks de LLM como juiz (LLM-as-a-judge); Copilot Studio e Power Automate para agentes dentro do Microsoft 365; desenvolvimento web full-stack com Next.js, React, Svelte e .NET; e engenharia assistida por IA com Claude Code, GitHub Copilot e MCP. O Azure é a sua nuvem principal; ele também trabalha com Google Cloud (GCP) e AWS.",
+      },
+    },
+    {
+      id: "ai-models",
+      question: {
+        en: "Which AI models has Davi worked with?",
+        "pt-br": "Com quais modelos de IA o Davi já trabalhou?",
+      },
+      answer: {
+        en: "Davi has built with models from OpenAI (GPT, on Azure OpenAI), Anthropic (Claude) and Google (Gemini). He created an LLM-as-a-judge benchmarking approach so model decisions rest on measured accuracy, and led a move to newer generative AI models across several projects that cut costs by more than 40% with no loss in accuracy.",
+        "pt-br":
+          "Davi já construiu com modelos da OpenAI (GPT, no Azure OpenAI), da Anthropic (Claude) e do Google (Gemini). Ele criou uma abordagem de benchmarking com LLM como juiz (LLM-as-a-judge) para que as decisões sobre modelos se apoiem em acurácia medida, e liderou a migração para modelos de IA Generativa mais novos em vários projetos, reduzindo custos em mais de 40% sem perda de acurácia.",
+      },
+    },
+    {
+      id: "cloud",
+      question: {
+        en: "Which cloud platforms does Davi know?",
+        "pt-br": "Quais plataformas de nuvem o Davi conhece?",
+      },
+      answer: {
+        en: "Microsoft Azure is his specialty: he builds on Azure OpenAI and Azure AI Foundry at Algar and holds three Microsoft certifications in agentic AI, multi-agent solutions and Azure AI apps and agents. He also works with Google Cloud (GCP) and Amazon Web Services (AWS).",
+        "pt-br":
+          "O Microsoft Azure é a sua especialidade: ele constrói no Azure OpenAI e no Azure AI Foundry na Algar e tem três certificações Microsoft em IA agêntica, soluções multiagente e apps e agentes de IA no Azure. Ele também trabalha com Google Cloud (GCP) e Amazon Web Services (AWS).",
+      },
+    },
+    {
+      id: "agents-in-production",
+      question: {
+        en: "Has Davi built AI agents in production?",
+        "pt-br": "Davi já colocou agentes de IA em produção?",
+      },
+      answer: {
+        en: "Yes. At Algar he built Bud, an agent made with Copilot Studio, Power Automate and a message broker that lets Microsoft Teams users request SAP reports and actions through RPA; it cut the projects team's workload by 40%. He builds AI agents and automations for complex workflows with Mastra, LangGraph, CrewAI and the AI SDK, on Azure OpenAI and Azure AI Foundry, and is a Microsoft Certified: Multi-Agent AI Solutions Expert.",
+        "pt-br":
+          "Sim. Na Algar ele construiu o Bud, um agente criado com Copilot Studio, Power Automate e message broker que permite a usuários do Microsoft Teams solicitar relatórios e ações no SAP via RPA; ele reduziu em 40% a carga de trabalho da área de projetos. Davi desenvolve agentes de IA e automações para fluxos complexos com Mastra, LangGraph, CrewAI e AI SDK, no Azure OpenAI e no Azure AI Foundry, e é Microsoft Certified: Multi-Agent AI Solutions Expert.",
+      },
+    },
+    {
+      id: "mcp",
+      question: {
+        en: "Does Davi work with the Model Context Protocol (MCP)?",
+        "pt-br": "Davi trabalha com o Model Context Protocol (MCP)?",
+      },
+      answer: {
+        en: "Yes. Since May 2026 he has led the adoption of Claude Code and GitHub Copilot across Algar's engineering teams, training developers in Skills, MCP and AI-assisted engineering. He completed DeepLearning.AI's MCP: Build Rich-Context AI Apps with Anthropic course (August 2025), and his own site runs a read-only MCP server at davilacerda.com/mcp.",
+        "pt-br":
+          "Sim. Desde maio de 2026 ele lidera a adoção do Claude Code e do GitHub Copilot entre os times de engenharia da Algar, capacitando pessoas desenvolvedoras em Skills, MCP e engenharia assistida por IA. Concluiu o curso MCP: Build Rich-Context AI Apps with Anthropic, da DeepLearning.AI (agosto de 2025), e o seu próprio site tem um servidor MCP somente leitura em davilacerda.com/mcp.",
       },
     },
     {
@@ -990,6 +1044,18 @@ export const profile: Profile = {
         en: "Billy is a generative AI app at Algar that automates the analysis and validation of telecom invoices, extracting and interpreting contract data with Azure OpenAI and RPA. It cut manual review time by 96% and saved millions in operating costs.",
         "pt-br":
           "O Billy é uma aplicação de IA Generativa da Algar que automatiza a análise e a validação de faturas de telecom, extraindo e interpretando dados de contratos com Azure OpenAI e RPA. Reduziu o tempo de revisão manual em 96% e gerou economia de milhões em custos operacionais.",
+      },
+    },
+    {
+      id: "results",
+      question: {
+        en: "What results has Davi's AI work delivered?",
+        "pt-br": "Que resultados o trabalho de IA do Davi já entregou?",
+      },
+      answer: {
+        en: "At Algar, the Sales Copilot, which he built as main developer, won Best AI Project in LATAM at the Conecta Latam awards (December 2025); Billy cut manual invoice review time by 96% and saved millions in operating costs; Bud cut the projects team's workload by 40%; and a move to newer generative AI models cut costs by more than 40% with no loss in accuracy.",
+        "pt-br":
+          "Na Algar, o Sales Copilot, do qual foi o principal desenvolvedor, venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam (dezembro de 2025); o Billy reduziu em 96% o tempo de revisão manual de faturas e gerou economia de milhões em custos operacionais; o Bud reduziu em 40% a carga de trabalho da área de projetos; e a migração para modelos de IA Generativa mais novos cortou mais de 40% dos custos sem perda de acurácia.",
       },
     },
     {
