@@ -4,6 +4,7 @@ import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 
 import { Piece } from "@/components/chat/piece";
+import { AsciiBackdrop } from "@/components/ui/ascii-backdrop";
 import { LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { profile } from "@/content/profile";
@@ -78,8 +79,9 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
             as="section"
             tone="ink"
             aria-labelledby="award-title"
-            className="flex min-h-[19rem] flex-col justify-between gap-16 sm:min-h-[25rem] sm:p-10"
+            className="relative isolate flex min-h-[19rem] flex-col justify-between gap-16 overflow-hidden sm:min-h-[25rem] sm:p-10"
           >
+            <AsciiBackdrop scene="copilot" tone="ink" clear />
             <p className="flex items-center justify-between gap-4 text-small text-on-ink-muted">
               <span className="inline-flex items-center gap-2.5">
                 <TrophyIcon aria-hidden="true" className="size-6 text-on-ink" />

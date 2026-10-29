@@ -277,6 +277,8 @@ export const en = {
       courses: "Also completed",
       stack: "Stack",
       highlights: "Highlights",
+      /** The disclosure under a job's first highlights: "Show 4 more". */
+      moreHighlights: "Show {count} more",
       role: "Role",
       location: "Location",
       privateProject: "Private",

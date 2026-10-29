@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { Piece } from "@/components/chat/piece";
+import { AsciiBackdrop } from "@/components/ui/ascii-backdrop";
 import { CopyButton } from "@/components/ui/copy-button";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { LogoTile } from "@/components/ui/logo";
@@ -38,7 +39,15 @@ export function CertificationsAnswer({ lang }: { lang: Locale }) {
   return (
     <>
       {credentials.length ? (
-        <Piece i={2} className="mt-8 flex flex-wrap items-end gap-x-8 gap-y-3">
+        <Piece
+          i={2}
+          className="relative isolate mt-8 flex flex-wrap items-end gap-x-8 gap-y-3"
+        >
+          <AsciiBackdrop
+            scene="agents"
+            clear
+            className="-inset-y-6 h-[calc(100%+3rem)] max-sm:hidden"
+          />
           <p className="text-figure font-semibold" aria-hidden="true">
             {summary.count}×
           </p>

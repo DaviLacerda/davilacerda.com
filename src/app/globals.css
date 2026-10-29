@@ -250,6 +250,21 @@
   }
 }
 
+/*
+ * A navy brand mark (`tint` in the logo registry: Brain, UFU) keeps its colour
+ * on light grounds and takes the ground's ink on dark ones, where navy would
+ * vanish: in dark mode, and on an ink tile in light mode (`data-ground="ink"`).
+ */
+@utility logo-tint {
+  color: var(--logo-tint);
+  :where(.dark, [data-ground="ink"]) & {
+    color: inherit;
+  }
+  :where(.dark [data-ground="ink"]) & {
+    color: var(--logo-tint);
+  }
+}
+
 /* ---------------------------------------------------------------------------
  * 3. Base
  * ------------------------------------------------------------------------- */

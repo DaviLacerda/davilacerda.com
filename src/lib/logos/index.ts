@@ -31,7 +31,13 @@ export function techLogo(name: string): LogoId | undefined {
   return byName.get(name.toLowerCase());
 }
 
-export type LogoSvg = { label: string; viewBox: string; body: string };
+export type LogoSvg = {
+  label: string;
+  viewBox: string;
+  body: string;
+  /** A dark brand colour the mark takes on light grounds only (see `tint` in the registry). */
+  tint?: string;
+};
 
 /** SVG data for a bundled logo, ready to inline (server only; nothing reaches the client bundle). */
 export function getLogoSvg(id: LogoId): LogoSvg {
@@ -49,6 +55,7 @@ export function getLogoSvg(id: LogoId): LogoSvg {
     label: spec.label,
     viewBox: attributes.viewBox,
     body: "color" in spec ? body.replaceAll("currentColor", spec.color) : body,
+    ...("tint" in spec ? { tint: spec.tint } : {}),
   };
 }
 
