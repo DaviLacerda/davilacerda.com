@@ -10,6 +10,7 @@ import { Games } from "@/components/personal/games";
 import { Interests } from "@/components/personal/interests";
 import { NowPlayingCard } from "@/components/personal/now-playing";
 import { tileClass, TileTitle } from "@/components/personal/parts";
+import { SoundToggle } from "@/components/personal/sound-toggle";
 import { TeamsBoard } from "@/components/personal/teams";
 import { WatchingTile } from "@/components/personal/watching";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -154,7 +155,12 @@ export default async function PersonalPage({ params }: PageProps) {
           className="col-span-2 sm:col-span-6 lg:col-span-4 lg:col-start-5 lg:row-start-2"
         />
 
-        <Tile id="teams" enter={4} title={dict.personal.teams.title}>
+        <Tile
+          id="teams"
+          enter={4}
+          title={dict.personal.teams.title}
+          aside={<SoundToggle label={dict.personal.teams.sound} />}
+        >
           <TeamsBoard
             teams={teams.map((team) => ({
               id: team.id,
@@ -163,6 +169,8 @@ export default async function PersonalPage({ params }: PageProps) {
               sport: team.sport,
               league: team.league,
               logo: team.logo,
+              ascii: team.ascii,
+              sfx: team.sfx,
               game: null,
             }))}
             lang={lang}
@@ -208,12 +216,15 @@ function Tile({
   id,
   enter,
   title,
+  aside,
   children,
 }: {
   id: string;
   /** Place in the entrance (see `Reveal`). */
   enter: number;
   title: string;
+  /** A small control at the end of the title's line (the teams' sound toggle). */
+  aside?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -224,9 +235,12 @@ function Tile({
       enter={enter}
       className={cn(tileClass, "col-span-2 scroll-mt-8 sm:col-span-12")}
     >
-      <TileTitle as="h2" id={`${id}-title`}>
-        {title}
-      </TileTitle>
+      <div className="flex h-5 items-center justify-between gap-4">
+        <TileTitle as="h2" id={`${id}-title`}>
+          {title}
+        </TileTitle>
+        {aside ? <div className="-mr-1.5 sm:-mr-2">{aside}</div> : null}
+      </div>
       {children}
     </Reveal>
   );

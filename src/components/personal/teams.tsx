@@ -3,10 +3,20 @@
 import { AnimatePresence, useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
 import Image from "next/image";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+  type PointerEvent,
+  type ReactNode,
+} from "react";
 
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/i18n/config";
+import type { AsciiScene } from "@/lib/ascii/types";
+import { cueSfx, hushSfx, playSfx, unlockAudio } from "@/lib/sfx/player";
+import type { SfxId } from "@/lib/sfx/types";
 import {
   articles,
   competitionLabel,
@@ -20,15 +30,25 @@ import {
 } from "@/lib/teams/types";
 import { cn } from "@/lib/utils";
 
+import { AsciiBackdrop } from "./ascii-backdrop";
 import { fill, fillNodes, liveUrl, LiveDot } from "./parts";
+import { useSoundsOn } from "./sound-toggle";
 
 export type TeamsStrings = Dictionary["personal"]["teams"] & {
   opensInNewTab: string;
 };
 
+/** A team as the page passes it: its status before the first answer, and its card's effects. */
+export type BoardTeam = TeamStatus & {
+  /** The ASCII animation behind the card. */
+  ascii?: AsciiScene;
+  /** The sound on hover, focus or tap, when sounds are on. */
+  sfx?: SfxId;
+};
+
 type TeamsBoardProps = {
   /** The teams from `src/content/personal.ts` (`game: null`): what shows before the first answer. */
-  teams: TeamStatus[];
+  teams: BoardTeam[];
   lang: Locale;
   /** `Intl` locale for dates and times. */
   locale: string;
@@ -246,6 +266,9 @@ function describe(
  *   the new one rising out of a 3px blur (280ms ease-out; reduced motion:
  *   a fade). A game going live or ending is announced politely.
  * - Each card links to the game on espn.com when there is one.
+ * - Behind each card, its team's ASCII animation (`AsciiBackdrop`), calm,
+ *   livelier while the card is hovered, focused or tapped; with the sounds
+ *   on (`SoundToggle`), the same moments play the team's sound.
  */
 export function TeamsBoard({ teams, lang, locale, strings }: TeamsBoardProps) {
   const [{ data, at, failed, previous }, setState] = useState<State>({
@@ -384,6 +407,61 @@ function announce(
 
 /* ------------------------------------------------------------- Card */
 
+/** How long a tap keeps a card lively on a touch screen. */
+const TAP_MS = 1600;
+
+/**
+ * A card's hover, focus and tap: `active` while pointed at (mouse or pen),
+ * focused from the keyboard, or for a moment after a tap; and the team's
+ * sound at those moments when sounds are on. Hover and focus cue the sound
+ * after a short dwell and stop it on leaving; a tap plays it at once (the tap
+ * is the gesture that lets audio start), and the card still opens the game.
+ */
+function useCardMoments(sound: SfxId | undefined) {
+  const soundsOn = useSoundsOn();
+  const [active, setActive] = useState(false);
+  const tap = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(tap.current), []);
+
+  function start() {
+    window.clearTimeout(tap.current);
+    setActive(true);
+    if (soundsOn && sound) cueSfx(sound);
+  }
+
+  function end() {
+    setActive(false);
+    hushSfx();
+  }
+
+  return {
+    active,
+    handlers: {
+      onPointerEnter(event: PointerEvent<HTMLElement>) {
+        if (event.pointerType !== "touch") start();
+      },
+      onPointerLeave(event: PointerEvent<HTMLElement>) {
+        if (event.pointerType !== "touch") end();
+      },
+      onFocus(event: FocusEvent<HTMLElement>) {
+        if (event.currentTarget.matches(":focus-visible")) start();
+      },
+      onBlur: end,
+      onPointerUp(event: PointerEvent<HTMLElement>) {
+        if (event.pointerType !== "touch") return;
+        setActive(true);
+        window.clearTimeout(tap.current);
+        tap.current = window.setTimeout(() => setActive(false), TAP_MS);
+        if (soundsOn && sound) {
+          unlockAudio();
+          playSfx(sound);
+        }
+      },
+    },
+  };
+}
+
 function TeamCard({
   team,
   game,
@@ -393,7 +471,7 @@ function TeamCard({
   strings,
   now,
 }: {
-  team: TeamStatus;
+  team: BoardTeam;
   game: Game | null;
   mode: "loading" | "ready" | "failed";
   lang: Locale;
@@ -401,6 +479,7 @@ function TeamCard({
   strings: TeamsStrings;
   now: number;
 }) {
+  const { active, handlers } = useCardMoments(team.sfx);
   const competition = competitionLabel(game?.competition ?? team.league, lang);
   const logo = game?.team.logo ?? team.logo;
   const outcome = game ? outcomeOf(game) : null;
@@ -500,6 +579,7 @@ function TeamCard({
 
   const body = (
     <>
+      {team.ascii ? <AsciiBackdrop scene={team.ascii} active={active} /> : null}
       <span className="flex items-center gap-4">
         <TeamMark
           logo={logo}
@@ -532,8 +612,9 @@ function TeamCard({
 
   // Stacked on a phone and in the three columns from 1024px; in between, a
   // row: the team on the left, the game on the right.
+  // The animation sits under the content, clipped to the card's corners.
   const className =
-    "block h-full rounded-surface p-3 sm:grid sm:grid-cols-2 sm:items-center sm:gap-6 sm:p-4 lg:block";
+    "relative isolate block h-full overflow-hidden rounded-surface p-3 sm:grid sm:grid-cols-2 sm:items-center sm:gap-6 sm:p-4 lg:block";
   return game?.url ? (
     <a
       href={game.url}
@@ -541,6 +622,7 @@ function TeamCard({
       rel="noopener noreferrer"
       aria-label={`${label} (${strings.opensInNewTab})`}
       className={cn(className, "pressable-panel hover:bg-surface-strong")}
+      {...handlers}
     >
       {body}
     </a>
@@ -550,6 +632,7 @@ function TeamCard({
       aria-label={label}
       aria-busy={mode === "loading"}
       className={className}
+      {...handlers}
     >
       {body}
     </div>

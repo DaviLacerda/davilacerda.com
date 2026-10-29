@@ -343,6 +343,8 @@ export const en = {
     /** Live or last results of Davi's teams (src/content/personal.ts, /api/teams). */
     teams: {
       title: "My teams",
+      /** The speaker beside the title (a toggle): each card's sound on hover, focus or tap. */
+      sound: "Team sounds",
       live: "Live",
       /** `{when}` is "today", "yesterday" or a short date. */
       final: "Final, {when}",

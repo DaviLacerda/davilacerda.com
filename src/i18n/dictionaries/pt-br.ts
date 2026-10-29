@@ -299,6 +299,7 @@ export const ptBr: Dictionary = {
     },
     teams: {
       title: "Meus times",
+      sound: "Sons dos times",
       live: "Ao vivo",
       final: "Encerrado, {when}",
       quarter: "{n}º quarto",

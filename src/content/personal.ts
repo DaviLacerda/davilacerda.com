@@ -12,12 +12,16 @@
  *   open site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/<abbr>
  *   (football/nfl for the NFL) and read `team.id`. Scores come from ESPN's
  *   public site API through `/api/teams` (see ARCHITECTURE.md, "My teams").
+ *   `ascii` picks the card's animated background and `sfx` its sound
+ *   (`basketball`, `soccer` or `longship`; `court`, `crowd` or `horn`).
  * - Games: Steam needs `STEAM_API_KEY` for the live part, Valorant
  *   `HENRIK_API_KEY` and Rainbow Six Siege `R6DATA_API_KEY` for their rank
  *   and stats (see README, "Games"); without a key a game is a link card.
  */
 import type { Localizable } from "@/i18n";
+import type { AsciiScene } from "@/lib/ascii/types";
 import type { LogoId } from "@/lib/logos/registry";
+import type { SfxId } from "@/lib/sfx/types";
 
 /* ---------------------------------------------------------------- Watching */
 
@@ -71,6 +75,10 @@ export type Team = {
   espnId: string;
   /** Shown before the scores load and when ESPN cannot be reached. */
   logo: TeamLogo;
+  /** The ASCII animation behind the card (`src/lib/ascii/scenes`); none without it. */
+  ascii?: AsciiScene;
+  /** The sound on hover, focus or tap when sounds are on (`src/lib/sfx`); none without it. */
+  sfx?: SfxId;
 };
 
 /** A team logo on ESPN's CDN: `espnLogo("nba", "bkn")`, `espnLogo("soccer", "874")`. */
@@ -90,6 +98,8 @@ export const teams: Team[] = [
     league: "nba",
     espnId: "17",
     logo: espnLogo("nba", "bkn"),
+    ascii: "basketball",
+    sfx: "court",
   },
   {
     id: "corinthians",
@@ -99,6 +109,8 @@ export const teams: Team[] = [
     league: "bra.1",
     espnId: "874",
     logo: espnLogo("soccer", "874"),
+    ascii: "soccer",
+    sfx: "crowd",
   },
   {
     id: "vikings",
@@ -108,6 +120,8 @@ export const teams: Team[] = [
     league: "nfl",
     espnId: "16",
     logo: espnLogo("nfl", "min"),
+    ascii: "longship",
+    sfx: "horn",
   },
 ];
 
