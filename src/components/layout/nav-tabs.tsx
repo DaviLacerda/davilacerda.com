@@ -16,9 +16,9 @@ type NavTabsProps = {
 };
 
 /**
- * Work / Personal tabs, set as one small island: a round surface holding
- * both tabs, 4px in. The active tab sits on a page-coloured pill that slides to
- * the other tab (a shared `layoutId`, 0.3s spring without bounce), so the
+ * Work / Projects / Personal tabs, set as one small island: a round surface
+ * holding the tabs, 4px in. The active tab sits on a page-coloured pill that slides to
+ * the next tab (a shared `layoutId`, 0.3s spring without bounce), so the
  * switch reads as one control changing state rather than two links. The pill
  * moves on click, before the next page has loaded, so the tab answers at
  * once; the URL takes over when the navigation lands.
@@ -35,8 +35,12 @@ export function NavTabs({ lang, labels, ariaLabel }: NavTabsProps) {
   const current = pending && pending.from === pathname ? pending.tab : fromUrl;
 
   return (
-    <nav aria-label={ariaLabel}>
-      <ul className="flex items-center gap-1 rounded-full bg-surface p-1">
+    // Below 640px: the header's second row, three equal tabs across it.
+    <nav
+      aria-label={ariaLabel}
+      className="order-last w-full sm:order-none sm:w-auto"
+    >
+      <ul className="grid grid-cols-3 items-center gap-1 rounded-full bg-surface p-1 sm:flex">
         {tabs.map((tab) => {
           const href = tab.href(lang);
           const isActive = tab.id === fromUrl;
@@ -62,7 +66,7 @@ export function NavTabs({ lang, labels, ariaLabel }: NavTabsProps) {
                     setPending({ tab: tab.id, from: pathname });
                 }}
                 className={cn(
-                  "relative inline-flex h-8 pressable items-center rounded-full px-4 text-small font-semibold",
+                  "relative flex h-8 pressable items-center justify-center rounded-full px-4 text-small font-semibold sm:inline-flex",
                   showPill
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",

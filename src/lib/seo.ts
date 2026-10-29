@@ -3,19 +3,30 @@ import type {
   BlogLeaf,
   BlogPostingLeaf,
   BreadcrumbListLeaf,
+  CollectionPageLeaf,
+  CreativeWorkLeaf,
   EducationalOccupationalCredential,
   FAQPageLeaf,
+  ItemPageLeaf,
+  NewsArticleLeaf,
   PersonLeaf,
   ProfilePageLeaf,
   WebSiteLeaf,
 } from "schema-dts";
 
 import { siteConfig } from "@/config/site";
-import { allSkills, profile, type FaqItem } from "@/content/profile";
+import {
+  allSkills,
+  getProjectAchievement,
+  profile,
+  type FaqItem,
+  type Project,
+} from "@/content/profile";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { toIsoDate } from "@/i18n/format";
 import { markdownPathFor } from "@/lib/agents/discovery";
 import type { PostMeta } from "@/lib/blog";
+import { isCurrentEmployer, projectMeta } from "@/lib/projects";
 import { routes } from "@/lib/routes";
 import { absoluteUrl } from "@/lib/utils";
 
@@ -204,6 +215,12 @@ export const jsonLdIds = {
   website: `${siteConfig.url}/#website`,
   employer: `${siteConfig.url}/#employer`,
   blog: (lang: Locale) => `${absoluteUrl(routes.personal(lang))}#blog`,
+  projects: (lang: Locale) => `${absoluteUrl(routes.projects(lang))}#page`,
+  /** A project: on its own page when it has one, else on the Projects tab. */
+  project: (lang: Locale, project: Project) =>
+    project.story
+      ? `${absoluteUrl(routes.project(lang, project.id))}#project`
+      : `${absoluteUrl(routes.projects(lang))}#${project.id}`,
 } as const;
 
 /** De-duplicates strings ignoring case, keeping the first spelling. */
@@ -421,6 +438,128 @@ export function blogPostingJsonLd(
     publisher: { "@id": jsonLdIds.person },
     isPartOf: { "@id": jsonLdIds.blog(post.lang) },
     ...(otherVersions.length ? { workTranslation: otherVersions } : {}),
+  };
+}
+
+/**
+ * A project as a CreativeWork: Davi as `creator`, the employer it was built
+ * for as `sourceOrganization`, its award, what it is about, and the press
+ * that covered it as `subjectOf` NewsArticles (the articles are about the
+ * project, not about Davi, so they hang here and never on the Person).
+ */
+export function projectJsonLd(
+  project: Project,
+  lang: Locale,
+): CreativeWorkLeaf {
+  const id = jsonLdIds.project(lang, project);
+  const url = project.story
+    ? absoluteUrl(routes.project(lang, project.id))
+    : undefined;
+  const achievement = getProjectAchievement(project);
+  const award = achievement
+    ? [
+        t(achievement.title, lang),
+        achievement.category ? t(achievement.category, lang) : null,
+        achievement.event ?? achievement.issuer,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : project.award
+      ? t(project.award, lang)
+      : undefined;
+  const press: NewsArticleLeaf[] = (project.press ?? []).map((item) => ({
+    "@type": "NewsArticle",
+    headline: item.title,
+    url: item.url,
+    datePublished: toIsoDate(item.date),
+    inLanguage: item.lang,
+    publisher: { "@type": "Organization", name: item.outlet },
+    about: { "@id": id },
+  }));
+
+  return {
+    "@type": "CreativeWork",
+    "@id": id,
+    name: t(project.name, lang),
+    description: projectMeta(project, lang).description,
+    ...(project.summary ? { abstract: t(project.summary, lang) } : {}),
+    ...(url ? { url, mainEntityOfPage: url } : {}),
+    inLanguage: localeMeta[lang].htmlLang,
+    ...(project.year ? { dateCreated: toIsoDate(project.year) } : {}),
+    creator: { "@id": jsonLdIds.person },
+    ...(project.context
+      ? {
+          sourceOrganization: isCurrentEmployer(project.context)
+            ? {
+                "@type": "Organization",
+                "@id": jsonLdIds.employer,
+                name: project.context,
+              }
+            : { "@type": "Organization", name: project.context },
+        }
+      : {}),
+    ...(project.topics?.length
+      ? {
+          about: project.topics.map((name) => ({
+            "@type": "Thing" as const,
+            name,
+          })),
+        }
+      : {}),
+    keywords: [...(project.topics ?? []), ...project.stack].join(", "),
+    ...(award ? { award } : {}),
+    ...(press.length ? { subjectOf: press } : {}),
+  };
+}
+
+/** The Projects tab: a CollectionPage listing every project (each a `projectJsonLd` node). */
+export function projectsPageJsonLd(lang: Locale): CollectionPageLeaf {
+  const dict = getDictionary(lang);
+  const url = absoluteUrl(routes.projects(lang));
+  return {
+    "@type": "CollectionPage",
+    "@id": jsonLdIds.projects(lang),
+    url,
+    name: `${dict.meta.projects.title} | ${dict.meta.siteName}`,
+    description: dict.meta.projects.description,
+    inLanguage: localeMeta[lang].htmlLang,
+    isPartOf: { "@id": jsonLdIds.website },
+    author: { "@id": jsonLdIds.person },
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: profile.projects.map((project, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: { "@id": jsonLdIds.project(lang, project) },
+        ...(project.story
+          ? { url: absoluteUrl(routes.project(lang, project.id)) }
+          : {}),
+      })),
+    },
+  };
+}
+
+/** A project's page: an ItemPage whose main entity is the project. */
+export function projectPageJsonLd(
+  project: Project,
+  lang: Locale,
+): ItemPageLeaf {
+  const dict = getDictionary(lang);
+  const meta = projectMeta(project, lang);
+  const url = absoluteUrl(routes.project(lang, project.id));
+  return {
+    "@type": "ItemPage",
+    "@id": `${url}#page`,
+    url,
+    name: `${meta.title} | ${dict.meta.siteName}`,
+    description: meta.description,
+    inLanguage: localeMeta[lang].htmlLang,
+    isPartOf: [
+      { "@id": jsonLdIds.website },
+      { "@id": jsonLdIds.projects(lang) },
+    ],
+    author: { "@id": jsonLdIds.person },
+    mainEntity: { "@id": jsonLdIds.project(lang, project) },
   };
 }
 

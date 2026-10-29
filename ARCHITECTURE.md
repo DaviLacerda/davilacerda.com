@@ -42,6 +42,10 @@ src/
     [lang]/(assistant)/work/[topic]/  one answer on the canvas, e.g. /en/work/experience (static, 7 topics)
     [lang]/(assistant)/work/page.tsx  /en/work -> 308 to /en
     [lang]/(assistant)/ask/page.tsx   the composer's no-JS form target: "nothing on that yet" (noindex)
+    [lang]/projects/page.tsx      Projects tab: the outlets that covered the work ("In the press"), then every project
+                                  told by its result (award on ink, figures counting up on surface panels)
+    [lang]/projects/[slug]/       one project's page, e.g. /en/projects/sales-copilot (static, one per project
+                                  with a `story`): result, demo video, press cards, problem, what it does, how it's built
     [lang]/personal/page.tsx      Personal tab: a bento grid (hello with the portrait, Spotify, watching, interests, my
                                   teams, games), then writing (blog index) and elsewhere
     [lang]/personal/blog/[slug]/  Blog post
@@ -56,6 +60,8 @@ src/
                                   composer, question, reply, piece, copy-email-button
     chat/answers/                 one server component per answer (overview, experience, sales-copilot,
                                   certifications, skills, education, faq, contact) + parts (Panel, fit()...)
+    projects/                     cards (FeaturedProjectCard, ResultCard, ProjectHero, NextProjectLink), press
+                                  (PressStrip, PressCards), figure (the count-up, client), demo-video
     motion/                       motion-provider (LazyMotion + MotionConfig), reveal (scroll entrance), features
     layout/                       site-header, nav-tabs, locale-switcher, theme-toggle, site-footer
     personal/                     interests, now-playing (the Spotify tile, client), watching, teams (the scoreboard,
@@ -80,6 +86,8 @@ src/
     code-theme.ts                 Shiki theme in the site palette (monochrome: ink, greys, italic muted comments)
     work/topics.ts                topic ids + keyword matcher (dependency-free; client, proxy, server)
     work/answers.ts               topic copy, leads and intros, composer/reply strings, stackLogos() (server-only)
+    projects/index.ts             projectHeadline() (award or figure), projectMeta(), projectOutlets(), nextProject(),
+                                  projectDemo() (the demo files, checked at build) (server-only)
     logos/                        brand logo registry, generated icons.json subset, getLogoSvg() (server-only)
     spotify/                      now-playing.ts (Spotify Web API, server-only), types.ts (the JSON shape, shared)
     teams/                        espn.ts (ESPN site API, server-only), fixtures.ts (mock scenarios), types.ts (shared)
@@ -117,7 +125,8 @@ Import alias: `@/*` -> `src/*`.
   "Dec 2023 to Aug 2024" or, with `end: null`, "Since Aug 2024" (no dashes in visible text),
   `toIsoDate()` for `<time dateTime>`. All UTC.
 - `@/lib/routes`: `routes.work(lang)` `/en`, `routes.topic(lang, "experience")` `/en/work/experience`,
-  `routes.ask(lang)` `/en/ask`, `routes.personal(lang)`, `routes.blog(lang)`
+  `routes.ask(lang)` `/en/ask`, `routes.projects(lang)` `/en/projects`,
+  `routes.project(lang, "billy")` `/en/projects/billy`, `routes.personal(lang)`, `routes.blog(lang)`
   (`/en/personal#blog`, so give the blog section `id="blog"`), `routes.post(lang, slug)`,
   `routes.rss(lang)` (`/en/personal/blog/rss.xml`), plus `tabs`, `activeTab()`, `switchLocalePath()`.
 - Locale switcher: swaps the prefix by default. Pages whose URL differs per locale (blog posts)
@@ -267,6 +276,8 @@ from `scale(0)`, transform and opacity only.
 | Timeline bars (`data-bar`)             | globals.css (clip-path reveal)             | 640ms ease-out, 140ms apart, on every mount                                                                                                       |
 | Scroll reveal                          | `<Reveal stagger? enter?>` (`inView`)      | 800ms `--ease-fluid`, rise 64px out of a 12px blur, 60ms stagger                                                                                  |
 | Disclosure (`details.disclosure`)      | globals.css (`::details-content`)          | open 240ms, close 160ms, ease-out; caret turns with it                                                                                            |
+| Figures count up (`data-count`)        | globals.css + `Figure` (`inView`)          | once, 0 to the value in 1400ms `--ease-fluid`; on load, on view or after a client nav; reduced motion: none                                       |
+| Press cards                            | `<Reveal as="ul" stagger>`                 | the Reveal rise, 60ms apart, as they scroll into view                                                                                             |
 | Header tab pill (in the tab island)    | `NavTabs` (`layoutId`)                     | spring 0.3s, no bounce, moves on click (optimistic)                                                                                               |
 | Theme icon swap (System, Light, Dark)  | `ThemeToggle`                              | 200ms ease-out crossfade, scale 0.6 and 4px blur                                                                                                  |
 | Copy confirmation (email, credential)  | `CopyButton` (`CopyEmailButton` wraps it)  | 150ms blur crossfade of icon and label, width reserved                                                                                            |
@@ -357,12 +368,14 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
     links to its answer;
   - experience: the career as one bar (Brain, then Algar in ink up to "Today"), one panel per job
     (the current one in ink) with its stack and highlights in a disclosure, then "Also at Algar":
-    the Sales Copilot as a link to its answer, then one result panel per project with a `metric`
-    (the figure set large, the name, the one-line `summary`, its press as pills; the first, Billy,
-    across the canvas, the others side by side on a shared subgrid so their names line up);
+    the Sales Copilot as a link to its project page, then one result panel per project with a
+    `metric` (the figure set large, the name (linked to its page when it has one), the one-line
+    `summary`, its press as pills; the first, Billy, across the canvas, the others side by side on
+    a shared subgrid so their names line up), then "All projects";
   - sales-copilot: "Best AI Project in LATAM" filling an ink panel, a facts row (company, year,
-    role, access), the three layers it was built in (AI tools in ink), the stack, then "Coverage"
-    (`PressList`: outlet, month, language when it differs from the page, headline);
+    role, access) with "See the project page", the three layers it was built in (AI tools in ink),
+    the stack, then "Coverage" (`PressList`: outlet, month, language when it differs from the
+    page, headline);
   - certifications: an oversized "3×" with the tiers (`certificationsSummary()`), then one panel per
     credential whose picture is the print of its certificate (the newest across the canvas, the
     others side by side; a tap opens it in `ImageLightbox`), its tier, month issued and "valid
@@ -393,6 +406,42 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
   (`src/lib/agents/markdown.ts`) and search mapping in `search.ts`. Routes, chips, sitemap and
   llms.txt pick it up from `topicIds`.
 
+## Projects
+
+The Projects tab (`/[lang]/projects`) tells the work by what it achieved and who wrote about it,
+all from `profile.projects`:
+
+- **Tab:** the title and one line; "In the press", the outlets that covered any project set as
+  large grey wordmarks (newest first, each opening its newest article; `PressStrip`); then one
+  card per project. A project with a `story` gets a card across the grid that opens its page: the
+  award on the ink panel (`achievement` gives the edition, category and date) or its figure on a
+  surface panel. The others are `ResultCard`s two across (figure, what it measures, name, one
+  line, stack). The one ink panel on the screen is the award.
+- **Project page** (`/[lang]/projects/<id>`, one per project with a `story`, static): back link,
+  name and one line, facts (company, year, role, access), the result on the ink panel
+  (`ProjectHero`: the award, or the figure with `results` under it), the demo video when its files
+  exist, the press as cards (`PressCards`: outlet, headline as published with its `lang`, date,
+  language), the problem beside what it does, how it's built (each `story.build` part with its
+  stack's logos, or the stack alone), the next project.
+- **Facts only.** The articles cover the projects, not Davi by name: the copy says "Articles about
+  the project", and in the JSON-LD they are `subjectOf` on the project's `CreativeWork`, never on
+  the Person. Headlines stay as published.
+- **Figures** (`Figure`, client): the value's digits run as a CSS counter (`[data-count]` in
+  globals.css: `::before` counts, `::after` holds the final value invisibly so the width never
+  changes); the DOM text is the value, once, in an `sr-only` span. Words ("Millions") are not
+  counted.
+- **Demo video:** put `public/work/<id>/demo.mp4` (required), `demo.webm` (optional, served first)
+  and `demo.png` (the poster; its size sets the player's ratio) in the repository; `projectDemo()`
+  finds them at build time and the page shows a native player under the result (no autoplay,
+  `preload="none"`). Without the files nothing renders.
+- **Add a project:** one entry in `profile.projects` (id = slug, `summary`, `metric` or `award` +
+  `achievement`, `results?`, `press?`, `topics?`, `stack`). Add `story` (`problem`, `solution[]`,
+  `build?`) for it to get a page. The tab, its page, OG cards, sitemap, JSON-LD, Markdown,
+  llms.txt, search, MCP resources and JSON Resume pick it up; nothing else to wire.
+- **Agents:** `/en/projects.md` and `/en/projects/<id>.md` (proxy rewrite or `Accept:
+text/markdown`), the `projects-{lang}` MCP resources and the `project` resource template, a
+  "Projects" section in llms.txt, both in llms-full.txt.
+
 ## Components
 
 | Component                                                                   | Notes                                                                                                           |
@@ -409,6 +458,11 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<Question text label>` / `<Reply question strings>`                        | the question bubble; the "nothing on that yet" reply (client)                                                   |
 | `<Panel as? tone?>`, `fit()`, `<BlockTitle>`, `<Disclosure>`                | answer building blocks in `answers/parts.tsx` (server)                                                          |
 | `<PressList items lang>` / `<PressPills items lang>`                        | a project's coverage as rows (Sales Copilot) or compact pills (result panels), in `answers/press.tsx` (server)  |
+| `<FeaturedProjectCard project lang>` / `<ResultCard project lang>`          | Projects tab cards: a project page's link (award on ink, figure on surface); a project told by its figure       |
+| `<ProjectHero project headline lang>` / `<NextProjectLink project lang>`    | a project page's result on the ink panel; the way on to the next project                                        |
+| `<PressStrip lang enter?>` / `<PressCards items lang>`                      | the outlets as wordmark links (tab); the articles as cards, staggered (project page)                            |
+| `<Figure value>`                                                            | a figure that counts up once (client; see Projects)                                                             |
+| `<DemoVideo demo label>`                                                    | a project's demo, a native `<video>` with WebM then MP4 and the poster                                          |
 | `<Reveal as? stagger? enter?>`                                              | scroll entrance below the fold; with `enter`, part of the load entrance (client)                                |
 | `<CopyButton value label copiedLabel variant? size? iconOnly?>`             | copy with a short crossfade confirmation (client); `CopyEmailButton` is the email preset                        |
 | `<ImageLightbox src width height alt caption detail? openLabel closeLabel>` | a link around a thumbnail that opens the image in a modal `<dialog>` (client; see Motion)                       |
@@ -425,10 +479,10 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<BrandMark draw?>`                                                         | the calligraphic "d" in `currentColor`, sized by height; `draw` (header only) writes it on once per session     |
 | `<JsonLd data={node \| node[]}>`                                            | adds `@context`; arrays become one `@graph`                                                                     |
 | `<LocaleAlternates links>`                                                  | per-page locale switcher targets                                                                                |
-| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; static header, tabs in a round island, theme cycles System, Light, Dark                    |
+| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | in the layout; tabs in a round island (own row below 640px); theme cycles System, Light, Dark                   |
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
-`reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, `teams`,
+`reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `figure`, `now-playing`, `teams`,
 `steam`, `trackers`, `ascii-backdrop`, the providers. Pages, answers and logos stay Server Components.
 
 ## Content model (`src/content/profile.ts`)
@@ -439,11 +493,14 @@ line and the overview), `location`,
 `email`, `currentEmployer`, `socials[]` (GitHub, LinkedIn, Instagram, Spotify,
 Discord, email; `sameAs` ones go into the Person JSON-LD), `highlights[]` (hero stats),
 `experience[]` (`company, role, start, end|null, employmentType, workModel, location, description,
-highlights, stack`), `projects[]` (work built at Algar: `summary?` (one line), `metric?`
-`{ value, label }` (a project with one is told by its result on Experience), `press?`
-(`{ outlet, title, url, date, lang }`, articles that cover the project; shown as Coverage and in the
-Markdown, JSON Resume and search; not in the JSON-LD, since they don't name Davi), `context?`,
-`role?`, `award?`, `isPrivate?`, `year?`), `skills[]` (groups `llm, rag, ml, backend, frontend, infra`),
+highlights, stack`), `projects[]` (work built at Algar; `id` is also its page's slug: `summary?`
+(one line), `metric?` `{ value, label }` (a project with one is told by its result), `results?`
+(more `{ value, label }` beside it on its page), `award?` + `achievement?` (the `achievements` id
+behind it: issuer, date, `event`, `category`, link), `press?` (`{ outlet, title, url, date, lang }`,
+articles that cover the project; on the Projects tab and pages, Coverage, Markdown, JSON Resume,
+search, and as `subjectOf` on the project's `CreativeWork`, never on the Person, since they don't
+name Davi), `topics?` (schema.org `about`, keywords), `story?` (`problem`, `solution[]`, `build?`:
+with it the project gets a page), `context?`, `role?`, `isPrivate?`, `year?`), `skills[]` (groups `llm, rag, ml, backend, frontend, infra`),
 `knowsAbout[]`, `certifications[]` (`kind: "certification" | "course"`, `level?` ("Expert", "Associate"),
 `credentialId?`, `certificationNumber?`, `expires?`, `credentialUrl?` (the Verify link, or the
 course's accomplishment page; renders only when set), `image?` `{ src, width, height }`: a PNG print
@@ -456,7 +513,8 @@ Expert certifications), `languages[]`, `faq[]` (rendered on the FAQ topic, `/[la
 used for its FAQPage JSON-LD; the other answers' first paragraphs reuse FAQ answers).
 `image` (the portrait, `/images/davi.webp`, with a PNG twin for the OG card) and `interests[]`
 (`{ id, label }`, the Personal chips; inferred from GitHub, see the `TODO(davi)`).
-Helpers: `allSkills()`, `getSocial(id)`, `getCertifications(kind?)`, `certificationTiers()`.
+Helpers: `allSkills()`, `getSocial(id)`, `getCertifications(kind?)`, `certificationTiers()`,
+`getProjectPages()`, `getProjectPage(id)`, `getProjectAchievement(project)`, `getPressOutlets()`.
 
 Rules: only verified facts; anything unknown has a `TODO(davi)` comment. No seniority levels or
 formal titles for Algar (the role is "AI Engineer", since Aug 2024). Dates are strings
@@ -668,7 +726,10 @@ mark from the logo registry.
   files over `images`.
 - JSON-LD builders (bare nodes linked by `@id`): `personJsonLd(lang)`, `websiteJsonLd(lang)`,
   `profilePageJsonLd(lang, opts?)`, `breadcrumbJsonLd(items)`, `blogJsonLd(lang, posts)`,
-  `blogPostingJsonLd(post, { image?, translations? })`, `faqPageJsonLd(lang, items?)`.
+  `blogPostingJsonLd(post, { image?, translations? })`, `faqPageJsonLd(lang, items?)`,
+  `projectJsonLd(project, lang)` (`CreativeWork`: `creator` the Person, `about` its topics,
+  `award`, `subjectOf` its press as `NewsArticle`s), `projectsPageJsonLd(lang)` (`CollectionPage`
+  with an `ItemList`), `projectPageJsonLd(project, lang)` (`ItemPage`).
   Render with `<JsonLd data={[personJsonLd(lang), websiteJsonLd(lang), profilePageJsonLd(lang)]} />`.
 - Helpers: `localizedPaths("/personal")`, `hreflangAlternates(paths)`, `jsonLdIds`.
 
@@ -737,11 +798,12 @@ All of it is static (`force-static` + `generateStaticParams`) except `/mcp`.
 | Path                                                                                                                   | What                                                                                                                                                                                                                                           |
 | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/robots.txt`                                                                                                          | RFC 9309. `*` group plus an explicit AI crawler/agent group, both `Allow: /` with `Content-Signal: search=yes, ai-input=yes, ai-train=yes`; `Sitemap:` line.                                                                                   |
-| `/sitemap.xml`                                                                                                         | Every page in every locale (including the seven Work answers) and every post, with `xhtml:link` hreflang (incl. `x-default`) and `lastmod` (last git commit of the profile sources; post `updated ?? date`).                                   |
+| `/sitemap.xml`                                                                                                         | Every page in every locale (Work answers, project pages) and every post, with `xhtml:link` hreflang (incl. `x-default`) and `lastmod` (last git commit of the profile sources; post `updated ?? date`).                                        |
 | `/manifest.webmanifest`, `/icons/{icon-192,icon-512,maskable-512}.png`                                                 | Web app manifest and its icons (the brand mark, static files from `yarn brand`).                                                                                                                                                               |
 | `opengraph-image` / `twitter-image`                                                                                    | Monochrome, like the site. Per locale for Work (headline, award ink panel, Azure "3×" panel), each Work answer (question bubble + the answer's picture; Certifications shows the newest print), Personal (portrait + hello) and each post.     |
-| `/llms.txt`, `/llms-full.txt`                                                                                          | [llmstxt.org](https://llmstxt.org) index; full text of both profiles, both Personal pages and every post.                                                                                                                                      |
+| `/llms.txt`, `/llms-full.txt`                                                                                          | [llmstxt.org](https://llmstxt.org) index; full text of every profile, Projects and Personal page and every post.                                                                                                                               |
 | `/{lang}.md` (`/{lang}/index.md`), `/{lang}/work/{topic}.md`, `/{lang}/personal.md`, `/{lang}/personal/blog/{slug}.md` | Markdown renditions (Work reads like a résumé; each answer has its own). Also served for `Accept: text/markdown` on the HTML URL and on `/`.                                                                                                   |
+| `/{lang}/projects.md`, `/{lang}/projects/{id}.md`                                                                      | The Projects tab and each project page as Markdown, served the same two ways.                                                                                                                                                                  |
 | `/api/profile.json`, `/api/posts.json`, `/api/{lang}/{profile,posts,resume}.json`                                      | JSON (profile localized per language; posts with Markdown URLs).                                                                                                                                                                               |
 | `/resume.json`                                                                                                         | [JSON Resume](https://jsonresume.org) v1.0.0 (English; Portuguese at `/api/pt-br/resume.json`).                                                                                                                                                |
 | `/api/openapi.json`, `/api/status.json`                                                                                | OpenAPI 3.1 description of the read-only HTTP API; status document for the API catalog.                                                                                                                                                        |
@@ -769,11 +831,11 @@ Both are mounted once in `src/app/[lang]/layout.tsx` via `<AgentDiscovery />`.
 
 - `src/lib/agents/discovery.ts`: paths, page parsing (`parsePagePath`, `pagePath`, `markdownPath`),
   `prefersMarkdown(accept)`, Link header builders. Dependency-free (imported by the proxy).
-- `src/lib/agents/markdown.ts`: Work/topic/Personal/post Markdown, `llms.txt` (with a "Work answers"
-  section), `llms-full.txt`.
+- `src/lib/agents/markdown.ts`: Work/topic/Projects/project/Personal/post Markdown, `llms.txt`
+  (with "Projects" and "Work answers" sections), `llms-full.txt`.
 - `src/lib/agents/json.ts`: profile/posts JSON, JSON Resume, status, OpenAPI document.
 - `src/lib/agents/search.ts`: keyword search over profile sections and post sections (MCP `search`);
-  profile hits point at the Work answer that shows them (`/en/work/certifications`...).
+  profile hits point at the page that shows them (a project's page, `/en/work/certifications`...).
 - `src/lib/agents/mcp.ts`: the MCP server factory; `well-known.ts`: API catalog, server card,
   SKILL.md + index, ARD and Poppy documents.
 - `src/lib/agents/labels.ts`: strings only machines read (Markdown labels), kept out of the dictionaries.
@@ -782,7 +844,7 @@ Both are mounted once in `src/app/[lang]/layout.tsx` via `<AgentDiscovery />`.
 - `src/lib/og/`: OG template (`OgFrame`, `OgTitle`, `OgLead`, `OgQuestion`, `OgMeta`, `OgPanel`,
   `OgLogo` (a registry logo as an SVG data URI), `OgTrophy`, `clampText`), the per-answer pictures
   (`answers.tsx`: `OgHome`, `OgAnswer`; titles split into balanced lines, since Satori breaks
-  greedily) and fonts (Geist 400, 500 and 600 static TTFs, Latin and Latin Extended, with the
+  greedily), the Projects cards (`projects.tsx`: `OgProjects`, `OgProject`) and fonts (Geist 400, 500 and 600 static TTFs, Latin and Latin Extended, with the
   `kern` and `liga` features removed because Satori mis-spaces words after kerned glyphs; OFL
   licence alongside). Satori cannot read woff2, hence the separate TTFs.
 - `src/app/markdown/**`: internal Markdown routes. Only reached through proxy rewrites; requested

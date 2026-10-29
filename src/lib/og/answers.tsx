@@ -49,7 +49,7 @@ function fitSize(text: string, width: number, max: number, lines = 2) {
  * Splits a title into two lines of about the same length, at a space
  * (Satori fills lines greedily, which left "LATAM" alone on the second).
  */
-function balance(text: string): string[] {
+export function balance(text: string): string[] {
   const words = text.split(" ");
   if (words.length < 2) return [text];
   let best = 1;
@@ -107,7 +107,7 @@ function awardData(lang: Locale) {
     : null;
 }
 
-const display = {
+export const display = {
   fontWeight: 600,
   letterSpacing: "-0.05em",
   lineHeight: 0.95,

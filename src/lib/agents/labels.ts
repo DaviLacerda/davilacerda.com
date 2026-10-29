@@ -19,10 +19,20 @@ const en = {
   },
   personalTitle: "{name}: personal",
   workDocTitle: "{name}: {headline}",
+  projectsTitle: "{name}: projects",
   topic: {
     question: "Question",
     otherTopics: "Other answers",
     builtBy: "What he built",
+  },
+  project: {
+    page: "Project page",
+    result: "Result",
+    category: "Category",
+    otherProjects: "Other projects",
+    about: "About the project",
+    /** A press line's project: "about Billy". */
+    about_project: "about {name}",
   },
   certificate: {
     number: "Certification number",
@@ -65,6 +75,13 @@ const en = {
     topics: "Work answers",
     topicsIntro:
       "The Work tab is a guided assistant over the profile: each suggested question has its own page with a written answer, in both languages (English links below; Portuguese at the same paths under /pt-br).",
+    projects: "Projects",
+    projectsIntro:
+      "What Davi built at Algar, told by its results, with every article that covered each project (the articles are about the projects and do not name Davi). English links below; Portuguese at the same paths under /pt-br.",
+    projectsEn: "Projects (English)",
+    projectsPt: "Projetos (Português)",
+    projectsDesc:
+      "Every project with its result, award and press coverage, and the outlets that covered them.",
     full: "Full text",
     fullDesc:
       "The complete profile in both languages and every blog post inline, in one file.",
@@ -91,10 +108,19 @@ const ptBr: Labels = {
   },
   personalTitle: "{name}: pessoal",
   workDocTitle: "{name}: {headline}",
+  projectsTitle: "{name}: projetos",
   topic: {
     question: "Pergunta",
     otherTopics: "Outras respostas",
     builtBy: "O que ele construiu",
+  },
+  project: {
+    page: "Página do projeto",
+    result: "Resultado",
+    category: "Categoria",
+    otherProjects: "Outros projetos",
+    about: "Sobre o projeto",
+    about_project: "sobre {name}",
   },
   certificate: {
     number: "Número da certificação",
