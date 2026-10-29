@@ -12,14 +12,14 @@ import { routes } from "@/lib/routes";
 /**
  * A plain bar on the wide frame: Davi's mark and name (the name from 640px
  * up), the Work/Personal tabs, the locale link and the theme toggle. Its
- * edges line up with the Work split pane. It scrolls away with the page, so
- * nothing ever sits on top of the text.
+ * edges line up with the Work split pane. It sticks to the top on a
+ * translucent, blurred page tone so the tabs stay in reach while scrolling.
  */
 export function SiteHeader({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
 
   return (
-    <header>
+    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-background">
       <Container
         wide
         className="flex h-16 items-center justify-between gap-3 sm:h-20"

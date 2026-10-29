@@ -268,7 +268,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    scroll-padding-top: 2rem;
+    scroll-padding-top: 6rem;
     -webkit-tap-highlight-color: transparent;
   }
 

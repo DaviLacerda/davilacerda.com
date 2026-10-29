@@ -425,7 +425,7 @@ focus? })` marks the chip (`pendingHref`), remembers what was typed (`asked`) an
 | `<BrandMark draw?>`                                                         | the calligraphic "d" in `currentColor`, sized by height; `draw` (header only) writes it on once per session     |
 | `<JsonLd data={node \| node[]}>`                                            | adds `@context`; arrays become one `@graph`                                                                     |
 | `<LocaleAlternates links>`                                                  | per-page locale switcher targets                                                                                |
-| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; static header, tabs in a round island, theme cycles System, Light, Dark                    |
+| `SiteHeader`, `SiteFooter`, `NavTabs`, `LocaleSwitcher`, `ThemeToggle`      | wired in the layout; sticky translucent header, tabs in a round island, theme cycles System, Light, Dark                    |
 
 Client components: the chat leaves (assistant, composer, question, reply, copy-email-button),
 `reveal`, `motion-provider`, `nav-tabs`, `locale-switcher`, `theme-toggle`, `now-playing`, `teams`,
