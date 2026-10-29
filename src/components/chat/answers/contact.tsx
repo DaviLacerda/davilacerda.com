@@ -3,6 +3,7 @@ import { ClockIcon } from "@phosphor-icons/react/dist/ssr/Clock";
 import { CopyEmailButton } from "@/components/chat/copy-email-button";
 import { Piece } from "@/components/chat/piece";
 import { SocialList } from "@/components/personal/elsewhere";
+import { AsciiBackdrop } from "@/components/ui/ascii-backdrop";
 import { ButtonLink } from "@/components/ui/button";
 import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
@@ -26,8 +27,9 @@ export function ContactAnswer({ lang }: { lang: Locale }) {
           as="section"
           tone="ink"
           aria-labelledby="email-title"
-          className="flex min-h-[19rem] flex-col justify-between gap-12 sm:min-h-[22rem] sm:p-10"
+          className="relative isolate flex min-h-[19rem] flex-col justify-between gap-12 overflow-hidden sm:min-h-[22rem] sm:p-10"
         >
+          <AsciiBackdrop scene="send" tone="ink" clear />
           <div className="@container">
             <h2
               id="email-title"

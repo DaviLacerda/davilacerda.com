@@ -1,4 +1,5 @@
 import { Piece } from "@/components/chat/piece";
+import { LogoTile } from "@/components/ui/logo";
 import { TextLink } from "@/components/ui/text-link";
 import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
@@ -26,14 +27,27 @@ export function EducationAnswer({ lang }: { lang: Locale }) {
               tone="ink"
               className="flex min-h-[20rem] flex-col justify-between gap-12 sm:min-h-[24rem] sm:p-10"
             >
-              {edu.shortName ? (
-                <div className="@container">
-                  <p
-                    aria-hidden="true"
-                    className="text-[clamp(5rem,34cqi,12rem)] leading-[0.8] font-semibold tracking-[-0.07em]"
-                  >
-                    {edu.shortName}
-                  </p>
+              {edu.shortName || edu.logo ? (
+                <div className="flex items-start justify-between gap-6">
+                  {edu.shortName ? (
+                    <div className="@container min-w-0 flex-1">
+                      <p
+                        aria-hidden="true"
+                        className="text-[clamp(5rem,34cqi,12rem)] leading-[0.8] font-semibold tracking-[-0.07em]"
+                      >
+                        {edu.shortName}
+                      </p>
+                    </div>
+                  ) : null}
+                  {edu.logo ? (
+                    <LogoTile
+                      logo={edu.logo}
+                      name={institution}
+                      size="xl"
+                      tone="ink"
+                      className="ml-auto"
+                    />
+                  ) : null}
                 </div>
               ) : null}
               <div>

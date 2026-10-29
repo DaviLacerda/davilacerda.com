@@ -102,7 +102,7 @@ export const ptBr: Dictionary = {
         chip: "Sales Copilot",
         question: "O que é o Sales Copilot?",
         title: "Sales Copilot",
-        metaTitle: "Sales Copilot, Melhor Projeto de IA da América Latina",
+        metaTitle: "O que é o Sales Copilot que o Davi criou?",
         description:
           "O copiloto de IA que Davi Lacerda construiu de ponta a ponta para os times de vendas da Algar: escuta as ligações e sugere argumentos e ofertas em tempo real. Eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
         summary: "O copiloto premiado que ele construiu de ponta a ponta.",
@@ -254,6 +254,7 @@ export const ptBr: Dictionary = {
       courses: "Também concluídos",
       stack: "Stack",
       highlights: "Destaques",
+      moreHighlights: "Mostrar mais {count}",
       role: "Função",
       location: "Local",
       privateProject: "Privado",
