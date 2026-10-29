@@ -4,6 +4,8 @@
  * - `logos:*` (@iconify-json/logos): the brand's own colours.
  * - `simple-icons:*` (@iconify-json/simple-icons): one path in `currentColor`,
  *   or in the entry's `color` (PlayStation blue, Valorant red).
+ * - `file:*`: an SVG in `public/logos/` (the companies and the university,
+ *   whose marks are in no icon set), copied in the same way.
  *
  * The rule, applied everywhere: a logo keeps its brand colours, except marks
  * whose brand colour is black or white (GitHub, GitHub Copilot, LangChain,
@@ -30,6 +32,13 @@ export type LogoSpec = {
    * not black or white; without it the mark is `currentColor`.
    */
   color?: string;
+  /**
+   * A dark brand colour (Brain's and UFU's navy): the mark is drawn in it on
+   * light grounds and in the ground's ink on dark ones (dark mode, an ink
+   * tile), where navy would vanish. The script swaps this colour in the file
+   * for `currentColor`.
+   */
+  tint?: string;
 };
 
 export const logoRegistry = {
@@ -115,6 +124,10 @@ export const logoRegistry = {
     color: "#ff4655",
   },
   ubisoft: { icon: "simple-icons:ubisoft", label: "Ubisoft" },
+  // Where Davi worked and studied (`logo` in the profile): files in public/logos.
+  algar: { icon: "file:algar-symbol", label: "Algar" },
+  brain: { icon: "file:brain-symbol", label: "Brain", tint: "#002f51" },
+  ufu: { icon: "file:ufu", label: "UFU", tint: "#092269" },
 } as const satisfies Record<string, LogoSpec>;
 
 export type LogoId = keyof typeof logoRegistry;

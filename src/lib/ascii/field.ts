@@ -19,10 +19,22 @@ export type Field = {
   ink: Float32Array;
   /** A glyph chosen for the cell instead of the ramp's (1 + its index in `GLYPHS`; 0 for none). */
   marks: Uint8Array;
+  /**
+   * How clear each cell is of the content the canvas sits under (1: clear,
+   * 0: on a word or a picture), when the backdrop keeps clear of it; null
+   * otherwise. The backdrop fades the ink by it after every draw, and scenes
+   * can read it (see `freeRect`) to compose in the space the content leaves.
+   */
+  free: Float32Array | null;
+  /** Bumped whenever `free` changes, so scenes know to compose again. */
+  revision: number;
 };
 
-/** Glyphs a scene can place on purpose (heads, waves, arms), besides the density ramp. */
-export const GLYPHS = "o~/\\|_()";
+/**
+ * Glyphs a scene can place on purpose (heads, waves, arms, a check, a
+ * bracket), besides the density ramp. Append only: marks store the index.
+ */
+export const GLYPHS = "o~/\\|_()-=:.'v*+[]<>#x@`";
 
 /** A field of `cols` by `rows` cells of `cw` by `ch` units on a card `width` units wide. */
 export function createField(
@@ -40,6 +52,8 @@ export function createField(
     ch,
     ink: new Float32Array(cols * rows),
     marks: new Uint8Array(cols * rows),
+    free: null,
+    revision: 0,
   };
 }
 
@@ -77,6 +91,62 @@ export function mark(
   field.ink[i] = ink;
   field.marks[i] = code + 1;
   return true;
+}
+
+/** A box in card units. */
+export type Box = { x0: number; y0: number; x1: number; y1: number };
+
+/**
+ * The best rectangle of clear cells (see `free`), by `score(width, height)`
+ * in units, e.g. the widest lane at least a few rows tall. Null when the field
+ * has no `free` map or nothing scores above 0. One pass over the grid (the
+ * largest rectangle under a histogram, row by row); call it when `revision`
+ * changes, not every frame.
+ */
+export function freeRect(
+  field: Field,
+  score: (width: number, height: number, box: Box) => number,
+  threshold = 0.9,
+): Box | null {
+  const { cols, rows, cw, ch, free } = field;
+  if (!free) return null;
+  const heights = new Int32Array(cols);
+  const stack = new Int32Array(cols + 1);
+  let best: Box | null = null;
+  let bestScore = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      heights[c] =
+        (free[r * cols + c] ?? 0) >= threshold ? (heights[c] ?? 0) + 1 : 0;
+    }
+    // Every maximal rectangle whose bottom is this row (and every shorter one
+    // inside it, so a score can prefer a lane to the tallest box).
+    let top = 0;
+    for (let c = 0; c <= cols; c++) {
+      const h = c < cols ? (heights[c] ?? 0) : 0;
+      while (top > 0 && (heights[stack[top - 1] ?? 0] ?? 0) >= h) {
+        const height = heights[stack[--top] ?? 0] ?? 0;
+        const left = top > 0 ? (stack[top - 1] ?? 0) + 1 : 0;
+        for (let k = height; k > 0; k--) {
+          const box = {
+            x0: left * cw,
+            y0: (r + 1 - k) * ch,
+            x1: c * cw,
+            y1: (r + 1) * ch,
+          };
+          // (Width and height as whole cells times the cell, so a score's
+          // `h >= ch * 5` holds for exactly five rows.)
+          const value = score((c - left) * cw, k * ch, box);
+          if (value > bestScore) {
+            bestScore = value;
+            best = box;
+          }
+        }
+      }
+      stack[top++] = c;
+    }
+  }
+  return best;
 }
 
 export const clamp = (value: number, min = 0, max = 1) =>

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 
 import {
   getLogoSvg,
@@ -33,7 +33,10 @@ export function BrandLogo({ id, className, label }: BrandLogoProps) {
   return (
     <svg
       viewBox={svg.viewBox}
-      className={cn("size-4 shrink-0", className)}
+      className={cn("size-4 shrink-0", svg.tint && "logo-tint", className)}
+      style={
+        svg.tint ? ({ "--logo-tint": svg.tint } as CSSProperties) : undefined
+      }
       {...(label
         ? { role: "img", "aria-label": label }
         : { "aria-hidden": true, focusable: false })}
@@ -120,6 +123,7 @@ export function LogoTile({
   return (
     <span
       {...a11y}
+      data-ground={tone === "ink" ? "ink" : undefined}
       className={cn(
         "grid shrink-0 place-items-center overflow-hidden",
         s.box,

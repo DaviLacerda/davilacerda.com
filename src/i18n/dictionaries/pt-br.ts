@@ -253,6 +253,7 @@ export const ptBr: Dictionary = {
       courses: "Também concluídos",
       stack: "Stack",
       highlights: "Destaques",
+      moreHighlights: "Mostrar mais {count}",
       role: "Função",
       location: "Local",
       privateProject: "Privado",

@@ -2,6 +2,7 @@ import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 
 import { AskLink } from "@/components/chat/assistant";
 import { Piece } from "@/components/chat/piece";
+import { AsciiBackdrop } from "@/components/ui/ascii-backdrop";
 import { BrandLogo, LogoTile } from "@/components/ui/logo";
 import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
@@ -46,8 +47,9 @@ export function Overview({ lang }: { lang: Locale }) {
           <Piece as="li" i={0} className="sm:col-span-2">
             <AskLink
               href={routes.topic(lang, "sales-copilot")}
-              className={`${panel} min-h-[17rem] gap-14 bg-ink p-6 text-on-ink hover:bg-ink/90 sm:min-h-[21rem] sm:p-10`}
+              className={`${panel} relative isolate min-h-[17rem] gap-14 overflow-hidden bg-ink p-6 text-on-ink hover:bg-ink/90 sm:min-h-[21rem] sm:p-10`}
             >
+              <AsciiBackdrop scene="copilot" tone="ink" clear />
               <span className="flex items-center justify-between gap-4">
                 <TrophyIcon aria-hidden="true" className="size-7" />
                 <PanelArrow />

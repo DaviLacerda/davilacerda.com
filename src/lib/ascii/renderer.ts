@@ -24,6 +24,8 @@ export class AsciiRenderer {
   rows = 0;
   /** A cell's size in card units (the canvas's height is 1). */
   cell = { width: 0, height: 0 };
+  /** The grid in CSS pixels from the canvas's top left: its offset and cell size. */
+  grid = { x: 0, y: 0, width: 0, height: 0 };
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d", { alpha: true });
@@ -52,6 +54,12 @@ export class AsciiRenderer {
     this.cell = {
       width: this.cw / this.canvas.height,
       height: this.ch / this.canvas.height,
+    };
+    this.grid = {
+      x: this.offsetX / dpr,
+      y: this.offsetY / dpr,
+      width: this.cw / dpr,
+      height: this.ch / dpr,
     };
     this.atlas = null;
   }

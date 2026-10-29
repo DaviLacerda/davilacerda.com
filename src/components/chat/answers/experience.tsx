@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 
 import { AskLink } from "@/components/chat/assistant";
 import { Piece } from "@/components/chat/piece";
+import { AsciiBackdrop } from "@/components/ui/ascii-backdrop";
 import { LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { TextLink } from "@/components/ui/text-link";
@@ -16,6 +17,7 @@ import {
   toIsoDate,
   type PartialDate,
 } from "@/i18n/format";
+import type { AsciiScene } from "@/lib/ascii/types";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { splitCompanyName } from "@/lib/work/answers";
@@ -124,69 +126,127 @@ function Timeline({ lang }: { lang: Locale }) {
   );
 }
 
+/** How many of a job's highlights show before "Show 4 more". */
+const SHOWN_HIGHLIGHTS = 3;
+
+/**
+ * One job, as a row of the career: who and when (the logo with the dates
+ * beside it, the company, the role), then what he did (the first highlights,
+ * the rest behind "Show 4 more", then the stack). The current job leads in
+ * ink; a past one is lighter, on the surface, a size smaller. Where the panel
+ * is wide (42rem and up) the two sit side by side,
+ * the dates under the role. Rows are as tall as their own content, so
+ * opening one never stretches another.
+ */
 function JobPanel({ job, lang }: { job: Experience; lang: Locale }) {
   const dict = getDictionary(lang);
   const labels = dict.work.labels;
-  const tone: Tone = job.end === null ? "ink" : "surface";
+  const current = job.end === null;
+  const tone: Tone = current ? "ink" : "surface";
   const company = splitCompanyName(t(job.company, lang));
   const period = formatDateRange(job.start, job.end, lang);
   const highlights = t(job.highlights, lang);
+  const shown = highlights.slice(0, SHOWN_HIGHLIGHTS);
+  const more = highlights.slice(SHOWN_HIGHLIGHTS);
   const muted = mutedOn(tone);
+  const titleId = `${job.id}-job`;
+  const when = job.start ? (
+    <time dateTime={toIsoDate(job.start)}>{period}</time>
+  ) : (
+    period
+  );
+  const list = cn(
+    "list-disc space-y-2.5 pl-5 text-small",
+    current ? "marker:text-on-ink-muted" : "marker:text-muted-foreground",
+  );
 
   return (
-    <Panel as="article" tone={tone} className="flex h-full flex-col">
-      <div className="flex items-start justify-between gap-4">
-        <LogoTile logo={job.logo} name={company.short} size="xl" tone={tone} />
-        <p className={cn("text-small", muted)}>
-          {job.start ? (
-            <time dateTime={toIsoDate(job.start)}>{period}</time>
-          ) : (
-            period
-          )}
-        </p>
-      </div>
-      <h2 className="mt-10 text-[clamp(2rem,1.7rem+1.4vw,2.75rem)] leading-none tracking-[-0.045em]">
-        {job.companyUrl ? (
-          <TextLink
-            href={job.companyUrl}
-            arrow={false}
-            newTabLabel={dict.a11y.opensInNewTab}
-            className={tone === "ink" ? "text-on-ink" : undefined}
+    <Panel as="article" tone={tone} aria-labelledby={titleId}>
+      {/* Stacked; side by side (who and when, then what) where the panel is wide. */}
+      <div className="@2xl:grid @2xl:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] @2xl:gap-x-12">
+        <header>
+          <div className="flex items-start justify-between gap-4">
+            <LogoTile
+              logo={job.logo}
+              name={company.short}
+              size={current ? "xl" : "lg"}
+              tone={tone}
+            />
+            <p className={cn("text-small @2xl:hidden", muted)}>{when}</p>
+          </div>
+          <h2
+            id={titleId}
+            className={cn(
+              "mt-6 leading-none",
+              current
+                ? "text-[clamp(2rem,1.7rem+1.4vw,2.75rem)] tracking-[-0.045em]"
+                : "text-heading",
+            )}
           >
-            {company.short}
-          </TextLink>
-        ) : (
-          company.short
-        )}
-      </h2>
-      <p className="mt-3 font-medium">{t(job.role, lang)}</p>
-      <p className={muted}>
-        {[company.long, t(job.employmentType, lang), t(job.workModel, lang)]
-          .filter(Boolean)
-          .join(", ")}
-      </p>
-      <div className="mt-auto pt-8">
-        <TagList items={job.stack} label={labels.stack} logos tone={tone} />
-        {highlights.length ? (
-          <Disclosure summary={labels.highlights} tone={tone} className="mt-5">
-            <ul
-              className={cn(
-                "mt-4 list-disc space-y-2 pl-5 text-small",
-                tone === "ink"
-                  ? "marker:text-on-ink-muted"
-                  : "marker:text-muted-foreground",
-              )}
-            >
-              {highlights.map((item) => (
+            {job.companyUrl ? (
+              <TextLink
+                href={job.companyUrl}
+                arrow={false}
+                newTabLabel={dict.a11y.opensInNewTab}
+                className={current ? "text-on-ink" : undefined}
+              >
+                {company.short}
+              </TextLink>
+            ) : (
+              company.short
+            )}
+          </h2>
+          <p className="mt-3 font-medium">{t(job.role, lang)}</p>
+          <p className={cn("mt-1 text-small", muted)}>
+            {[company.long, t(job.employmentType, lang), t(job.workModel, lang)]
+              .filter(Boolean)
+              .join(", ")}
+          </p>
+          <p className={cn("mt-1 hidden text-small @2xl:block", muted)}>
+            {when}
+          </p>
+        </header>
+
+        <div className="mt-8 @2xl:mt-0">
+          {shown.length ? (
+            <ul aria-label={labels.highlights} className={list}>
+              {shown.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
-          </Disclosure>
-        ) : null}
+          ) : null}
+          {more.length ? (
+            <Disclosure
+              summary={interpolate(labels.moreHighlights, {
+                count: more.length,
+              })}
+              tone={tone}
+              className="mt-4"
+            >
+              <ul className={cn("mt-4", list)}>
+                {more.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </Disclosure>
+          ) : null}
+          <TagList
+            items={job.stack}
+            label={labels.stack}
+            logos
+            tone={tone}
+            className={shown.length ? "mt-8" : undefined}
+          />
+        </div>
       </div>
     </Panel>
   );
 }
+
+/** A project's ASCII scene behind its result panel (Billy's invoices being checked). */
+const projectScenes: Partial<Record<string, AsciiScene>> = {
+  billy: "invoice",
+};
 
 /**
  * A project told by its result: the figure set large ("96%") with what it
@@ -205,12 +265,14 @@ function ProjectPanel({
   featured: boolean;
 }) {
   const titleId = `${project.id}-title`;
+  const scene = projectScenes[project.id];
   return (
     <Panel
       as="article"
       aria-labelledby={titleId}
       className={cn(
         "flex h-full flex-col justify-between gap-10",
+        scene && "relative isolate overflow-hidden",
         // Side by side, the cards share two rows (the figure, then the name),
         // so their names line up whatever the length of the copy. A subgrid
         // can't be a size container, so the Panel's `@container` is dropped.
@@ -219,6 +281,7 @@ function ProjectPanel({
           : "sm:@container-normal sm:row-span-2 sm:grid sm:grid-rows-subgrid sm:justify-normal",
       )}
     >
+      {scene ? <AsciiBackdrop scene={scene} clear /> : null}
       <p className="font-semibold">
         <span
           className={cn(
@@ -304,7 +367,7 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
       <Piece i={2} className="mt-10">
         <Timeline lang={lang} />
       </Piece>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4">
+      <div className="mt-6 grid gap-3 sm:gap-4">
         {profile.experience.map((job, index) => (
           <Piece key={job.id} i={3 + index}>
             <JobPanel job={job} lang={lang} />

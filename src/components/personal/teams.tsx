@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { AsciiBackdrop } from "@/components/ui/ascii-backdrop";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/i18n/config";
 import type { AsciiScene } from "@/lib/ascii/types";
@@ -28,7 +29,6 @@ import {
 } from "@/lib/teams/types";
 import { cn } from "@/lib/utils";
 
-import { AsciiBackdrop } from "./ascii-backdrop";
 import { fill, fillNodes, liveUrl, LiveDot } from "./parts";
 
 export type TeamsStrings = Dictionary["personal"]["teams"] & {
