@@ -101,9 +101,10 @@ function WatchingCard({
         <Image
           src={show.poster}
           alt=""
-          width={256}
-          height={384}
-          sizes="(min-width: 1024px) 16rem, (min-width: 640px) 12rem, 6rem"
+          width={680}
+          height={1020}
+          quality={90}
+          sizes="(min-width: 1024px) 22rem, (min-width: 640px) 12rem, 66vw"
           className="aspect-[2/3] w-2/3 shrink-0 rounded-[10px] bg-surface-strong object-cover sm:w-48 lg:w-full"
         />
       ) : (
