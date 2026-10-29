@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { getProjectPages } from "@/content/profile";
 import { locales } from "@/i18n";
 import { profileLastModified, siteLastModified } from "@/lib/agents/dates";
 import { getAllPosts, getPostAlternates } from "@/lib/blog";
@@ -9,7 +10,8 @@ import { absoluteUrl } from "@/lib/utils";
 import { topicIds } from "@/lib/work/topics";
 
 /**
- * Every HTML page in every locale (Work, its answers, Personal, posts), with
+ * Every HTML page in every locale (Work, its answers, Projects and each
+ * project's page, Personal, posts), with
  * hreflang alternates (`xhtml:link`, including x-default) and `lastmod`. Markdown/JSON renditions are discovered
  * through Link headers, llms.txt and the API catalog instead.
  */
@@ -25,6 +27,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
       alternates: { languages: hreflangAlternates(localizedPaths("/")) },
     },
+    {
+      url: absoluteUrl(routes.projects(lang)),
+      lastModified: profileUpdated,
+      changeFrequency: "monthly",
+      priority: 0.9,
+      alternates: {
+        languages: hreflangAlternates(localizedPaths("/projects")),
+      },
+    },
+    ...getProjectPages().map((project) => ({
+      url: absoluteUrl(routes.project(lang, project.id)),
+      lastModified: profileUpdated,
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+      alternates: {
+        languages: hreflangAlternates(
+          localizedPaths(`/projects/${project.id}`),
+        ),
+      },
+    })),
     {
       url: absoluteUrl(routes.personal(lang)),
       lastModified: personalUpdated,

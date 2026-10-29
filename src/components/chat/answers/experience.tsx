@@ -1,5 +1,6 @@
 import { ChartLineUpIcon } from "@phosphor-icons/react/dist/ssr/ChartLineUp";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
+import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { AskLink } from "@/components/chat/assistant";
@@ -235,7 +236,13 @@ function ProjectPanel({
       </p>
       <div>
         <h3 id={titleId} className="text-heading">
-          {t(project.name, lang)}
+          {project.story ? (
+            <TextLink href={routes.project(lang, project.id)}>
+              {t(project.name, lang)}
+            </TextLink>
+          ) : (
+            t(project.name, lang)
+          )}
         </h3>
         {project.summary ? (
           <p className="mt-1 text-small text-muted-foreground">
@@ -253,7 +260,8 @@ function ProjectPanel({
 /**
  * Experience: the career as a bar (the timeline), then one panel per job,
  * the current one in ink, then what else he shipped there: the Sales Copilot
- * as a link to its answer, and the projects told by their results.
+ * as a link to its page (or its answer, without one), and the projects told
+ * by their results, each name linking to its page when it has one.
  */
 export function ExperienceAnswer({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
@@ -272,6 +280,24 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
   const company = current
     ? splitCompanyName(t(current.company, lang)).short
     : "";
+  const copilotRow =
+    "group flex h-full pressable-panel items-center gap-4 rounded-surface bg-surface p-4 hover:bg-surface-strong sm:p-5";
+  const copilotContent = copilot ? (
+    <>
+      <span className="grid size-12 shrink-0 place-items-center rounded-tile bg-ink text-on-ink">
+        <TrophyIcon aria-hidden="true" className="size-6" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">{t(copilot.name, lang)}</span>
+        {award ? (
+          <span className="block text-small text-muted-foreground">
+            {t(award.title, lang)}
+          </span>
+        ) : null}
+      </span>
+      <PanelArrow className="text-muted-foreground group-hover:text-foreground" />
+    </>
+  ) : null;
 
   return (
     <>
@@ -298,25 +324,22 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
           <ul className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
             {copilot ? (
               <li className="sm:col-span-2">
-                <AskLink
-                  href={routes.topic(lang, "sales-copilot")}
-                  className="group flex h-full pressable-panel items-center gap-4 rounded-surface bg-surface p-4 hover:bg-surface-strong sm:p-5"
-                >
-                  <span className="grid size-12 shrink-0 place-items-center rounded-tile bg-ink text-on-ink">
-                    <TrophyIcon aria-hidden="true" className="size-6" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-medium">
-                      {t(copilot.name, lang)}
-                    </span>
-                    {award ? (
-                      <span className="block text-small text-muted-foreground">
-                        {t(award.title, lang)}
-                      </span>
-                    ) : null}
-                  </span>
-                  <PanelArrow className="text-muted-foreground group-hover:text-foreground" />
-                </AskLink>
+                {copilot.story ? (
+                  // Its page on the Projects tab tells the whole story.
+                  <Link
+                    href={routes.project(lang, copilot.id)}
+                    className={copilotRow}
+                  >
+                    {copilotContent}
+                  </Link>
+                ) : (
+                  <AskLink
+                    href={routes.topic(lang, "sales-copilot")}
+                    className={copilotRow}
+                  >
+                    {copilotContent}
+                  </AskLink>
+                )}
               </li>
             ) : null}
             {results.map(({ project, metric }, index) => (
@@ -357,6 +380,11 @@ export function ExperienceAnswer({ lang }: { lang: Locale }) {
               </li>
             ))}
           </ul>
+          <p className="mt-6">
+            <TextLink href={routes.projects(lang)}>
+              {dict.projects.all}
+            </TextLink>
+          </p>
         </Piece>
       ) : null}
     </>

@@ -72,8 +72,36 @@ export type PressLink = {
   lang: string;
 };
 
-/** Something Davi built at a job (it may be private). */
+/** A result beside the headline one, on the project's page: "Millions", "saved in operating costs". */
+export type ProjectResult = {
+  /** Set large. A leading number ("40%") counts up on screen; words ("Millions") stay as they are. */
+  value: Localizable;
+  label: L10n;
+};
+
+/**
+ * The case study told on a project's own page. Only facts Davi stated (his
+ * CV, LinkedIn); nothing here may add a metric, a client or a claim.
+ */
+export type ProjectStory = {
+  /** What was hard before, in one or two sentences. */
+  problem: L10n;
+  /** What the product does, one short point per line. */
+  solution: L10n<string[]>;
+  /**
+   * How it is built, part by part, each with the technologies in it (their
+   * logos come from the registry). Omit when the split is not known.
+   */
+  build?: { part: L10n; stack: string[] }[];
+};
+
+/**
+ * Something Davi built at a job (it may be private). A project with a
+ * `story` gets its own page, `/[lang]/projects/<id>`, and a large card on the
+ * Projects tab; the others are told by their result on that tab.
+ */
 export type Project = {
+  /** Also the URL slug of its page (`/en/projects/sales-copilot`): lowercase, hyphens. */
   id: string;
   name: Localizable;
   /** One line for the project's card (the full story is `description`). */
@@ -86,10 +114,18 @@ export type Project = {
   role?: L10n;
   /** Award or recognition, displayed as a badge. */
   award?: L10n;
+  /** The `achievements` entry behind `award` (its issuer, date, category and link). */
+  achievement?: string;
   /** The headline result, set large on the card: "96%" and what it measures. */
   metric?: { value: string; label: L10n };
+  /** More results, beside the headline on the project's page. */
+  results?: ProjectResult[];
   /** Press coverage, newest first. */
   press?: PressLink[];
+  /** What the project is about, in plain English (schema.org `about` and page keywords). */
+  topics?: string[];
+  /** The case study; with it the project gets its own page. */
+  story?: ProjectStory;
   isPrivate?: boolean;
   year?: PartialDate;
 };
@@ -156,6 +192,10 @@ export type Achievement = {
   description: L10n;
   /** Awarding body or platform. */
   issuer?: string;
+  /** The edition of the awards, as the issuer names it ("Conecta Latam Awards 2025"). */
+  event?: string;
+  /** The category won, as the issuer names it. */
+  category?: L10n;
   /** Show prominently (hero, highlights). */
   featured: boolean;
   date?: PartialDate;
@@ -466,6 +506,7 @@ export const profile: Profile = {
         en: "Best AI Project in LATAM, Conecta Latam awards",
         "pt-br": "Melhor Projeto de IA da América Latina, prêmio Conecta Latam",
       },
+      achievement: "conecta-latam-best-ai-project",
       isPrivate: true,
       year: "2025",
       summary: {
@@ -479,6 +520,40 @@ export const profile: Profile = {
           "Um copiloto com IA para os times de vendas da Algar (PMEs e Corporativo): escuta as ligações, analisa a conversa em tempo real e sugere argumentos e ofertas sob medida para cada cliente. Projetei e construí de ponta a ponta, do front-end em Svelte e do back-end em .NET às ferramentas de IA no Azure OpenAI. Eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
       },
       stack: ["Azure OpenAI", "Svelte", ".NET"],
+      topics: ["Generative AI", "AI copilot", "Sales", "Telecommunications"],
+      // From Davi's CV (October 2026): the copilot reads the conversation's
+      // signals in real time and fits arguments and offers to the customer's
+      // profile and pain points.
+      story: {
+        problem: {
+          en: "On a sales call, the right argument and the right offer depend on who the customer is and what they need, and they are needed while the customer is still on the line.",
+          "pt-br":
+            "Numa ligação de vendas, o argumento e a oferta certos dependem de quem é o cliente e do que ele precisa, e precisam chegar enquanto ele ainda está na linha.",
+        },
+        solution: {
+          en: [
+            "Listens to the call and reads the conversation in real time.",
+            "Suggests arguments and offers that fit the customer's profile and pain points.",
+            "Built for Algar's small business and corporate sales teams.",
+          ],
+          "pt-br": [
+            "Escuta a ligação e analisa a conversa em tempo real.",
+            "Sugere argumentos e ofertas sob medida para o perfil e as dores do cliente.",
+            "Feito para os times de vendas de PMEs e Corporativo da Algar.",
+          ],
+        },
+        build: [
+          {
+            part: { en: "Front end", "pt-br": "Front-end" },
+            stack: ["Svelte"],
+          },
+          {
+            part: { en: "AI tools", "pt-br": "Ferramentas de IA" },
+            stack: ["Azure OpenAI"],
+          },
+          { part: { en: "Back end", "pt-br": "Back-end" }, stack: [".NET"] },
+        ],
+      },
       // Opened and checked October 2026. Mobile Time describes the copilot
       // (calls, arguments, Azure OpenAI) before it had its name.
       press: [
@@ -523,7 +598,42 @@ export const profile: Profile = {
         "pt-br":
           "Uma aplicação de IA Generativa que automatiza a análise e a validação de faturas de telecom, extraindo e interpretando dados de contratos, com Azure OpenAI e RPA. Reduziu o tempo de revisão manual em 96% e gerou economia de milhões em custos operacionais.",
       },
+      results: [
+        {
+          value: { en: "Millions", "pt-br": "Milhões" },
+          label: {
+            en: "saved in operating costs",
+            "pt-br": "de economia em custos operacionais",
+          },
+        },
+      ],
       stack: ["Azure OpenAI", "RPA"],
+      topics: [
+        "Generative AI",
+        "Invoice processing",
+        "Robotic process automation",
+        "Telecommunications",
+      ],
+      // TODO(davi): add your role on Billy (`role`); its page shows it when set.
+      story: {
+        problem: {
+          en: "Telecom invoices were analyzed and validated by hand, against the data in each contract.",
+          "pt-br":
+            "As faturas de telecom eram analisadas e validadas manualmente, com base nos dados de cada contrato.",
+        },
+        solution: {
+          en: [
+            "Extracts and interprets contract data.",
+            "Automates the analysis and validation of telecom invoices.",
+            "Combines Azure OpenAI with RPA.",
+          ],
+          "pt-br": [
+            "Extrai e interpreta os dados dos contratos.",
+            "Automatiza a análise e a validação das faturas de telecom.",
+            "Combina Azure OpenAI e RPA.",
+          ],
+        },
+      },
       // Opened and checked October 2026; each names Billy and its numbers.
       press: [
         {
@@ -886,6 +996,11 @@ export const profile: Profile = {
         "pt-br": "Melhor Projeto de IA da América Latina",
       },
       issuer: "Conecta Latam",
+      event: "Conecta Latam Awards 2025",
+      category: {
+        en: "Best AI Implementation Initiative in Telecommunications",
+        "pt-br": "Melhor Iniciativa de Implementação de IA em Telecomunicações",
+      },
       featured: true,
       // Winners announced on December 3, 2025, in Panama City (Tele.Síntese).
       date: "2025-12",
@@ -1119,6 +1234,56 @@ export function getSocial(id: SocialId): Social {
   const social = profile.socials.find((s) => s.id === id);
   if (!social) throw new Error(`Unknown social "${id}"`);
   return social;
+}
+
+/** Projects with their own page (a `story`), in profile order. */
+export function getProjectPages(): Project[] {
+  return profile.projects.filter((project) => project.story);
+}
+
+/** A project with its own page, by id (= slug), or undefined. */
+export function getProjectPage(id: string): Project | undefined {
+  return getProjectPages().find((project) => project.id === id);
+}
+
+/** The achievement behind a project's award (issuer, date, category, link). */
+export function getProjectAchievement(
+  project: Project,
+): Achievement | undefined {
+  return project.achievement
+    ? profile.achievements.find((item) => item.id === project.achievement)
+    : undefined;
+}
+
+export type OutletCoverage = {
+  outlet: string;
+  /** Its articles, newest first, each with the project it covers. */
+  articles: (PressLink & { project: Project })[];
+};
+
+/** Every outlet that covered a project, by its newest article (newest first). */
+export function getPressOutlets(): OutletCoverage[] {
+  const byOutlet = new Map<string, OutletCoverage>();
+  for (const project of profile.projects) {
+    for (const item of project.press ?? []) {
+      const entry = byOutlet.get(item.outlet) ?? {
+        outlet: item.outlet,
+        articles: [],
+      };
+      entry.articles.push({ ...item, project });
+      byOutlet.set(item.outlet, entry);
+    }
+  }
+  const newest = (entry: OutletCoverage) =>
+    entry.articles.reduce((max, a) => (a.date > max ? a.date : max), "");
+  return [...byOutlet.values()]
+    .map((entry) => ({
+      ...entry,
+      articles: [...entry.articles].sort((a, b) =>
+        b.date.localeCompare(a.date),
+      ),
+    }))
+    .sort((a, b) => newest(b).localeCompare(newest(a)));
 }
 
 /** Formal credentials first (newest first), then courses. */

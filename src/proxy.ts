@@ -20,7 +20,8 @@ import { matchTopic } from "@/lib/work/topics";
  *   (canonical, hreflang, Markdown alternate, llms.txt, API catalog, sitemap, RSS).
  *   When the `Accept` header prefers `text/markdown`, known pages are rewritten
  *   to their Markdown rendition instead (`Vary: Accept` on both variants).
- * - `/en.md`, `/en/index.md`, `/en/work/<topic>.md`, `/en/personal.md`,
+ * - `/en.md`, `/en/index.md`, `/en/work/<topic>.md`, `/en/projects.md`,
+ *   `/en/projects/<slug>.md`, `/en/personal.md`,
  *   `/en/personal/blog/<slug>.md` are rewritten to the internal Markdown
  *   routes (`src/app/markdown`).
  * - `/en/ask?q=...` (the Work composer's form without JavaScript) is
@@ -117,7 +118,8 @@ export const config = {
      * - extension-less metadata routes: opengraph-image, twitter-image, icon, apple-icon
      */
     "/((?!_next/|api/|mcp$|mcp/|.*\\..*|opengraph-image|twitter-image|icon|apple-icon).*)",
-    // Markdown renditions: /en.md, /en/index.md, /en/work/<topic>.md, /en/personal.md, /en/personal/blog/<slug>.md
+    // Markdown renditions: /en.md, /en/index.md, /en/work/<topic>.md, /en/projects.md,
+    // /en/projects/<slug>.md, /en/personal.md, /en/personal/blog/<slug>.md
     "/(.*\\.md)",
   ],
 };

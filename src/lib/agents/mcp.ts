@@ -4,8 +4,9 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import * as z from "zod";
 
 import { siteConfig } from "@/config/site";
-import { profile } from "@/content/profile";
+import { getProjectPage, getProjectPages, profile } from "@/content/profile";
 import { locales, t, type Locale } from "@/i18n";
+import { projectMeta } from "@/lib/projects";
 import { absoluteUrl } from "@/lib/utils";
 
 import { agentPaths, markdownPath } from "./discovery";
@@ -14,6 +15,8 @@ import {
   llmsTxt,
   personalMarkdown,
   postMarkdown,
+  projectMarkdown,
+  projectsMarkdown,
   workMarkdown,
 } from "./markdown";
 import { getRawPost, getRawPosts } from "./posts";
@@ -148,6 +151,15 @@ export function staticResources() {
         read: () => workMarkdown(lang),
       },
       {
+        name: `projects-${lang}`,
+        uri: absoluteUrl(markdownPath({ kind: "projects", lang })),
+        title: lang === "en" ? "Projects (English)" : "Projetos (Português)",
+        description:
+          "Every project with its result, award and the press that covered it, as Markdown.",
+        mimeType: "text/markdown",
+        read: () => projectsMarkdown(lang),
+      },
+      {
         name: `personal-${lang}`,
         uri: absoluteUrl(markdownPath({ kind: "personal", lang })),
         title:
@@ -171,6 +183,7 @@ export function staticResources() {
 }
 
 export const POST_RESOURCE_TEMPLATE = `${siteConfig.url}/{lang}/personal/blog/{slug}.md`;
+export const PROJECT_RESOURCE_TEMPLATE = `${siteConfig.url}/{lang}/projects/{slug}.md`;
 
 function text(value: string) {
   return { content: [{ type: "text" as const, text: value }] };
@@ -338,6 +351,45 @@ export function createSiteMcpServer(): McpServer {
             uri: uri.href,
             mimeType: "text/markdown",
             text: postMarkdown(post),
+          },
+        ],
+      };
+    },
+  );
+
+  server.registerResource(
+    "project",
+    new ResourceTemplate(PROJECT_RESOURCE_TEMPLATE, {
+      list: async () => ({
+        resources: locales.flatMap((lang) =>
+          getProjectPages().map((project) => ({
+            uri: absoluteUrl(
+              markdownPath({ kind: "project", lang, slug: project.id }),
+            ),
+            name: `${lang}/${project.id}`,
+            title: t(project.name, lang),
+            description: projectMeta(project, lang).description,
+            mimeType: "text/markdown",
+          })),
+        ),
+      }),
+    }),
+    {
+      title: "Project",
+      description:
+        "A project's page as Markdown (result, problem, what it does, how it's built, press): {lang} is en or pt-br, {slug} is a project id such as sales-copilot.",
+      mimeType: "text/markdown",
+    },
+    async (uri, variables) => {
+      const lang = pickLang(String(variables.lang));
+      const project = getProjectPage(String(variables.slug));
+      if (!project) throw new Error(`Unknown project: ${uri.href}`);
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "text/markdown",
+            text: projectMarkdown(lang, project),
           },
         ],
       };

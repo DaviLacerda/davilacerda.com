@@ -1,14 +1,17 @@
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { BrowserIcon } from "@phosphor-icons/react/dist/ssr/Browser";
 import { DatabaseIcon } from "@phosphor-icons/react/dist/ssr/Database";
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 
 import { Piece } from "@/components/chat/piece";
+import { ButtonLink } from "@/components/ui/button";
 import { LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { profile } from "@/content/profile";
 import { getDictionary, t, type Locale } from "@/i18n";
 import { formatPartialDate, toIsoDate } from "@/i18n/format";
+import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { splitCompanyName } from "@/lib/work/answers";
 
@@ -121,6 +124,16 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
             </div>
           ))}
         </dl>
+        {project.story ? (
+          <ButtonLink
+            href={routes.project(lang, project.id)}
+            variant="quiet"
+            className="mt-10"
+          >
+            {dict.projects.open}
+            <ArrowRightIcon aria-hidden="true" className="size-4" />
+          </ButtonLink>
+        ) : null}
       </Piece>
 
       <Piece

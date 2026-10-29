@@ -21,6 +21,11 @@ export const en = {
       description:
         "Davi Lacerda is an AI Engineer at Algar, Brazil, building generative AI and agents. Main developer of the award-winning Sales Copilot, 3× Microsoft Certified.",
     },
+    projects: {
+      title: "Projects",
+      description:
+        "What Davi Lacerda built with AI at Algar, and the results: the Sales Copilot, Best AI Project in LATAM, Billy, which cut manual invoice review time by 96%, and the press that covered them.",
+    },
     personal: {
       title: "Personal",
       description:
@@ -49,6 +54,7 @@ export const en = {
 
   nav: {
     work: "Work",
+    projects: "Projects",
     personal: "Personal",
     blog: "Blog",
     contact: "Contact",
@@ -307,6 +313,46 @@ export const en = {
       "Conecta Latam",
       "Best AI Project in LATAM",
     ],
+  },
+
+  /**
+   * The Projects tab (`/[lang]/projects`) and each project's page. The facts
+   * (results, award, press, story) come from `profile.projects`.
+   */
+  projects: {
+    title: "Projects",
+    /** First-person line under the title. */
+    lead: "What I built with AI at Algar, and the results.",
+    /** The outlets' row on the tab, and the coverage on a project's page. */
+    press: "In the press",
+    /** Under "In the press" on a project's page (the articles do not name Davi). */
+    pressNote: "Articles about the project, with their original headlines.",
+    /** Beside an article, by its BCP 47 tag. */
+    language: { "pt-BR": "Portuguese", en: "English" },
+    /** The back link on a project's page. */
+    all: "All projects",
+    next: "Next project",
+    /** Above a project's headline figure on its page. */
+    result: "Result",
+    /** The link from a Work answer to a project's page. */
+    open: "See the project page",
+    award: "Award",
+    facts: {
+      company: "Company",
+      year: "Year",
+      role: "Role",
+      access: "Access",
+    },
+    problem: "The problem",
+    solution: "What it does",
+    build: "How it's built",
+    /** The demo video's accessible name. */
+    demo: "Demo: {name}",
+    /** A project page's title: "Billy, 96% less time on manual review". */
+    metaTitle: "{name}, {result}",
+    /** A project page's description. `{outlets}` is a list: "Tele.Síntese and Mobile Time". */
+    metaDescription: "{summary} {result}. In the press: {outlets}.",
+    metaDescriptionNoPress: "{summary} {result}.",
   },
 
   personal: {

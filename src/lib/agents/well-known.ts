@@ -9,7 +9,7 @@ import {
 import * as z from "zod";
 
 import { siteConfig } from "@/config/site";
-import { getCertifications, profile } from "@/content/profile";
+import { getCertifications, getProjectPages, profile } from "@/content/profile";
 import { locales, localeMeta, t } from "@/i18n";
 import { formatPartialDate } from "@/i18n/format";
 import { routes } from "@/lib/routes";
@@ -21,6 +21,7 @@ import {
   MCP_INSTRUCTIONS,
   MCP_SERVER_INFO,
   POST_RESOURCE_TEMPLATE,
+  PROJECT_RESOURCE_TEMPLATE,
   staticResources,
   toolInputs,
   toolMeta,
@@ -212,6 +213,12 @@ export function mcpServerCard() {
         title: "Blog post",
         mimeType: "text/markdown",
       },
+      {
+        name: "project",
+        uriTemplate: PROJECT_RESOURCE_TEMPLATE,
+        title: "Project",
+        mimeType: "text/markdown",
+      },
     ],
     prompts: [
       {
@@ -271,7 +278,10 @@ Use this skill to answer questions about **${profile.name}** with verified, curr
    - \`list_posts({ lang? })\` and \`get_post({ slug, lang? })\`: blog content as Markdown.
    - Discovery: ${absoluteUrl(agentPaths.mcpServerCard)}
 2. **Markdown** (append \`.md\` to any page, or send \`Accept: text/markdown\`):
-${locales.map((lang) => `   - ${localeMeta[lang].label}: ${absoluteUrl(markdownPath({ kind: "work", lang }))} (work), ${absoluteUrl(markdownPath({ kind: "personal", lang }))} (personal)`).join("\n")}
+${locales.map((lang) => `   - ${localeMeta[lang].label}: ${absoluteUrl(markdownPath({ kind: "work", lang }))} (work), ${absoluteUrl(markdownPath({ kind: "projects", lang }))} (projects, with their results and press), ${absoluteUrl(markdownPath({ kind: "personal", lang }))} (personal)`).join("\n")}
+   - Projects: \`${siteConfig.url}/<lang>/projects/<slug>.md\` (${getProjectPages()
+     .map((project) => `\`${project.id}\``)
+     .join(", ")})
    - Posts: \`${siteConfig.url}/<lang>/personal/blog/<slug>.md\`
    - Everything at once: ${absoluteUrl(agentPaths.llmsFull)}
 3. **JSON**: ${absoluteUrl(agentPaths.profileJson())} (profile), ${absoluteUrl(agentPaths.postsJson())} (posts), ${absoluteUrl(agentPaths.resume())} (JSON Resume). OpenAPI: ${absoluteUrl(agentPaths.openapi)}

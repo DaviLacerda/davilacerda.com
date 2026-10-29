@@ -11,9 +11,11 @@ const PROFILE_SOURCES = [
   "src/content/personal.ts",
   "src/i18n/dictionaries",
   "src/app/[lang]/(assistant)",
+  "src/app/[lang]/projects",
   "src/app/[lang]/personal/page.tsx",
   "src/components/chat/answers",
   "src/lib/work",
+  "src/lib/projects",
 ].map((file) => `:(literal)${file}`); // "[lang]" would otherwise be a glob
 
 let cached: string | undefined;

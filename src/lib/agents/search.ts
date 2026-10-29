@@ -1,6 +1,11 @@
 import "server-only";
 
-import { getCertifications, profile } from "@/content/profile";
+import {
+  getCertifications,
+  getProjectAchievement,
+  getProjectPage,
+  profile,
+} from "@/content/profile";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { formatDateRange, formatPartialDate } from "@/i18n/format";
 import { absoluteUrl } from "@/lib/utils";
@@ -71,23 +76,30 @@ function countOccurrences(haystack: string, needle: string): number {
 }
 
 /**
- * Each profile document points at the page that answers it best: a Work
- * answer (`/en/work/<topic>`) or, for the summary, the Work page.
+ * Each profile document points at the page that answers it best: a project's
+ * page (or the Projects tab), a Work answer (`/en/work/<topic>`) or, for the
+ * summary, the Work page.
  */
 function profileDocuments(lang: Locale): SearchDocument[] {
   const dict = getDictionary(lang);
   const s = dict.work.sections;
+  const projectPage = (id: string): PageRef =>
+    getProjectPage(id)
+      ? { kind: "project", lang, slug: id }
+      : { kind: "projects", lang };
   const doc = (
     id: string,
     section: string,
     title: string,
     text: string,
-    where: TopicId | "work" = "work",
+    where: TopicId | "work" | PageRef = "work",
   ): SearchDocument => {
     const page: PageRef =
-      where === "work"
-        ? { kind: "work", lang }
-        : { kind: "topic", lang, topic: where };
+      typeof where === "object"
+        ? where
+        : where === "work"
+          ? { kind: "work", lang }
+          : { kind: "topic", lang, topic: where };
     return {
       id: `profile:${lang}:${id}`,
       lang,
@@ -135,28 +147,38 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         "experience",
       ),
     ),
-    ...profile.projects.map((project) =>
-      doc(
+    ...profile.projects.map((project) => {
+      const achievement = getProjectAchievement(project);
+      return doc(
         `project:${project.id}`,
-        s.projects.title,
+        dict.projects.title,
         t(project.name, lang),
         [
+          project.summary && t(project.summary, lang),
           t(project.description, lang),
           project.context,
           project.role && t(project.role, lang),
           project.award && t(project.award, lang),
+          achievement?.event,
+          achievement?.category && t(achievement.category, lang),
           project.metric &&
             `${project.metric.value} ${t(project.metric.label, lang)}`,
+          ...(project.results ?? []).map(
+            (result) => `${t(result.value, lang)} ${t(result.label, lang)}`,
+          ),
+          project.story && t(project.story.problem, lang),
+          ...(project.story ? t(project.story.solution, lang) : []),
           project.stack.join(", "),
+          project.topics?.join(", "),
           ...(project.press ?? []).map(
             (item) => `${item.outlet}: ${item.title} (${item.url})`,
           ),
         ]
           .filter(Boolean)
           .join("\n"),
-        project.id === "sales-copilot" ? "sales-copilot" : "experience",
-      ),
-    ),
+        projectPage(project.id),
+      );
+    }),
     ...profile.skills.map((group) =>
       doc(
         `skills:${group.id}`,
@@ -200,19 +222,31 @@ function profileDocuments(lang: Locale): SearchDocument[] {
         "education",
       ),
     ),
-    ...profile.achievements.map((item) =>
-      doc(
+    ...profile.achievements.map((item) => {
+      const project = profile.projects.find(
+        (candidate) => candidate.achievement === item.id,
+      );
+      return doc(
         `achievement:${item.id}`,
         s.achievements.title,
         t(item.title, lang),
-        [item.issuer, t(item.description, lang)].filter(Boolean).join("\n"),
-        item.id.startsWith("conecta-latam")
-          ? "sales-copilot"
-          : item.id.startsWith("microsoft")
-            ? "certifications"
-            : "work",
-      ),
-    ),
+        [
+          item.issuer,
+          item.event,
+          item.category && t(item.category, lang),
+          t(item.description, lang),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        project
+          ? projectPage(project.id)
+          : item.id.startsWith("conecta-latam")
+            ? "sales-copilot"
+            : item.id.startsWith("microsoft")
+              ? "certifications"
+              : "work",
+      );
+    }),
     ...profile.faq.map((item) =>
       doc(
         `faq:${item.id}`,

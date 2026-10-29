@@ -18,6 +18,10 @@ export const routes = {
    * `?q=` to the best-matching topic; the page itself is the "no answer" reply.
    */
   ask: (lang: Locale) => `/${lang}/ask`,
+  /** Projects tab: what Davi built, told by its results and its press. */
+  projects: (lang: Locale) => `/${lang}/projects`,
+  /** One project's page (a project with a `story` in the profile), e.g. `/en/projects/billy`. */
+  project: (lang: Locale, slug: string) => `/${lang}/projects/${slug}`,
   /** Personal tab. */
   personal: (lang: Locale) => `/${lang}/personal`,
   /** Blog index lives inside the Personal tab. */
@@ -31,6 +35,7 @@ export const routes = {
 /** Tabs shown in the header, in order. See `activeTab()` for the active state. */
 export const tabs = [
   { id: "work", href: routes.work },
+  { id: "projects", href: routes.projects },
   { id: "personal", href: routes.personal },
 ] as const;
 
@@ -38,10 +43,11 @@ export type TabId = (typeof tabs)[number]["id"];
 
 /** Which header tab a pathname belongs to (`/pt-br/personal/blog/x` -> "personal"). */
 export function activeTab(pathname: string, lang: Locale): TabId {
-  return pathname === routes.personal(lang) ||
-    pathname.startsWith(`${routes.personal(lang)}/`)
-    ? "personal"
-    : "work";
+  const within = (base: string) =>
+    pathname === base || pathname.startsWith(`${base}/`);
+  if (within(routes.personal(lang))) return "personal";
+  if (within(routes.projects(lang))) return "projects";
+  return "work";
 }
 
 /**
