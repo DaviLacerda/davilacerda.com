@@ -467,7 +467,6 @@ export const ptBr: Dictionary = {
 
   footer: {
     rights: "Todos os direitos reservados.",
-    updated: "atualizado em {date}",
   },
 
   notFound: {

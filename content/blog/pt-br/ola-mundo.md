@@ -26,34 +26,6 @@ A engenharia de IA também anda rápido, e muito do que se publica fica em um de
 - **Azure AI**: construir IA corporativa no stack da Microsoft, com segurança e governança desde o primeiro dia.
 - **IA Generativa em produção**: avaliação, observabilidade, custo e latência, e interfaces que fazem funcionalidades de IA parecerem confiáveis.
 
-## Um princípio para começar
-
-Se uma ideia aparece em quase tudo o que eu construo, é esta:
-
-> Trate a saída do modelo como entrada de usuário: útil, mas não confiável até ser validada.
-
-No código, isso costuma significar uma fronteira bem tipada logo depois que o modelo responde:
-
-```ts title="summarize.ts" {13-14}
-import { z } from "zod";
-
-const Summary = z.object({
-  title: z.string(),
-  bullets: z.array(z.string()).max(5),
-});
-
-export async function summarize(text: string) {
-  const raw = await callModel({
-    system: "Resuma o texto em JSON.",
-    input: text,
-  });
-  // Valide antes que o resto da aplicação veja o resultado.
-  return Summary.parse(JSON.parse(raw));
-}
-```
-
-Pequeno, sem graça e fácil de testar. Uma quantidade surpreendente de software de IA confiável se parece com isso.
-
 ## Vamos conversar
 
 Se quiser conversar sobre engenharia de IA, me mande um e-mail em [davi16lacerda@gmail.com](mailto:davi16lacerda@gmail.com) ou me encontre no [LinkedIn](https://www.linkedin.com/in/davi16lacerda/). Para receber o próximo post, assine o [feed RSS](/pt-br/personal/blog/rss.xml).

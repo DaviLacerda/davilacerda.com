@@ -550,8 +550,6 @@ export const en = {
 
   footer: {
     rights: "All rights reserved.",
-    /** After the copyright: "© 2026 Davi Lacerda, updated October 29, 2026". */
-    updated: "updated {date}",
   },
 
   notFound: {
