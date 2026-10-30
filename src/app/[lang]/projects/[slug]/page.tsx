@@ -59,9 +59,9 @@ export async function generateMetadata({
 
 /**
  * One project's page, e.g. `/en/projects/sales-copilot`: the result first,
- * then the story. The name and one line; the facts (company, year, role,
- * access); the result on the ink panel (the award, or the figure counting
- * up); the demo when its files exist; every article that covered it, as
+ * then the story. The name and one line; the demo, playing, when its files
+ * exist; the facts (company, year, role, access); the result on the ink
+ * panel (the award, or the figure counting up); every article that covered it, as
  * cards, right under the result; the problem beside what it does; how it is
  * built, part by part with the stack's logos (or the stack alone); and the
  * next project. All from the project's entry in `profile.projects`.
@@ -148,6 +148,13 @@ export default async function ProjectPage({ params }: PageProps) {
         </p>
       ) : null}
 
+      {/* The demo first: seeing it work says more than any fact below. */}
+      {demo ? (
+        <div {...enter(3)} className="mt-10">
+          <DemoVideo demo={demo} label={interpolate(p.demo, { name })} />
+        </div>
+      ) : null}
+
       {facts.length ? (
         <dl
           {...enter(3)}
@@ -168,12 +175,6 @@ export default async function ProjectPage({ params }: PageProps) {
         <div {...enter(4)} className="mt-10">
           <ProjectHero project={project} headline={headline} lang={lang} />
         </div>
-      ) : null}
-
-      {demo ? (
-        <Reveal className="mt-4">
-          <DemoVideo demo={demo} label={interpolate(p.demo, { name })} />
-        </Reveal>
       ) : null}
 
       {/* The press right under the result: what others wrote comes first. */}

@@ -3,9 +3,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * A project's demo, from `public/work/<id>/` (see `projectDemo()`): the
- * browser's own player, nothing loaded until it is played, the poster in
- * place meanwhile and the box sized by it, so nothing shifts. WebM first,
- * MP4 for Safari. No autoplay: the visitor starts it.
+ * browser's own player, playing on its own (muted and looping, which is what
+ * browsers allow to autoplay), the poster in place until the first frame and
+ * the box sized by it, so nothing shifts. WebM first, MP4 for Safari. The
+ * controls stay, so the visitor can pause it.
  */
 export function DemoVideo({
   demo,
@@ -21,8 +22,11 @@ export function DemoVideo({
     <figure className={className}>
       <video
         controls
+        autoPlay
+        muted
+        loop
         playsInline
-        preload="none"
+        preload="auto"
         poster={demo.poster}
         aria-label={label}
         width={demo.width}

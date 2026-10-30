@@ -5,13 +5,15 @@ import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 
 import { Piece } from "@/components/chat/piece";
+import { DemoVideo } from "@/components/projects/demo-video";
 import { AsciiBackdrop } from "@/components/ui/ascii-backdrop";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { profile } from "@/content/profile";
-import { getDictionary, t, type Locale } from "@/i18n";
+import { getDictionary, interpolate, t, type Locale } from "@/i18n";
 import { formatPartialDate, toIsoDate } from "@/i18n/format";
+import { projectDemo } from "@/lib/projects";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { splitCompanyName } from "@/lib/work/answers";
@@ -20,7 +22,8 @@ import { BlockTitle, fit, Panel } from "./parts";
 import { PressList } from "./press";
 
 /**
- * Sales Copilot: the award first, as large as the canvas allows, on the ink
+ * Sales Copilot: the demo first, playing, when its files exist; then the
+ * award, as large as the canvas allows, on the ink
  * panel; then the project's four facts in large type; then how it was built,
  * drawn as its three layers with the AI tools in the middle; then the press
  * that covered it.
@@ -34,6 +37,7 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
     item.id.startsWith("conecta-latam"),
   );
   if (!project) return null;
+  const demo = projectDemo(project.id);
   const employer = profile.experience.find(
     (job) => splitCompanyName(t(job.company, lang)).short === project.context,
   );
@@ -76,8 +80,19 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
 
   return (
     <>
-      {awardTitle ? (
+      {demo ? (
         <Piece i={2} className="mt-10">
+          <DemoVideo
+            demo={demo}
+            label={interpolate(dict.projects.demo, {
+              name: t(project.name, lang),
+            })}
+          />
+        </Piece>
+      ) : null}
+
+      {awardTitle ? (
+        <Piece i={2} className={demo ? "mt-4" : "mt-10"}>
           <Panel
             as="section"
             tone="ink"
