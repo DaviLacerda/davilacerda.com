@@ -350,6 +350,8 @@ export const en = {
     build: "How it's built",
     /** The demo video's accessible name. */
     demo: "Demo: {name}",
+    /** The label on the demo video: it shows sample data, not the company's. */
+    demoNote: "Demo with sample data, showing how the real product works",
     /** A project page's title: "Billy, 96% less time on manual review". */
     metaTitle: "{name}, {result}",
     /** A project page's description. `{outlets}` is a list: "Tele.Síntese and Mobile Time". */

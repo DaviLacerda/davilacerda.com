@@ -151,7 +151,11 @@ export default async function ProjectPage({ params }: PageProps) {
       {/* The demo first: seeing it work says more than any fact below. */}
       {demo ? (
         <div {...enter(3)} className="mt-10">
-          <DemoVideo demo={demo} label={interpolate(p.demo, { name })} />
+          <DemoVideo
+            demo={demo}
+            label={interpolate(p.demo, { name })}
+            note={p.demoNote}
+          />
         </div>
       ) : null}
 

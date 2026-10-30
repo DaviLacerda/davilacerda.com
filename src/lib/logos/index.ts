@@ -9,7 +9,7 @@ export { logoRegistry, type LogoId } from "./registry";
 
 /**
  * Where a logo comes from: a bundled brand logo (an id from the registry) or
- * a file in /public, such as "/logos/algar.svg".
+ * a file in /public, such as "/logos/algar.png".
  */
 export type LogoSource = LogoId | `/${string}`;
 

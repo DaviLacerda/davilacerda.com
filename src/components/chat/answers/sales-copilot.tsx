@@ -87,6 +87,7 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
             label={interpolate(dict.projects.demo, {
               name: t(project.name, lang),
             })}
+            note={dict.projects.demoNote}
           />
         </Piece>
       ) : null}

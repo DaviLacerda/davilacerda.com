@@ -151,9 +151,8 @@ export const logoRegistry = {
     color: "#ff4655",
   },
   ubisoft: { icon: "simple-icons:ubisoft", label: "Ubisoft" },
-  // Where Davi worked and studied (`logo` in the profile): files in public/logos.
-  algar: { icon: "file:algar-symbol", label: "Algar" },
-  brain: { icon: "file:brain-symbol", label: "Brain", tint: "#002f51" },
+  // Where Davi studied (`logo` in the profile): files in public/logos. Algar and
+  // Brain use their full-colour PNG logos instead (public/logos/*.png).
   ufu: { icon: "file:ufu", label: "UFU", tint: "#092269" },
 } as const satisfies Record<string, LogoSpec>;
 

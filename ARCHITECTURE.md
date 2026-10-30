@@ -228,16 +228,16 @@ version in `currentColor` so they follow the theme. A one-colour mark whose bran
 takes it from `color` on its entry (PlayStation blue, Valorant red); Steam and Ubisoft stay in
 `currentColor`. Logos are decorative next to their name
 (`aria-hidden`); a logo standing alone gets `label` (role `img` + `aria-label`). Gradient ids are
-scoped per instance (`scopeSvgIds`). Company and school logos are in no icon set: their official
-SVGs live in `public/logos/` (svgo'd) and the registry lists them as `file:<name>` icons
-(`algar` the three-triangle symbol, `brain` the symbol, `ufu`), which `yarn logos` copies into
-`icons.json` like the rest, so they inline the same way. The symbols are used, not the wordmarks
-(`algar.svg`, `brain.svg` in the folder, unused): the name is always written beside the tile.
-Brain's and UFU's marks are navy, which would vanish on a dark ground, so their entries carry
+scoped per instance (`scopeSvgIds`). Company and school logos are in no icon set. Algar and Brain
+use the full-colour logos Davi supplied (`public/logos/algar.png`, without the tagline, and
+`brain.png`, squared and trimmed); as files, `LogoTile` puts them on a white plate they fill, so
+they read the same in both themes and on the ink panel. UFU's official SVG lives in
+`public/logos/` (svgo'd) and the registry lists it as a `file:ufu` icon, which `yarn logos`
+copies into `icons.json` like the rest, so it inlines the same way. UFU's mark is navy, which would vanish on a dark ground, so its entry carries
 `tint`: the script turns that colour into `currentColor`, and the `logo-tint` utility draws it
 navy on light grounds and in the ground's ink in dark mode and on ink tiles (`data-ground="ink"`,
-inverted again inside dark mode). Algar's symbol keeps its colours everywhere. `logo` on an entry
-in `profile.ts` is a registry id (`"algar"`) or a `/public` path; without one `<LogoTile>` shows a
+inverted again inside dark mode). `logo` on an entry
+in `profile.ts` is a registry id (`"ufu"`) or a `/public` path; without one `<LogoTile>` shows a
 monogram. Only technologies already in `profile.ts` get a logo. On an ink panel a tile turns
 `tone="ink"` (translucent on-ink fill) and the logo keeps its colours.
 
@@ -521,7 +521,7 @@ cropped to the certificate; curated: the three Microsoft certifications, plus co
 they add AI signal), `credentialsProfile` (`{ name, url: L10n }`, the Microsoft Learn profile:
 linked under the certifications, in `sameAs` and the JSON Resume profiles),
 `education[]` (experience, certifications and education take an optional `logo`: a registry id
-such as `"azure"` or a `/public` path such as `"/logos/algar.svg"`), `achievements[]` (`featured` ones: the Conecta Latam award and the Microsoft
+such as `"azure"` or a `/public` path such as `"/logos/algar.png"`), `achievements[]` (`featured` ones: the Conecta Latam award and the Microsoft
 Expert certifications), `languages[]`, `faq[]` (rendered on the FAQ topic, `/[lang]/work/faq`, and
 used for its FAQPage JSON-LD; the other answers' first paragraphs reuse FAQ answers).
 `image` (the portrait, `/images/davi.webp`, with a PNG twin for the OG card) and `interests[]`

@@ -102,7 +102,9 @@ type LogoTileProps = {
 
 /**
  * A logo on a small tile one tone step from its ground, the picture beside a
- * company, school or credential. Without a logo file it shows the name's
+ * company, school or credential. A logo file (a full-colour brand logo made
+ * for white, like Algar's and Brain's) sits on a white plate instead and
+ * fills it, so a wordmark stays legible in both themes and on the ink panel. Without a logo file it shows the name's
  * initial in the text face, so rows keep the same rhythm until the real logo
  * is added (`logo: "/logos/<name>.svg"` in the profile).
  */
@@ -116,6 +118,7 @@ export function LogoTile({
   className,
 }: LogoTileProps) {
   const s = tileSizes[size];
+  const file = logo && !isLogoId(logo) ? logo : undefined;
   const letters = mark ?? name.trim().charAt(0).toUpperCase();
   const a11y = label
     ? { role: "img" as const, "aria-label": label }
@@ -127,20 +130,20 @@ export function LogoTile({
       className={cn(
         "grid shrink-0 place-items-center overflow-hidden",
         s.box,
-        tileTones[tone],
+        file ? "bg-white" : tileTones[tone],
         className,
       )}
     >
       {logo && isLogoId(logo) ? (
         <BrandLogo id={logo} className={s.logo} />
-      ) : logo ? (
+      ) : file ? (
         <Image
-          src={logo}
+          src={file}
           alt=""
           width={s.px}
           height={s.px}
           unoptimized
-          className={cn("object-contain", s.logo)}
+          className="size-full object-contain p-[12%]"
         />
       ) : (
         <span

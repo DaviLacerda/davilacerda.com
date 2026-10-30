@@ -304,6 +304,8 @@ export const ptBr: Dictionary = {
     solution: "O que ele faz",
     build: "Como foi construído",
     demo: "Demonstração: {name}",
+    demoNote:
+      "Demonstração com dados fictícios, mostrando como o produto funciona",
     metaTitle: "{name}, {result}",
     metaDescription: "{summary} {result}. Na mídia: {outlets}.",
     metaDescriptionNoPress: "{summary} {result}.",

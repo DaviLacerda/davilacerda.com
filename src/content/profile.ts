@@ -13,9 +13,10 @@
  *   For ranges, `end: null` means "present" and an omitted field means unknown
  *   (render nothing for it).
  * - Logos (`logo`): a bundled brand logo id (see `src/lib/logos/registry.ts`;
- *   Algar, Brain and UFU are SVGs in /public/logos inlined through it, so
- *   they can follow the theme) or a file you add under /public, e.g.
- *   `logo: "/logos/acme.png"` (an SVG, or a square PNG of at least 96px).
+ *   UFU is an SVG in /public/logos inlined through it, so it can follow
+ *   the theme) or a file you add under /public, e.g. `logo: "/logos/acme.png"`
+ *   (an SVG, or a square PNG of at least 96px; it sits on a white plate, as
+ *   Algar's and Brain's full-colour logos do).
  *   Without one the UI shows the name's initial on a tile.
  */
 import type { L10n, Localizable } from "@/i18n";
@@ -413,7 +414,7 @@ export const profile: Profile = {
       id: "algar",
       company: "Algar",
       companyUrl: "https://www.algar.com.br", // TODO(davi): confirm URL.
-      logo: "algar",
+      logo: "/logos/algar.png",
       role: { en: "AI Engineer", "pt-br": "Engenheiro de IA" },
       start: "2024-08",
       end: null,
@@ -463,7 +464,7 @@ export const profile: Profile = {
     {
       id: "brain",
       company: "Brain (Centro de Inovação em Negócios Digitais)",
-      logo: "brain",
+      logo: "/logos/brain.png",
       role: {
         en: "Research & Development Intern",
         "pt-br": "Estagiário de Pesquisa e Desenvolvimento",
