@@ -26,34 +26,6 @@ AI engineering also moves fast, and a lot of what gets published sits at one of 
 - **Azure AI**: building enterprise AI on Microsoft's stack, with security and governance in mind from day one.
 - **Shipping GenAI to production**: evaluation, observability, cost and latency, and interfaces that make AI features feel trustworthy.
 
-## One principle to start with
-
-If one idea shows up in almost everything I build, it's this one:
-
-> Treat model output like user input: useful, but untrusted until validated.
-
-In code, that usually means a well-typed boundary right after the model answers:
-
-```ts title="summarize.ts" {13-14}
-import { z } from "zod";
-
-const Summary = z.object({
-  title: z.string(),
-  bullets: z.array(z.string()).max(5),
-});
-
-export async function summarize(text: string) {
-  const raw = await callModel({
-    system: "Summarize the text as JSON.",
-    input: text,
-  });
-  // Validate before the rest of the app sees it.
-  return Summary.parse(JSON.parse(raw));
-}
-```
-
-Small, boring and easy to test. A surprising amount of reliable AI software looks like this.
-
 ## Say hi
 
 If you want to talk about AI engineering, email me at [davi16lacerda@gmail.com](mailto:davi16lacerda@gmail.com) or find me on [LinkedIn](https://www.linkedin.com/in/davi16lacerda/). To catch the next post, subscribe to the [RSS feed](/en/personal/blog/rss.xml).
