@@ -1,8 +1,8 @@
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { BrowserIcon } from "@phosphor-icons/react/dist/ssr/Browser";
-import { DatabaseIcon } from "@phosphor-icons/react/dist/ssr/Database";
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
+import { WaveformIcon } from "@phosphor-icons/react/dist/ssr/Waveform";
 
 import { Piece } from "@/components/chat/piece";
 import { DemoVideo } from "@/components/projects/demo-video";
@@ -25,7 +25,7 @@ import { PressList } from "./press";
  * Sales Copilot: the demo first, playing, when its files exist; then the
  * award, as large as the canvas allows, on the ink
  * panel; then the project's four facts in large type; then how it was built,
- * drawn as its three layers with the AI tools in the middle; then the press
+ * drawn as its three layers with the agents in the middle; then the press
  * that covered it.
  */
 export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
@@ -73,9 +73,9 @@ export function SalesCopilotAnswer({ lang }: { lang: Locale }) {
   ].filter((fact) => fact !== null);
 
   const layers = [
-    { ...a.layers.frontEnd, Icon: BrowserIcon, core: false },
-    { ...a.layers.aiTools, Icon: SparkleIcon, core: true },
-    { ...a.layers.backEnd, Icon: DatabaseIcon, core: false },
+    { ...a.layers.app, Icon: BrowserIcon, core: false },
+    { ...a.layers.agents, Icon: SparkleIcon, core: true },
+    { ...a.layers.voice, Icon: WaveformIcon, core: false },
   ];
 
   return (

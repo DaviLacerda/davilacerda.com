@@ -72,8 +72,8 @@ his own numbers):
 
 1. **How we cut GenAI costs by 40% without losing accuracy:** the model migration and the
    LLM-as-a-judge benchmark behind the decision (what was measured, how).
-2. **Building a real-time sales copilot on Azure OpenAI:** the architecture of the Sales Copilot
-   at the level Algar allows to share (Svelte, .NET, Azure OpenAI), what made it work live.
+2. **Building a real-time sales copilot with Mastra and the AI SDK:** the architecture of the Sales Copilot
+   at the level Algar allows to share (Next.js, Mastra, the AI SDK, OpenAI and Anthropic models, speech-to-text and text-to-speech), what made it work live.
 3. **An agent in Microsoft Teams that talks to SAP:** Bud with Copilot Studio, Power Automate
    and RPA, and when a low-code agent beats a framework.
 

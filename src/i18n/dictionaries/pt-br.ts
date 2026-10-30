@@ -171,17 +171,17 @@ export const ptBr: Dictionary = {
         award: "Prêmio",
         builtBy: "Construído de ponta a ponta",
         layers: {
-          frontEnd: {
-            title: "Front-end",
-            body: "A interface usada pelos times de vendas da Algar.",
+          app: {
+            title: "App em Next.js",
+            body: "O app usado pelos times de vendas da Algar, front-end e back-end.",
           },
-          aiTools: {
-            title: "Ferramentas de IA",
-            body: "As ferramentas de IA que fazem o copiloto funcionar.",
+          agents: {
+            title: "Agentes em Mastra e AI SDK",
+            body: "Agentes sobre modelos da OpenAI e da Anthropic.",
           },
-          backEnd: {
-            title: "Back-end",
-            body: "Os serviços que sustentam o copiloto.",
+          voice: {
+            title: "Speech-to-text e text-to-speech",
+            body: "A camada de voz que acompanha a ligação.",
           },
         },
         company: "Empresa",

@@ -192,17 +192,17 @@ export const en = {
         award: "Award",
         builtBy: "Built end to end",
         layers: {
-          frontEnd: {
-            title: "Front end",
-            body: "The interface Algar's sales teams use.",
+          app: {
+            title: "Next.js app",
+            body: "The app Algar's sales teams use, front end and back end.",
           },
-          aiTools: {
-            title: "AI tools",
-            body: "The AI tools that power the copilot.",
+          agents: {
+            title: "Agents on Mastra and the AI SDK",
+            body: "Agents on models from OpenAI and Anthropic.",
           },
-          backEnd: {
-            title: "Back end",
-            body: "The services the copilot runs on.",
+          voice: {
+            title: "Speech-to-text and text-to-speech",
+            body: "The voice layer that follows the call.",
           },
         },
         company: "Company",

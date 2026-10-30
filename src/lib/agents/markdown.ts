@@ -451,7 +451,7 @@ function topicBody(topic: TopicId, lang: Locale): string[] {
       return [
         project ? projectBlock(project, lang) : "",
         `### ${a.builtBy}`,
-        [a.layers.frontEnd, a.layers.aiTools, a.layers.backEnd]
+        [a.layers.app, a.layers.agents, a.layers.voice]
           .map((layer) => `- **${layer.title}:** ${layer.body}`)
           .join("\n"),
         `### ${s.achievements.title}`,

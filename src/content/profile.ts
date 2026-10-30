@@ -431,7 +431,7 @@ export const profile: Profile = {
       // From Davi's CV (October 2026). His formal titles there are not shown on purpose.
       highlights: {
         en: [
-          "Main developer of Algar's Sales Copilot, built end to end: a Svelte front end, a .NET back end and the AI tools on Azure OpenAI. It listens to sales calls in real time, suggests arguments and offers, and won Best AI Project in LATAM at the Conecta Latam awards.",
+          "Main developer of Algar's Sales Copilot, built end to end: a Next.js app with agents built on Mastra and the AI SDK, models from OpenAI and Anthropic, and speech-to-text and text-to-speech. It listens to sales calls in real time, suggests arguments and offers, and won Best AI Project in LATAM at the Conecta Latam awards.",
           "Billy: a generative AI app that automates telecom invoice analysis and validation with Azure OpenAI and RPA. It cut manual review time by 96% and saved millions in operating costs.",
           "Bud: an agent built with Copilot Studio, Power Automate and a message broker that lets Microsoft Teams users request SAP reports and actions through RPA. It cut the projects team's workload by 40%.",
           "Led the move to newer generative AI models across several projects, cutting costs by more than 40% with no loss in performance or accuracy (GenAI FinOps).",
@@ -440,7 +440,7 @@ export const profile: Profile = {
           "Build AI agents and automations for complex workflows with Mastra, LangGraph, CrewAI and the AI SDK, on Azure OpenAI and Azure AI Foundry.",
         ],
         "pt-br": [
-          "Principal desenvolvedor do Sales Copilot da Algar, construído de ponta a ponta: front-end em Svelte, back-end em .NET e as ferramentas de IA no Azure OpenAI. Ele escuta as ligações de vendas em tempo real, sugere argumentos e ofertas, e venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+          "Principal desenvolvedor do Sales Copilot da Algar, construído de ponta a ponta: um app em Next.js com agentes em Mastra e AI SDK, modelos da OpenAI e da Anthropic, e voz com speech-to-text e text-to-speech. Ele escuta as ligações de vendas em tempo real, sugere argumentos e ofertas, e venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
           "Billy: aplicação de IA Generativa que automatiza a análise e a validação de faturas de telecom com Azure OpenAI e RPA. Reduziu o tempo de revisão manual em 96% e gerou economia de milhões em custos operacionais.",
           "Bud: agente criado com Copilot Studio, Power Automate e message broker que permite a usuários do Microsoft Teams solicitar relatórios e ações no SAP via RPA. Reduziu em 40% a carga de trabalho da área de projetos.",
           "Liderei a migração para modelos de IA Generativa mais novos em vários projetos, reduzindo custos em mais de 40% sem perda de desempenho nem de acurácia (GenAI FinOps).",
@@ -516,11 +516,19 @@ export const profile: Profile = {
           "Escuta as ligações de vendas e sugere argumentos e ofertas em tempo real.",
       },
       description: {
-        en: "An AI copilot for Algar's sales teams (small business and corporate): it listens to calls, reads the conversation in real time and suggests arguments and offers that fit each customer. I designed and built it end to end, from the Svelte front end and the .NET back end to the AI tools on Azure OpenAI. Named Best AI Project in LATAM at the Conecta Latam awards.",
+        en: "An AI copilot for Algar's sales teams (small business and corporate): it listens to calls, reads the conversation in real time and suggests arguments and offers that fit each customer. I designed and built it end to end: a Next.js app, agents built with Mastra and the AI SDK on models from OpenAI and Anthropic, and speech-to-text and text-to-speech for the call's audio. Named Best AI Project in LATAM at the Conecta Latam awards.",
         "pt-br":
-          "Um copiloto com IA para os times de vendas da Algar (PMEs e Corporativo): escuta as ligações, analisa a conversa em tempo real e sugere argumentos e ofertas sob medida para cada cliente. Projetei e construí de ponta a ponta, do front-end em Svelte e do back-end em .NET às ferramentas de IA no Azure OpenAI. Eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
+          "Um copiloto com IA para os times de vendas da Algar (PMEs e Corporativo): escuta as ligações, analisa a conversa em tempo real e sugere argumentos e ofertas sob medida para cada cliente. Projetei e construí de ponta a ponta: um app em Next.js, agentes em Mastra e AI SDK sobre modelos da OpenAI e da Anthropic, e speech-to-text e text-to-speech para o áudio da ligação. Eleito Melhor Projeto de IA da América Latina no prêmio Conecta Latam.",
       },
-      stack: ["Azure OpenAI", "Svelte", ".NET"],
+      stack: [
+        "Next.js",
+        "AI SDK",
+        "Mastra",
+        "OpenAI",
+        "Anthropic",
+        "Speech-to-text",
+        "Text-to-speech",
+      ],
       topics: ["Generative AI", "AI copilot", "Sales", "Telecommunications"],
       // From Davi's CV (October 2026): the copilot reads the conversation's
       // signals in real time and fits arguments and offers to the customer's
@@ -543,16 +551,25 @@ export const profile: Profile = {
             "Feito para os times de vendas de PMEs e Corporativo da Algar.",
           ],
         },
+        // Davi (October 2026): no longer Svelte and .NET; now Next.js, the
+        // AI SDK and Mastra, models from OpenAI and Anthropic, plus TTS/STT.
         build: [
           {
-            part: { en: "Front end", "pt-br": "Front-end" },
-            stack: ["Svelte"],
+            part: { en: "App", "pt-br": "Aplicação" },
+            stack: ["Next.js"],
           },
           {
-            part: { en: "AI tools", "pt-br": "Ferramentas de IA" },
-            stack: ["Azure OpenAI"],
+            part: { en: "Agents", "pt-br": "Agentes" },
+            stack: ["Mastra", "AI SDK"],
           },
-          { part: { en: "Back end", "pt-br": "Back-end" }, stack: [".NET"] },
+          {
+            part: { en: "Models", "pt-br": "Modelos" },
+            stack: ["OpenAI", "Anthropic"],
+          },
+          {
+            part: { en: "Voice", "pt-br": "Voz" },
+            stack: ["Speech-to-text", "Text-to-speech"],
+          },
         ],
       },
       // Opened and checked October 2026. Mobile Time describes the copilot
@@ -723,7 +740,7 @@ export const profile: Profile = {
   // development, machine learning, UI/UX design, automation, FinOps, Agile, MCP (interest).
   // Davi's CV (October 2026) adds the agent frameworks, Azure OpenAI and AI Foundry,
   // Copilot Studio and Power Automate, LLM-as-a-judge, Claude Code and GitHub Copilot,
-  // scikit-learn, Svelte and .NET (the Sales Copilot). Davi (October 2026): models from
+  // scikit-learn, Svelte and .NET. Davi (October 2026): models from
   // OpenAI, Anthropic and Google (Gemini); Azure is his main cloud, and he also knows GCP and AWS.
   skills: [
     {
@@ -1145,9 +1162,9 @@ export const profile: Profile = {
         "pt-br": "O que é o Sales Copilot que Davi construiu?",
       },
       answer: {
-        en: "The Sales Copilot is an AI copilot for Algar's sales teams: it listens to calls, reads the conversation in real time and suggests arguments and offers that fit each customer. Davi was its main developer, designing and building it end to end, from the Svelte front end and the .NET back end to the AI tools on Azure OpenAI. It won Best AI Project in LATAM at the Conecta Latam awards in December 2025.",
+        en: "The Sales Copilot is an AI copilot for Algar's sales teams: it listens to calls, reads the conversation in real time and suggests arguments and offers that fit each customer. Davi was its main developer, designing and building it end to end: a Next.js app with agents built on Mastra and the AI SDK, models from OpenAI and Anthropic, and speech-to-text and text-to-speech. It won Best AI Project in LATAM at the Conecta Latam awards in December 2025.",
         "pt-br":
-          "O Sales Copilot é um copiloto com IA para os times de vendas da Algar: escuta as ligações, analisa a conversa em tempo real e sugere argumentos e ofertas sob medida para cada cliente. Davi foi o principal desenvolvedor, projetando e construindo de ponta a ponta, do front-end em Svelte e do back-end em .NET às ferramentas de IA no Azure OpenAI. Ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam, em dezembro de 2025.",
+          "O Sales Copilot é um copiloto com IA para os times de vendas da Algar: escuta as ligações, analisa a conversa em tempo real e sugere argumentos e ofertas sob medida para cada cliente. Davi foi o principal desenvolvedor, projetando e construindo de ponta a ponta: um app em Next.js com agentes em Mastra e AI SDK, modelos da OpenAI e da Anthropic, e speech-to-text e text-to-speech. Ele venceu como Melhor Projeto de IA da América Latina no prêmio Conecta Latam, em dezembro de 2025.",
       },
     },
     {
