@@ -1,0 +1,159 @@
+/*
+ * Brand and technology logos the site shows, by id. Each entry names an icon
+ * from an Iconify set:
+ * - `logos:*` (@iconify-json/logos): the brand's own colours.
+ * - `simple-icons:*` (@iconify-json/simple-icons): one path in `currentColor`,
+ *   or in the entry's `color` (PlayStation blue, Valorant red).
+ * - `file:*`: an SVG in `public/logos/` (the companies and the university,
+ *   whose marks are in no icon set), copied in the same way.
+ *
+ * The rule, applied everywhere: a logo keeps its brand colours, except marks
+ * whose brand colour is black or white (GitHub, GitHub Copilot, LangChain,
+ * Next.js, Vercel, Instagram's glyph, MCP, OpenAI, Anthropic) or near-black
+ * (AWS, whose wordmark would vanish on the dark theme), which take the ink
+ * colour so they flip with the theme.
+ *
+ * `names` are the strings used in `src/content/profile.ts` (stacks and skill
+ * lists) that should show this logo; matching ignores case.
+ *
+ * Plain data, no imports: `scripts/logos.mjs` reads this file (Node strips
+ * the types) to copy only these icons into `icons.json`. After adding or
+ * changing an entry, run `yarn logos` and commit the regenerated file.
+ */
+
+export type LogoSpec = {
+  /** Iconify id, `prefix:name`. */
+  icon: string;
+  /** Accessible name. */
+  label: string;
+  /** Profile strings that map to this logo. */
+  names?: readonly string[];
+  /**
+   * Brand colour for a one-colour (`simple-icons`) mark whose brand colour is
+   * not black or white; without it the mark is `currentColor`.
+   */
+  color?: string;
+  /**
+   * A dark brand colour (Brain's and UFU's navy): the mark is drawn in it on
+   * light grounds and in the ground's ink on dark ones (dark mode, an ink
+   * tile), where navy would vanish. The script swaps this colour in the file
+   * for `currentColor`.
+   */
+  tint?: string;
+};
+
+export const logoRegistry = {
+  azure: {
+    icon: "logos:microsoft-azure",
+    label: "Microsoft Azure",
+    names: ["Azure", "Microsoft Azure", "Azure OpenAI", "Azure AI Foundry"],
+  },
+  microsoft: { icon: "logos:microsoft-icon", label: "Microsoft" },
+  // Model providers and the other clouds (Azure stays the main one).
+  openai: {
+    icon: "simple-icons:openai",
+    label: "OpenAI",
+    names: ["OpenAI", "OpenAI GPT"],
+  },
+  anthropic: {
+    icon: "simple-icons:anthropic",
+    label: "Anthropic",
+    names: ["Anthropic", "Anthropic Claude"],
+  },
+  gemini: {
+    icon: "logos:google-gemini-icon",
+    label: "Gemini",
+    names: ["Google Gemini", "Gemini"],
+  },
+  gcp: {
+    icon: "logos:google-cloud",
+    label: "Google Cloud",
+    names: ["Google Cloud (GCP)", "Google Cloud", "GCP"],
+  },
+  aws: {
+    icon: "simple-icons:amazonwebservices",
+    label: "AWS",
+    names: ["Amazon Web Services (AWS)", "Amazon Web Services", "AWS"],
+  },
+  vercel: { icon: "simple-icons:vercel", label: "Vercel", names: ["Vercel"] },
+  python: { icon: "logos:python", label: "Python", names: ["Python"] },
+  typescript: {
+    icon: "logos:typescript-icon",
+    label: "TypeScript",
+    names: ["TypeScript"],
+  },
+  react: { icon: "logos:react", label: "React", names: ["React"] },
+  nextjs: {
+    icon: "simple-icons:nextdotjs",
+    label: "Next.js",
+    names: ["Next.js"],
+  },
+  nodejs: { icon: "logos:nodejs-icon", label: "Node.js", names: ["Node.js"] },
+  postgresql: {
+    icon: "logos:postgresql",
+    label: "PostgreSQL",
+    names: ["PostgreSQL"],
+  },
+  supabase: {
+    icon: "logos:supabase-icon",
+    label: "Supabase",
+    names: ["Supabase"],
+  },
+  tailwind: {
+    icon: "logos:tailwindcss-icon",
+    label: "Tailwind CSS",
+    names: ["Tailwind CSS"],
+  },
+  figma: { icon: "logos:figma", label: "Figma", names: ["Figma"] },
+  java: { icon: "logos:java", label: "Java", names: ["Java"] },
+  spring: { icon: "logos:spring-icon", label: "Spring", names: ["Spring"] },
+  svelte: { icon: "logos:svelte-icon", label: "Svelte", names: ["Svelte"] },
+  dotnet: { icon: "logos:dotnet", label: ".NET", names: [".NET"] },
+  mcp: {
+    icon: "simple-icons:modelcontextprotocol",
+    label: "Model Context Protocol",
+    names: ["Model Context Protocol (MCP)", "MCP"],
+  },
+  claude: {
+    icon: "logos:claude-icon",
+    label: "Claude Code",
+    names: ["Claude Code"],
+  },
+  githubcopilot: {
+    icon: "simple-icons:githubcopilot",
+    label: "GitHub Copilot",
+    names: ["GitHub Copilot"],
+  },
+  langchain: {
+    icon: "simple-icons:langchain",
+    label: "LangChain",
+    names: ["LangChain"],
+  },
+  github: {
+    icon: "simple-icons:github",
+    label: "GitHub",
+    names: ["Git & GitHub", "GitHub"],
+  },
+  linkedin: { icon: "logos:linkedin-icon", label: "LinkedIn" },
+  instagram: { icon: "simple-icons:instagram", label: "Instagram" },
+  discord: { icon: "logos:discord-icon", label: "Discord" },
+  spotify: { icon: "logos:spotify-icon", label: "Spotify" },
+  // Games (the Personal tab).
+  steam: { icon: "simple-icons:steam", label: "Steam" },
+  playstation: {
+    icon: "simple-icons:playstation",
+    label: "PlayStation",
+    color: "#0070d1",
+  },
+  valorant: {
+    icon: "simple-icons:valorant",
+    label: "Valorant",
+    color: "#ff4655",
+  },
+  ubisoft: { icon: "simple-icons:ubisoft", label: "Ubisoft" },
+  // Where Davi studied (`logo` in the profile): files in public/logos. Algar and
+  // Brain use their full-colour PNG logos instead (public/logos/*.png).
+  ufu: { icon: "file:ufu", label: "UFU", tint: "#092269" },
+} as const satisfies Record<string, LogoSpec>;
+
+export type LogoId = keyof typeof logoRegistry;

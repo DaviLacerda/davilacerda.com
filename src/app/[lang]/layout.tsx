@@ -1,115 +1,147 @@
-import { Header } from "@/components/header";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Analytics } from "@vercel/analytics/next";
+import type { Metadata, Viewport } from "next";
+import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
+
+import { AgentDiscovery } from "@/components/agents/agent-discovery";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { MotionProvider } from "@/components/motion/motion-provider";
+import { AlternateLinksProvider } from "@/components/providers/alternate-links";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { siteConfig } from "@/config/site";
-import { Locale } from "@/i18n/i18n-config";
-import { cn } from "@/lib/utils";
-import { Analytics } from "@vercel/analytics/react";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "../../styles/globals.css";
+import { profile } from "@/content/profile";
+import { getDictionary, isLocale, localeMeta, locales } from "@/i18n";
 
-const inter = Inter({ subsets: ["latin"] });
+import { fontVariables } from "../fonts";
+import "../globals.css";
 
-type Props = {
-    params: {
-        lang: Locale;
-    };
+type LayoutProps = {
+  children: ReactNode;
+  params: Promise<{ lang: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const description = siteConfig.description[params.lang];
-
-    return {
-        metadataBase: new URL(siteConfig.url),
-        title: {
-            default: siteConfig.name,
-            template: `%s | ${siteConfig.name}`,
-        },
-        description,
-        keywords: [
-            "Next.js",
-            "TypeScript",
-            "React",
-            "i18n",
-            "Tailwind CSS",
-            "shadcn/ui",
-            "UFU",
-            "Universidade Federal de Uberlândia",
-            "Front-end",
-            "Front End",
-            "Developer",
-            "Desenvolvedor",
-            "Uberlândia",
-        ],
-        authors: [
-            {
-                name: "Davi Lacerda",
-                url: siteConfig.url,
-            },
-        ],
-        creator: "Davi Lacerda",
-        themeColor: [
-            { media: "(prefers-color-scheme: light)", color: "white" },
-            { media: "(prefers-color-scheme: dark)", color: "black" },
-        ],
-        openGraph: {
-            type: "website",
-            locale: params.lang,
-            url: siteConfig.url,
-            title: siteConfig.name,
-            description,
-            siteName: siteConfig.name,
-            images: [
-                {
-                    url: siteConfig.ogImage,
-                    width: 1200,
-                    height: 630,
-                    alt: siteConfig.name,
-                },
-            ],
-        },
-        twitter: {
-            card: "summary_large_image",
-            title: siteConfig.name,
-            description,
-            images: [siteConfig.ogImage],
-            creator: "@davi16lacerda",
-        },
-        icons: {
-            icon: "/favicon.ico",
-            shortcut: "/favicon-16x16.png",
-            apple: "/apple-touch-icon.png",
-        },
-    };
+export function generateStaticParams() {
+  return locales.map((lang) => ({ lang }));
 }
 
-export default function RootLayout({
-    children,
-    params,
-}: {
-    children: React.ReactNode;
-    params: Props["params"];
-}) {
-    const { lang } = params;
+export const viewport: Viewport = {
+  themeColor: [
+    {
+      media: "(prefers-color-scheme: light)",
+      color: siteConfig.themeColor.light,
+    },
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: siteConfig.themeColor.dark,
+    },
+  ],
+  colorScheme: "light dark",
+  // The docked composer reads env(safe-area-inset-bottom).
+  viewportFit: "cover",
+};
 
-    return (
-        <html lang={lang}>
-            <body
-                className={cn(
-                    "relative min-h-screen flex flex-col gap-4",
-                    inter.className
-                )}
-            >
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                >
-                    <Header lang={lang} />
-                    <div className="flex-1">{children}</div>
-                </ThemeProvider>
-                <Analytics />
-            </body>
-        </html>
-    );
+/**
+ * Site-wide defaults. Pages override title/description/canonical/alternates/OG
+ * with `buildMetadata()` from `@/lib/seo` (no canonical here on purpose, so a
+ * page can never inherit the wrong one).
+ */
+export async function generateMetadata({
+  params,
+}: LayoutProps): Promise<Metadata> {
+  const { lang } = await params;
+  if (!isLocale(lang)) return {};
+  const dict = getDictionary(lang);
+
+  return {
+    metadataBase: new URL(siteConfig.url),
+    title: {
+      default: dict.meta.defaultTitle,
+      template: `%s | ${dict.meta.siteName}`,
+    },
+    description: dict.meta.description,
+    applicationName: dict.meta.siteName,
+    authors: [{ name: profile.name, url: siteConfig.url }],
+    creator: profile.name,
+    publisher: profile.name,
+    keywords: [...siteConfig.keywords],
+    category: "technology",
+    formatDetection: { email: false, address: false, telephone: false },
+    // Generated from the vector mark by `yarn brand`. The SVG follows the
+    // browser's light or dark theme; the .ico (16/32/48) is the fallback, and
+    // its explicit size keeps Chrome on the SVG.
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "32x32" },
+        { url: "/favicon.svg", type: "image/svg+xml" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
+    // Search Console and Bing Webmaster Tools tokens (see .env.example), so
+    // Google and Bing visibility can be measured separately. Unset, nothing
+    // renders; DNS verification works too and needs neither.
+    verification: {
+      ...(process.env.GOOGLE_SITE_VERIFICATION
+        ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+        : {}),
+      ...(process.env.BING_SITE_VERIFICATION
+        ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } }
+        : {}),
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+    openGraph: {
+      type: "website",
+      siteName: dict.meta.siteName,
+      locale: localeMeta[lang].ogLocale,
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
+
+export default async function RootLayout({ children, params }: LayoutProps) {
+  const { lang } = await params;
+  if (!isLocale(lang)) notFound();
+  const dict = getDictionary(lang);
+
+  return (
+    <html
+      lang={localeMeta[lang].htmlLang}
+      className={fontVariables}
+      // Next turns smooth scrolling off while it scrolls on a navigation.
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
+      <body className="flex min-h-dvh flex-col text-foreground">
+        <ThemeProvider>
+          <MotionProvider>
+            <AlternateLinksProvider>
+              <a
+                href="#main"
+                className="sr-only z-50 rounded-full bg-foreground px-4 py-2 text-small font-medium text-background focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+              >
+                {dict.a11y.skipToContent}
+              </a>
+              <SiteHeader lang={lang} />
+              <main id="main" tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </main>
+              <SiteFooter lang={lang} />
+            </AlternateLinksProvider>
+          </MotionProvider>
+        </ThemeProvider>
+        <AgentDiscovery />
+        <Analytics />
+      </body>
+    </html>
+  );
 }
