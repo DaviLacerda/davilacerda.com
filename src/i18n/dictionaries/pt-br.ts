@@ -469,12 +469,6 @@ export const ptBr: Dictionary = {
     rights: "Todos os direitos reservados.",
   },
 
-  notFound: {
-    title: "Página não encontrada",
-    description: "Esta página não existe ou mudou de endereço.",
-    backHome: "Voltar ao início",
-    topics: "Ou pergunte sobre",
-  },
 
   common: {
     readMore: "Ler mais",

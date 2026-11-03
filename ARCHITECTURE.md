@@ -50,7 +50,9 @@ src/
     [lang]/personal/page.tsx      Personal tab: a bento grid (hello with the portrait, Spotify, watching, interests, my
                                   teams, games), then writing (blog index) and elsewhere
     [lang]/personal/blog/[slug]/  Blog post
-    [lang]/not-found.tsx          localized 404 (the way back and the topics as links)
+    [lang]/not-found.tsx          localized 404: the status code and an ASCII art only
+    [lang]/error.tsx              localized error boundary: 500 and an ASCII art (noindex)
+    global-error.tsx              crash in the root layout: same 500 screen, own <html> and theme
     [lang]/[...rest]/page.tsx     sends unknown /<lang>/* paths to the 404
     api/now-playing/route.ts      what Davi is listening to on Spotify (dynamic, CDN-cached 30s; see Spotify now playing)
     api/teams/route.ts            his teams' live, last or next games from ESPN (dynamic, CDN-cached 30s to 10min; see My teams)

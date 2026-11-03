@@ -552,13 +552,6 @@ export const en = {
     rights: "All rights reserved.",
   },
 
-  notFound: {
-    title: "Page not found",
-    description: "This page doesn't exist or has moved.",
-    backHome: "Back to the start",
-    /** Heading of the topic links under it. */
-    topics: "Or ask about",
-  },
 
   common: {
     readMore: "Read more",
