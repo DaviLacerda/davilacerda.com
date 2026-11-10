@@ -32,6 +32,11 @@ export const ptBr: Dictionary = {
       description:
         "Escolha um tema sobre o trabalho de Davi Lacerda ou escreva direto para ele.",
     },
+    statistics: {
+      title: "Estatísticas de IA generativa e agentes de IA em {year}",
+      description:
+        "Estatísticas com fonte sobre agentes de IA e IA generativa em {year}: adoção, produção, desenvolvedores, MCP, ROI, telecom e Brasil, com resultados em produção na Algar.",
+    },
   },
 
   a11y: {
@@ -49,6 +54,7 @@ export const ptBr: Dictionary = {
     personal: "Pessoal",
     blog: "Blog",
     contact: "Contato",
+    statistics: "Estatísticas",
   },
 
   locale: {
@@ -450,6 +456,42 @@ export const ptBr: Dictionary = {
     feedTitle: "{name} | Blog",
   },
 
+  statistics: {
+    lead: "Números sobre agentes de IA e IA generativa no trabalho, entre desenvolvedores, em telecom e no Brasil. Cada um diz quem mediu e leva à fonte original.",
+    updated: "Atualizado em {date}",
+    count: "{stats} estatísticas de {sources} fontes",
+    onThisPage: "Nesta página",
+    source: "Fonte",
+    ownSource: "Davi Lacerda, do seu trabalho na Algar",
+    project: "Ver o projeto",
+    method: {
+      title: "Como esta página é feita",
+      items: [
+        "Cada número foi aberto na fonte original e conferido lá. O número que não pôde ser rastreado até quem mediu ficou de fora.",
+        "Cada linha diz o nome da pesquisa e o ano, para poder ser citada como está.",
+        "As pesquisas perguntam a pessoas diferentes, então dois números honestos sobre o mesmo assunto podem divergir. Cada seção diz quem respondeu.",
+        "Os resultados da Algar são de projetos em que trabalhei. Quando a imprensa publicou, a matéria é a fonte.",
+      ],
+    },
+    cite: {
+      title: "Como citar esta página",
+      text: "Davi Lacerda, {title}. {url}. Atualizado em {date}.",
+    },
+    related:
+      "Para contexto: estatísticas de IA generativa e agentes de IA em {year}",
+    keywords: [
+      "estatísticas de agentes de IA",
+      "estatísticas de IA generativa",
+      "agentes de IA em produção",
+      "adoção de agentes de IA",
+      "adoção do MCP",
+      "IA para programar",
+      "IA generativa em telecom",
+      "IA no Brasil",
+      "ROI de IA generativa",
+    ],
+  },
+
   dates: {
     present: "Atual",
     since: "Desde {start}",
@@ -468,7 +510,6 @@ export const ptBr: Dictionary = {
   footer: {
     rights: "Todos os direitos reservados.",
   },
-
 
   common: {
     readMore: "Ler mais",

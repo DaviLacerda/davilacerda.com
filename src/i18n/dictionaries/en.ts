@@ -41,6 +41,12 @@ export const en = {
       description:
         "Pick a topic about Davi Lacerda's work, or write to him directly.",
     },
+    statistics: {
+      /** `{year}` is the year of the page's last update (never in the URL). */
+      title: "Generative AI and AI agent statistics for {year}",
+      description:
+        "Sourced statistics on AI agents and generative AI in {year}: adoption, production, developers, MCP, ROI, telecom and Brazil, with results from production at Algar.",
+    },
   },
 
   a11y: {
@@ -58,6 +64,7 @@ export const en = {
     personal: "Personal",
     blog: "Blog",
     contact: "Contact",
+    statistics: "Statistics",
   },
 
   locale: {
@@ -531,6 +538,53 @@ export const en = {
     feedTitle: "{name} | Blog",
   },
 
+  /**
+   * The Statistics page (`/[lang]/statistics`). The numbers, their sentences
+   * and their sources live in `src/content/statistics.ts`.
+   */
+  statistics: {
+    /** First-person line under the title. */
+    lead: "Numbers on AI agents and generative AI at work, among developers, in telecom and in Brazil. Each one says who measured it and links to the original.",
+    /** Under the lead, a date and a count: "Updated November 10, 2026". */
+    updated: "Updated {date}",
+    count: "{stats} statistics from {sources} sources",
+    onThisPage: "On this page",
+    /** Before a statistic's source. */
+    source: "Source",
+    /** The source of a number only Davi's profile states. */
+    ownSource: "Davi Lacerda, from his work at Algar",
+    /** The link from one of Davi's numbers to its project. */
+    project: "See the project",
+    method: {
+      title: "How this page is built",
+      items: [
+        "Every number was opened at its original source and checked there. A number that could not be traced back to whoever measured it was left out.",
+        "Each line names the research and its year, so it can be quoted as it stands.",
+        "Surveys ask different people, so two honest numbers on the same subject can differ. Each section says who was asked.",
+        "The results from Algar come from projects I worked on. Where the press reported them, the article is the source.",
+      ],
+    },
+    cite: {
+      title: "Cite this page",
+      /** `{title}`, `{url}` and `{date}` are filled in. */
+      text: "Davi Lacerda, {title}. {url}. Updated {date}.",
+    },
+    /** The line on the Projects tab that links here. */
+    related: "For context: generative AI and AI agent statistics for {year}",
+    /** Page-specific SEO keywords, merged with the site-wide list. */
+    keywords: [
+      "AI agent statistics",
+      "generative AI statistics",
+      "AI agents in production",
+      "AI agent adoption",
+      "MCP adoption statistics",
+      "AI coding tools statistics",
+      "generative AI in telecom",
+      "AI in Brazil statistics",
+      "generative AI ROI",
+    ],
+  },
+
   dates: {
     present: "Present",
     /** An ongoing period, e.g. "Since Aug 2024". */
@@ -551,7 +605,6 @@ export const en = {
   footer: {
     rights: "All rights reserved.",
   },
-
 
   common: {
     readMore: "Read more",

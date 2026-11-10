@@ -13,6 +13,11 @@ import {
   type Project,
 } from "@/content/profile";
 import {
+  getStatSource,
+  statistics,
+  type Statistic,
+} from "@/content/statistics";
+import {
   getDictionary,
   interpolate,
   localeMeta,
@@ -25,6 +30,13 @@ import { formatDate, formatDateRange, formatPartialDate } from "@/i18n/format";
 import { getPostTranslations } from "@/lib/blog";
 import { headlineText, projectHeadline, projectMeta } from "@/lib/projects";
 import { routes } from "@/lib/routes";
+import {
+  sourceLine,
+  statisticProjectPath,
+  statisticsCountLine,
+  statisticsMeta,
+  statisticsUpdatedLine,
+} from "@/lib/statistics";
 import { competitionLabel } from "@/lib/teams/types";
 import { absoluteUrl } from "@/lib/utils";
 import { topicCopy, topicLead } from "@/lib/work/answers";
@@ -106,7 +118,12 @@ function alternateMarkdownUrls(page: PageRef): Record<string, string> {
   return out;
 }
 
-function documentFooter(page: PageRef, htmlPath: string): string {
+function documentFooter(
+  page: PageRef,
+  htmlPath: string,
+  /** Replaces the default note (the Statistics page cites other people's research). */
+  note?: string,
+): string {
   const lang = page.lang;
   const labels = getAgentLabels(lang).footer;
   const [other] = otherLocales(lang);
@@ -126,7 +143,7 @@ function documentFooter(page: PageRef, htmlPath: string): string {
   return blocks(
     "---",
     `## ${labels.title}`,
-    interpolate(labels.note, { url: absoluteUrl(htmlPath) }),
+    interpolate(note ?? labels.note, { url: absoluteUrl(htmlPath) }),
     `${labels.otherFormats}: ${dot(...formats)}`,
   );
 }
@@ -747,6 +764,74 @@ export function personalMarkdown(lang: Locale): string {
   );
 }
 
+/* ------------------------------------------------------------ Statistics */
+
+/**
+ * One statistic: its sentence on the first line, its source (linked, dated,
+ * with what it rests on) on the second. One of Davi's own numbers also
+ * links to its project.
+ */
+function statisticLine(stat: Statistic, lang: Locale): string {
+  const s = getDictionary(lang).statistics;
+  const source = getStatSource(stat);
+  const from = source
+    ? `${link(sourceLine(source, lang), t(source.url, lang))}.${
+        source.method ? ` ${t(source.method, lang)}` : ""
+      }`
+    : `${s.ownSource}.`;
+  const projectPath = statisticProjectPath(stat, lang);
+  const project = projectPath ? ` ${link(s.project, `${projectPath}.md`)}` : "";
+  return `- ${t(stat.text, lang)}\n  ${s.source}: ${from}${project}`;
+}
+
+/**
+ * The Statistics page: every number as its own line with its source, grouped
+ * under the question it answers, then how the page is built and how to cite it.
+ */
+export function statisticsMarkdown(lang: Locale): string {
+  const dict = getDictionary(lang);
+  const s = dict.statistics;
+  const labels = getAgentLabels(lang);
+  const page: PageRef = { kind: "statistics", lang };
+  const htmlPath = routes.statistics(lang);
+  const meta = statisticsMeta(lang);
+
+  return blocks(
+    frontmatter({
+      title: `${meta.title} | ${dict.meta.siteName}`,
+      description: meta.description,
+      author: profile.name,
+      url: absoluteUrl(htmlPath),
+      lang: localeMeta[lang].htmlLang,
+      published: statistics.published,
+      updated: statistics.updated,
+      keywords: meta.keywords,
+      alternates: alternateMarkdownUrls(page),
+    }),
+    `# ${meta.title}`,
+    `> ${meta.description}`,
+    s.lead,
+    `*${dot(statisticsUpdatedLine(lang), statisticsCountLine(lang))}*`,
+    ...statistics.sections.map((section) =>
+      blocks(
+        `## ${t(section.title, lang)}`,
+        section.intro && t(section.intro, lang),
+        section.stats.map((stat) => statisticLine(stat, lang)).join("\n"),
+      ),
+    ),
+    `## ${s.method.title}`,
+    s.method.items.map((item) => `- ${item}`).join("\n"),
+    `## ${s.cite.title}`,
+    interpolate(s.cite.text, {
+      title: meta.title,
+      url: absoluteUrl(htmlPath),
+      date: formatDate(statistics.updated, lang),
+    }),
+    `${labels.post.aboutAuthor}: ${link(profile.name, markdownPath({ kind: "work", lang }))} · ${dict.projects.all}: ${link(dict.meta.projects.title, markdownPath({ kind: "projects", lang }))}`,
+    documentFooter(page, htmlPath, labels.statistics.note),
+  );
+}
+
 /* ------------------------------------------------------------ Blog posts */
 
 /** A blog post: front matter, title, byline and the original Markdown body. */
@@ -826,6 +911,7 @@ export function pageMarkdown(page: PageRef): string | null {
   if (page.kind === "topic") return topicMarkdown(page.lang, page.topic);
   if (page.kind === "personal") return personalMarkdown(page.lang);
   if (page.kind === "projects") return projectsMarkdown(page.lang);
+  if (page.kind === "statistics") return statisticsMarkdown(page.lang);
   if (page.kind === "project") {
     const project = getProjectPage(page.slug);
     return project ? projectMarkdown(page.lang, project) : null;
@@ -870,6 +956,17 @@ export function llmsTxt(): string {
     `## ${labels.topics}`,
     labels.topicsIntro,
     topicLinks("en"),
+    `## ${labels.statistics}`,
+    labels.statisticsIntro,
+    locales
+      .map(
+        (lang) =>
+          `- ${link(
+            `${statisticsMeta(lang).title} (${localeMeta[lang].label})`,
+            markdownPath({ kind: "statistics", lang }),
+          )}: ${statisticsMeta(lang).description}`,
+      )
+      .join("\n"),
     `## ${labels.blog}`,
     postLines.length ? postLines.join("\n") : labels.noPosts,
     `## ${labels.machine}`,
@@ -912,6 +1009,10 @@ export function llmsFullTxt(): string {
       })),
     ]),
     ...locales.map((lang) => ({
+      url: markdownPath({ kind: "statistics", lang }),
+      body: statisticsMarkdown(lang),
+    })),
+    ...locales.map((lang) => ({
       url: markdownPath({ kind: "personal", lang }),
       body: personalMarkdown(lang),
     })),
@@ -926,7 +1027,7 @@ export function llmsFullTxt(): string {
   const header = blocks(
     `# ${profile.name}: full context`,
     `> ${t(profile.tldr, "en")}`,
-    `This file concatenates every Markdown page of ${siteConfig.url} (profile, projects and personal pages in English and Brazilian Portuguese, then every blog post). Each section starts with its source URL. Index: ${absoluteUrl(agentPaths.llms)}. Last updated: ${profileLastModified()}.`,
+    `This file concatenates every Markdown page of ${siteConfig.url} (profile, projects, statistics and personal pages in English and Brazilian Portuguese, then every blog post). Each section starts with its source URL. Index: ${absoluteUrl(agentPaths.llms)}. Last updated: ${profileLastModified()}.`,
   );
 
   return `${[

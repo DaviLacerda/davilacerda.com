@@ -24,7 +24,8 @@ type NavTabsProps = {
  * once; the URL takes over when the navigation lands.
  *
  * `aria-current="page"` on the exact page, `"true"` inside the section
- * (e.g. a blog post under Personal).
+ * (e.g. a blog post under Personal). On a page outside the tabs (Statistics)
+ * no tab is current and the pill is away until one is clicked.
  */
 export function NavTabs({ lang, labels, ariaLabel }: NavTabsProps) {
   const pathname = usePathname() ?? `/${lang}`;

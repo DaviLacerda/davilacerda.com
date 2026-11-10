@@ -7,8 +7,10 @@ import { FeaturedProjectCard, ResultCard } from "@/components/projects/cards";
 import { PressStrip } from "@/components/projects/press";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
+import { TextLink } from "@/components/ui/text-link";
 import { getPressOutlets, profile } from "@/content/profile";
-import { getDictionary, isLocale, t } from "@/i18n";
+import { statisticsYear } from "@/content/statistics";
+import { getDictionary, interpolate, isLocale, t } from "@/i18n";
 import { routes } from "@/lib/routes";
 import {
   breadcrumbJsonLd,
@@ -49,7 +51,9 @@ export async function generateMetadata({
  * with a page (a `story` in the profile) run across the grid and open it:
  * the award on the ink panel, a figure that counts up on a surface panel.
  * The others sit two across, told by their figure. Everything comes from
- * `profile.projects`: a new project is one entry there.
+ * `profile.projects`: a new project is one entry there. Under the panels, one
+ * line leads to the Statistics page, where these results sit beside the
+ * industry's numbers.
  */
 export default async function ProjectsPage({ params }: PageProps) {
   const { lang } = await params;
@@ -117,6 +121,12 @@ export default async function ProjectsPage({ params }: PageProps) {
           </Reveal>
         ))}
       </ul>
+
+      <Reveal as="p" className="mt-12 text-muted-foreground sm:mt-16">
+        <TextLink href={routes.statistics(lang)}>
+          {interpolate(dict.statistics.related, { year: statisticsYear() })}
+        </TextLink>
+      </Reveal>
     </Container>
   );
 }

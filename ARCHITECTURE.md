@@ -47,6 +47,8 @@ src/
                                   told by its result (award on ink, figures counting up on surface panels)
     [lang]/projects/[slug]/       one project's page, e.g. /en/projects/sales-copilot (static, one per project
                                   with a `story`): result, demo video, press cards, problem, what it does, how it's built
+    [lang]/statistics/page.tsx    Statistics: generative AI and AI agent numbers, one per line, each with its source
+                                  (not a tab; see Statistics)
     [lang]/personal/page.tsx      Personal tab: a bento grid (hello with the portrait, Spotify, watching, interests, my
                                   teams, games), then writing (blog index) and elsewhere
     [lang]/personal/blog/[slug]/  Blog post
@@ -88,6 +90,8 @@ src/
     code-theme.ts                 Shiki theme in the site palette (monochrome: ink, greys, italic muted comments)
     work/topics.ts                topic ids + keyword matcher (dependency-free; client, proxy, server)
     work/answers.ts               topic copy, leads and intros, composer/reply strings, stackLogos() (server-only)
+    statistics/index.ts           statisticsMeta() (title with the year), the updated and count lines, sourceLine(),
+                                  statisticProjectPath() (server-only)
     projects/index.ts             projectHeadline() (award or figure), projectMeta(), projectOutlets(), nextProject(),
                                   projectDemo() (the demo files, checked at build) (server-only)
     logos/                        brand logo registry, generated icons.json subset, getLogoSvg() (server-only)
@@ -130,9 +134,11 @@ Import alias: `@/*` -> `src/*`.
   `toIsoDate()` for `<time dateTime>`. All UTC.
 - `@/lib/routes`: `routes.work(lang)` `/en`, `routes.topic(lang, "experience")` `/en/work/experience`,
   `routes.ask(lang)` `/en/ask`, `routes.projects(lang)` `/en/projects`,
-  `routes.project(lang, "billy")` `/en/projects/billy`, `routes.personal(lang)`, `routes.blog(lang)`
+  `routes.project(lang, "billy")` `/en/projects/billy`, `routes.statistics(lang)` `/en/statistics`,
+  `routes.personal(lang)`, `routes.blog(lang)`
   (`/en/personal#blog`, so give the blog section `id="blog"`), `routes.post(lang, slug)`,
-  `routes.rss(lang)` (`/en/personal/blog/rss.xml`), plus `tabs`, `activeTab()`, `switchLocalePath()`.
+  `routes.rss(lang)` (`/en/personal/blog/rss.xml`), plus `tabs`, `activeTab()` (`null` on a page
+  that belongs to no tab, such as Statistics), `switchLocalePath()`.
 - Locale switcher: swaps the prefix by default. Pages whose URL differs per locale (blog posts)
   render `<LocaleAlternates links={getPostAlternates(post)} />` (client, renders nothing). It also
   sets a `NEXT_LOCALE` cookie the proxy honours.
@@ -457,6 +463,38 @@ all from `profile.projects`:
 text/markdown`), the `projects-{lang}` MCP resources and the `project` resource template, a
   "Projects" section in llms.txt, both in llms-full.txt.
 
+## Statistics
+
+`/[lang]/statistics` is a reference page of numbers on generative AI and AI agents, written to be
+quoted: by journalists, by other writers and by AI answers. It is not a tab; the footer and the
+Projects tab link to it. All of it comes from `src/content/statistics.ts`.
+
+- **Shape:** the title with the year, one line, "Updated <date>" and the count, an outline of
+  anchors, then one section per subject. Each `h2` is the search it answers ("How many companies
+  use AI agents in 2026?"). Each statistic is one row (`StatSectionBlock` in
+  `components/statistics/stat-list.tsx`): the figure, one sentence that stands on its own and
+  names the research and its year, then the source (publisher, title, date) linked to the
+  original. The page ends with how it is built and a line to cite it.
+- **Davi's own numbers** (`own: true`, the results at Algar) sit on the page's one ink panel.
+  They are the numbers no other page has; where the press reported them, the article is the
+  source (`press()` reads it from `profile.projects`), otherwise the row says the number is his.
+- **Rules for a number:** open the original and check it there. If it cannot be traced back to
+  whoever measured it, leave it out. Name the research and the year in the sentence. Keep each
+  line short and able to stand alone. Give the source a `method` (who was asked, when) when the
+  original states it.
+- **The year is in the title, never in the URL.** `statisticsYear()` reads it from
+  `statistics.updated`, and the title, description, OG card, JSON-LD and Markdown follow. Updating
+  the page: edit the numbers and sources, set `updated` to the day; `published` stays.
+- **Add a statistic:** one entry in a section's `stats` (`id` is its anchor, `value`, `text` in
+  both locales, `source` a key of `sources`). A new source is one entry in `sources`. The count
+  line, JSON-LD citations, Markdown, llms files, search and OG card pick it up.
+- **JSON-LD:** `statisticsPageJsonLd(lang)`, an `Article` by the Person with `dateModified`,
+  `about` (the section titles) and `citation` (every source cited, as a `CreativeWork` with its
+  publisher, URL, date and language).
+- **Agents:** `/en/statistics.md` (proxy rewrite or `Accept: text/markdown`), the
+  `statistics-{lang}` MCP resources, a "Statistics" section in llms.txt, both documents in
+  llms-full.txt, one search document per section, `links.statistics` in the profile JSON.
+
 ## Components
 
 | Component                                                                   | Notes                                                                                                                    |
@@ -779,7 +817,8 @@ mark from the logo registry.
   `blogPostingJsonLd(post, { image?, translations? })`, `faqPageJsonLd(lang, items?)`,
   `projectJsonLd(project, lang)` (`CreativeWork`: `creator` the Person, `about` its topics,
   `award`, `subjectOf` its press as `NewsArticle`s), `projectsPageJsonLd(lang)` (`CollectionPage`
-  with an `ItemList`), `projectPageJsonLd(project, lang)` (`ItemPage`).
+  with an `ItemList`), `projectPageJsonLd(project, lang)` (`ItemPage`),
+  `statisticsPageJsonLd(lang)` (`Article` whose `citation` lists every source).
   Render with `<JsonLd data={[personJsonLd(lang), websiteJsonLd(lang), profilePageJsonLd(lang)]} />`.
 - Helpers: `localizedPaths("/personal")`, `hreflangAlternates(paths)`, `jsonLdIds`.
 - A `title` that already contains "Davi Lacerda" is used as is (no " | Davi Lacerda" suffix).
@@ -861,6 +900,7 @@ All of it is static (`force-static` + `generateStaticParams`) except `/mcp`.
 | `/llms.txt`, `/llms-full.txt`                                                                                          | [llmstxt.org](https://llmstxt.org) index; full text of every profile, Projects and Personal page and every post.                                                                                                                               |
 | `/{lang}.md` (`/{lang}/index.md`), `/{lang}/work/{topic}.md`, `/{lang}/personal.md`, `/{lang}/personal/blog/{slug}.md` | Markdown renditions (Work reads like a résumé; each answer has its own). Also served for `Accept: text/markdown` on the HTML URL and on `/`.                                                                                                   |
 | `/{lang}/projects.md`, `/{lang}/projects/{id}.md`                                                                      | The Projects tab and each project page as Markdown, served the same two ways.                                                                                                                                                                  |
+| `/{lang}/statistics.md`                                                                                                | The Statistics page as Markdown (one line per statistic with its source), served the same two ways.                                                                                                                                            |
 | `/api/profile.json`, `/api/posts.json`, `/api/{lang}/{profile,posts,resume}.json`                                      | JSON (profile localized per language; posts with Markdown URLs).                                                                                                                                                                               |
 | `/resume.json`                                                                                                         | [JSON Resume](https://jsonresume.org) v1.0.0 (English; Portuguese at `/api/pt-br/resume.json`).                                                                                                                                                |
 | `/api/openapi.json`, `/api/status.json`                                                                                | OpenAPI 3.1 description of the read-only HTTP API; status document for the API catalog.                                                                                                                                                        |
@@ -889,10 +929,11 @@ Both are mounted once in `src/app/[lang]/layout.tsx` via `<AgentDiscovery />`.
 
 - `src/lib/agents/discovery.ts`: paths, page parsing (`parsePagePath`, `pagePath`, `markdownPath`),
   `prefersMarkdown(accept)`, Link header builders. Dependency-free (imported by the proxy).
-- `src/lib/agents/markdown.ts`: Work/topic/Projects/project/Personal/post Markdown, `llms.txt`
-  (with "Projects" and "Work answers" sections), `llms-full.txt`.
+- `src/lib/agents/markdown.ts`: Work/topic/Projects/project/Statistics/Personal/post Markdown,
+  `llms.txt` (with "Projects", "Statistics" and "Work answers" sections), `llms-full.txt`.
 - `src/lib/agents/json.ts`: profile/posts JSON, JSON Resume, status, OpenAPI document.
-- `src/lib/agents/search.ts`: keyword search over profile sections and post sections (MCP `search`);
+- `src/lib/agents/search.ts`: keyword search over profile sections, Statistics sections and post
+  sections (MCP `search`);
   profile hits point at the page that shows them (a project's page, `/en/work/certifications`...).
 - `src/lib/agents/mcp.ts`: the MCP server factory; `well-known.ts`: API catalog, server card,
   SKILL.md + index, ARD and Poppy documents.

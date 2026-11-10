@@ -63,6 +63,7 @@ export type PageRef =
   | { kind: "projects"; lang: Locale }
   | { kind: "project"; lang: Locale; slug: string }
   | { kind: "personal"; lang: Locale }
+  | { kind: "statistics"; lang: Locale }
   | { kind: "post"; lang: Locale; slug: string };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -70,7 +71,7 @@ const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /**
  * Recognizes the pages that have a Markdown rendition: `/en`,
  * `/en/work/<topic>`, `/en/projects`, `/en/projects/<slug>`, `/en/personal`,
- * `/en/personal/blog/<slug>` (a trailing slash is tolerated). Project and
+ * `/en/statistics`, `/en/personal/blog/<slug>` (a trailing slash is tolerated). Project and
  * post slugs are only checked for shape here (the proxy cannot load the
  * profile); an unknown one 404s at its Markdown route.
  */
@@ -83,6 +84,9 @@ export function parsePagePath(pathname: string): PageRef | null {
   }
   if (rest.length === 1 && rest[0] === "projects") {
     return { kind: "projects", lang };
+  }
+  if (rest.length === 1 && rest[0] === "statistics") {
+    return { kind: "statistics", lang };
   }
   if (rest.length === 2 && rest[0] === "projects" && rest[1]) {
     return SLUG.test(rest[1]) ? { kind: "project", lang, slug: rest[1] } : null;
@@ -110,6 +114,7 @@ export function pagePath(page: PageRef): string {
   if (page.kind === "projects") return routes.projects(page.lang);
   if (page.kind === "project") return routes.project(page.lang, page.slug);
   if (page.kind === "personal") return routes.personal(page.lang);
+  if (page.kind === "statistics") return routes.statistics(page.lang);
   return routes.post(page.lang, page.slug);
 }
 
@@ -233,7 +238,7 @@ export function siteLinks(lang?: Locale): LinkTarget[] {
 /** Links specific to one page: canonical, hreflang alternates (same-path pages) and its Markdown rendition. */
 export function pageLinks(page: PageRef): LinkTarget[] {
   const links: LinkTarget[] = [{ href: pagePath(page), rel: "canonical" }];
-  // Work, topics, projects and Personal share their path across locales; post slugs differ
+  // Work, topics, projects, Personal and Statistics share their path across locales; post slugs differ
   // per locale, so their hreflang alternates live in the HTML <head> and sitemap only.
   if (page.kind !== "post") {
     for (const lang of locales) {
