@@ -11,7 +11,7 @@ import { topicIds } from "@/lib/work/topics";
 
 /**
  * Every HTML page in every locale (Work, its answers, Projects and each
- * project's page, Personal, posts), with
+ * project's page, Personal, Things, posts), with
  * hreflang alternates (`xhtml:link`, including x-default) and `lastmod`. Markdown/JSON renditions are discovered
  * through Link headers, llms.txt and the API catalog instead.
  */
@@ -54,6 +54,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
       alternates: {
         languages: hreflangAlternates(localizedPaths("/personal")),
+      },
+    },
+    {
+      url: absoluteUrl(routes.things(lang)),
+      lastModified: profileUpdated,
+      changeFrequency: "monthly",
+      priority: 0.6,
+      alternates: {
+        languages: hreflangAlternates(localizedPaths("/personal/things")),
       },
     },
   ]);

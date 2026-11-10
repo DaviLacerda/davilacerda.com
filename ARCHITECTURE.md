@@ -50,6 +50,7 @@ src/
     [lang]/personal/page.tsx      Personal tab: a bento grid (hello with the portrait, Spotify, watching, interests, my
                                   teams, games), then writing (blog index) and elsewhere
     [lang]/personal/blog/[slug]/  Blog post
+    [lang]/personal/things/       Things: a wall of drawings of what Davi uses that zooms into each one (see Things)
     [lang]/not-found.tsx          localized 404: the status code and an ASCII art only
     [lang]/error.tsx              localized error boundary: 500 and an ASCII art (noindex)
     global-error.tsx              crash in the root layout: same 500 screen, own <html> and theme
@@ -70,6 +71,7 @@ src/
     personal/                     interests, now-playing (the Spotify tile, client), watching, teams (the scoreboard,
                                   client), games + steam (the Steam card, client) + trackers (rank and stats, client),
                                   parts (the tiles' and cards' anatomy), elsewhere
+    things/                       art (the drawings, server), things-wall (the zooming wall and its card, client)
     blog/                         post-list, post-header, table-of-contents, author-card, post-pager, rss-link
     providers/                    theme-provider (next-themes), alternate-links (locale switcher targets)
     seo/json-ld.tsx               <JsonLd data={...} />
@@ -80,6 +82,7 @@ src/
   config/site.ts                  url, name, theme colors, shared SEO keywords
   content/profile.ts              ALL facts about Davi (typed, bilingual). Single source of truth.
   content/personal.ts             the Personal tab's facts that change often: the show, the teams, the game profiles
+  content/things.ts               the things Davi uses (Things page): name, brand, kind, facts, maker's link, drawing
   i18n/                           config, negotiate, dictionaries/{en,pt-br}.ts, index (t, getDictionary), format (dates)
   lib/
     routes.ts                     URL builders + tab logic. Never hand-write internal paths.
@@ -757,6 +760,42 @@ mark from the logo registry.
   and stats are ephemeral and stay out of the machine-readable layer; the Markdown and llms-full list the
   profiles under "Games".
 
+## Things
+
+`/[lang]/personal/things` (`routes.things`): what Davi uses every day, from `src/content/things.ts`.
+Reached from the "Things I use" tile at the end of the Personal grid (the whole tile is the link,
+with the six drawings in a row).
+
+- **Drawings** (`src/components/things/art.tsx`): one flat drawing per kind of object
+  (`art`: `wayfarer`, `macbook-air`, `airpods-pro`, `runner`, `court`, `mouse`), drawn for the site
+  in a 240x180 box on a shared floor line, with no product photography or brand artwork. Like a
+  photo, an object keeps its own greys in both themes (a black shoe stays black), so those greys
+  live in the file, not in the tokens; dark objects carry a lighter rim for the dark plates. The
+  drawings are called as functions inside one `<svg>` (Satori, which draws the OG card, accepts
+  only plain elements there). A new kind of object needs a new drawing.
+- **Wall** (`ThingsWall`, client): the tiles (a 4:3 plate, page tone in light and `surface-strong`
+  in dark, then the name and the brand) on one surface panel, two across on a phone, three from
+  640px. Picking one moves the camera: a single CSS transform on the wall (translate, then scale
+  from its top left), aimed after layout so the drawing fills the free side of the panel (beside
+  the card from 640px, above it on a phone), 700ms `--ease-fluid`, interruptible; the others dim
+  to 25% and the captions fade. The card (page tone, `rounded-surface`) says what it is and its
+  finish, the name, the maker, the facts as pills, the maker's link as the primary button ("See it
+  on apple.com", new tab), and previous and next. Escape, the close button, the zoomed tile or the
+  empty panel zoom out; the arrow keys move along. The hash follows (`#nike-book-1`): a link
+  opens zoomed in (on load without the move) and in-page hash links fly to the thing. The panel is
+  `overflow: clip`, so an anchor jump never scrolls it sideways. Focus moves to the card's title
+  and back to the tile. Reduced motion: the camera cuts. Without JavaScript the tiles stay a grid
+  with each maker's link under its name (`noscript:`).
+- **Agents and SEO:** a `CollectionPage` whose `ItemList` holds each thing as a plain `Thing`
+  (name, "Laptop, Apple", the maker's URL; not `Product`, which Google would report as invalid
+  without offers or reviews), breadcrumbs Work > Personal > Things, its own OG card (the six
+  drawings in a row), `/en/personal/things.md` (and `Accept: text/markdown`), a line in the
+  Personal Markdown, two lines in llms.txt, both locales in llms-full.txt, the `things-{lang}` MCP
+  resources and a sitemap entry. `src/content/things.ts` counts as a profile source for `lastmod`.
+- **Add a thing:** one entry in `things.ts` (`id`, `name`, `brand`, `category`, `kind`, `finish?`,
+  `facts` in both languages, `url` (one, or one per locale when the maker has a Brazilian store),
+  `art`). Facts are the maker's, not opinions; mark guesses with `TODO(davi)`.
+
 ## Blog (`src/lib/blog.ts`, server-only)
 
 `getAllPosts(lang)` -> `PostMeta[]` newest first (drafts only in dev) ·
@@ -860,6 +899,7 @@ All of it is static (`force-static` + `generateStaticParams`) except `/mcp`.
 | `opengraph-image` / `twitter-image`                                                                                    | Monochrome, like the site. Per locale for Work (headline, award ink panel, Azure "3×" panel), each Work answer (question bubble + the answer's picture; Certifications shows the newest print), Personal (portrait + hello) and each post.     |
 | `/llms.txt`, `/llms-full.txt`                                                                                          | [llmstxt.org](https://llmstxt.org) index; full text of every profile, Projects and Personal page and every post.                                                                                                                               |
 | `/{lang}.md` (`/{lang}/index.md`), `/{lang}/work/{topic}.md`, `/{lang}/personal.md`, `/{lang}/personal/blog/{slug}.md` | Markdown renditions (Work reads like a résumé; each answer has its own). Also served for `Accept: text/markdown` on the HTML URL and on `/`.                                                                                                   |
+| `/{lang}/personal/things.md`                                                                                           | The Things page as Markdown: each thing with its facts and its maker's link.                                                                                                                                                                   |
 | `/{lang}/projects.md`, `/{lang}/projects/{id}.md`                                                                      | The Projects tab and each project page as Markdown, served the same two ways.                                                                                                                                                                  |
 | `/api/profile.json`, `/api/posts.json`, `/api/{lang}/{profile,posts,resume}.json`                                      | JSON (profile localized per language; posts with Markdown URLs).                                                                                                                                                                               |
 | `/resume.json`                                                                                                         | [JSON Resume](https://jsonresume.org) v1.0.0 (English; Portuguese at `/api/pt-br/resume.json`).                                                                                                                                                |

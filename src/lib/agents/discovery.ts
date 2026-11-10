@@ -63,6 +63,7 @@ export type PageRef =
   | { kind: "projects"; lang: Locale }
   | { kind: "project"; lang: Locale; slug: string }
   | { kind: "personal"; lang: Locale }
+  | { kind: "things"; lang: Locale }
   | { kind: "post"; lang: Locale; slug: string };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -70,7 +71,7 @@ const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /**
  * Recognizes the pages that have a Markdown rendition: `/en`,
  * `/en/work/<topic>`, `/en/projects`, `/en/projects/<slug>`, `/en/personal`,
- * `/en/personal/blog/<slug>` (a trailing slash is tolerated). Project and
+ * `/en/personal/things`, `/en/personal/blog/<slug>` (a trailing slash is tolerated). Project and
  * post slugs are only checked for shape here (the proxy cannot load the
  * profile); an unknown one 404s at its Markdown route.
  */
@@ -80,6 +81,9 @@ export function parsePagePath(pathname: string): PageRef | null {
   if (rest.length === 0) return { kind: "work", lang };
   if (rest.length === 1 && rest[0] === "personal") {
     return { kind: "personal", lang };
+  }
+  if (rest.length === 2 && rest[0] === "personal" && rest[1] === "things") {
+    return { kind: "things", lang };
   }
   if (rest.length === 1 && rest[0] === "projects") {
     return { kind: "projects", lang };
@@ -110,6 +114,7 @@ export function pagePath(page: PageRef): string {
   if (page.kind === "projects") return routes.projects(page.lang);
   if (page.kind === "project") return routes.project(page.lang, page.slug);
   if (page.kind === "personal") return routes.personal(page.lang);
+  if (page.kind === "things") return routes.things(page.lang);
   return routes.post(page.lang, page.slug);
 }
 

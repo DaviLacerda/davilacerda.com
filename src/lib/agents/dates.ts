@@ -9,6 +9,7 @@ import { locales } from "@/i18n/config";
 const PROFILE_SOURCES = [
   "src/content/profile.ts",
   "src/content/personal.ts",
+  "src/content/things.ts",
   "src/i18n/dictionaries",
   "src/app/[lang]/(assistant)",
   "src/app/[lang]/projects",

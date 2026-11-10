@@ -2,6 +2,7 @@ import "server-only";
 
 import { siteConfig } from "@/config/site";
 import { gameProfiles, steam, teams, watching } from "@/content/personal";
+import { things, thingStore } from "@/content/things";
 import {
   getCertifications,
   getPressOutlets,
@@ -731,6 +732,8 @@ export function personalMarkdown(lang: Locale): string {
           `- **${game.title}:** ${link(game.handle, game.url)} (${t(game.label, lang)})`,
       ),
     ].join("\n"),
+    `## ${dict.personal.things.tile}`,
+    `${things.map((thing) => thing.name).join(", ")}. ${link(dict.meta.things.title, markdownPath({ kind: "things", lang }))}`,
     `## ${s.writing.title}`,
     s.writing.description,
     posts.length ? posts.map(postListItem).join("\n") : dict.blog.noPosts,
@@ -743,6 +746,53 @@ export function personalMarkdown(lang: Locale): string {
           `- **${dict.socials[social.id]}:** ${link(social.handle, social.url)}`,
       )
       .join("\n"),
+    documentFooter(page, htmlPath),
+  );
+}
+
+/* ------------------------------------------------------------ Things page */
+
+/** The Things page: every thing with what it is, its facts and its maker's link. */
+export function thingsMarkdown(lang: Locale): string {
+  const dict = getDictionary(lang);
+  const labels = getAgentLabels(lang);
+  const page: PageRef = { kind: "things", lang };
+  const htmlPath = routes.things(lang);
+
+  return blocks(
+    frontmatter({
+      title: `${dict.meta.things.title} | ${dict.meta.siteName}`,
+      description: dict.meta.things.description,
+      url: absoluteUrl(htmlPath),
+      lang: localeMeta[lang].htmlLang,
+      updated: profileLastModified(),
+      alternates: alternateMarkdownUrls(page),
+    }),
+    `# ${interpolate(labels.thingsTitle, { name: profile.name })}`,
+    `> ${dict.meta.things.description}`,
+    dict.personal.things.lead,
+    labels.thingsNote,
+    ...things.map((thing) => {
+      const url = t(thing.url, lang);
+      const kind = [
+        t(thing.kind, lang),
+        thing.finish && t(thing.finish, lang).toLowerCase(),
+      ]
+        .filter(Boolean)
+        .join(", ");
+      return blocks(
+        `## ${thing.name}`,
+        `${kind}, ${thing.brand}.`,
+        thing.facts[lang].map((fact) => `- ${fact}`).join("\n"),
+        link(
+          interpolate(dict.personal.things.wall.link, {
+            store: thingStore(url),
+          }),
+          url,
+        ),
+      );
+    }),
+    `${dict.personal.things.back}: ${link(dict.meta.personal.title, markdownPath({ kind: "personal", lang }))}`,
     documentFooter(page, htmlPath),
   );
 }
@@ -825,6 +875,7 @@ export function pageMarkdown(page: PageRef): string | null {
   if (page.kind === "work") return workMarkdown(page.lang);
   if (page.kind === "topic") return topicMarkdown(page.lang, page.topic);
   if (page.kind === "personal") return personalMarkdown(page.lang);
+  if (page.kind === "things") return thingsMarkdown(page.lang);
   if (page.kind === "projects") return projectsMarkdown(page.lang);
   if (page.kind === "project") {
     const project = getProjectPage(page.slug);
@@ -863,6 +914,8 @@ export function llmsTxt(): string {
       `- ${link(labels.projectsPt, markdownPath({ kind: "projects", lang: "pt-br" }))}: ${getDictionary("pt-br").meta.projects.description}`,
       `- ${link(labels.personalEn, markdownPath({ kind: "personal", lang: "en" }))}: ${labels.personalDesc}`,
       `- ${link(labels.personalPt, markdownPath({ kind: "personal", lang: "pt-br" }))}: ${getDictionary("pt-br").meta.personal.description}`,
+      `- ${link(labels.thingsEn, markdownPath({ kind: "things", lang: "en" }))}: ${labels.thingsDesc}`,
+      `- ${link(labels.thingsPt, markdownPath({ kind: "things", lang: "pt-br" }))}: ${getDictionary("pt-br").meta.things.description}`,
     ].join("\n"),
     `## ${labels.projects}`,
     labels.projectsIntro,
@@ -911,10 +964,16 @@ export function llmsFullTxt(): string {
         body: projectMarkdown(lang, project),
       })),
     ]),
-    ...locales.map((lang) => ({
-      url: markdownPath({ kind: "personal", lang }),
-      body: personalMarkdown(lang),
-    })),
+    ...locales.flatMap((lang) => [
+      {
+        url: markdownPath({ kind: "personal", lang }),
+        body: personalMarkdown(lang),
+      },
+      {
+        url: markdownPath({ kind: "things", lang }),
+        body: thingsMarkdown(lang),
+      },
+    ]),
     ...locales.flatMap((lang) =>
       getRawPosts(lang).map((post) => ({
         url: markdownPath({ kind: "post", lang, slug: post.slug }),
