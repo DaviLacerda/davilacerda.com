@@ -14,6 +14,7 @@ import { profileJson, postsJson } from "./json";
 import {
   llmsTxt,
   personalMarkdown,
+  thingsMarkdown,
   postMarkdown,
   projectMarkdown,
   projectsMarkdown,
@@ -169,6 +170,15 @@ export function staticResources() {
         description: "Blog index and social links as Markdown.",
         mimeType: "text/markdown",
         read: () => personalMarkdown(lang),
+      },
+      {
+        name: `things-${lang}`,
+        uri: absoluteUrl(markdownPath({ kind: "things", lang })),
+        title: lang === "en" ? "Things (English)" : "Coisas (Português)",
+        description:
+          "The things Davi uses every day, with links to their makers' pages, as Markdown.",
+        mimeType: "text/markdown",
+        read: () => thingsMarkdown(lang),
       },
     ]),
     {

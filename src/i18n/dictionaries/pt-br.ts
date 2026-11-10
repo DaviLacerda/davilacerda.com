@@ -22,6 +22,11 @@ export const ptBr: Dictionary = {
       description:
         "Música, séries, seus times, jogos, textos e onde encontrar Davi Lacerda.",
     },
+    things: {
+      title: "Coisas",
+      description:
+        "As coisas que Davi Lacerda usa todo dia: o MacBook Air, os AirPods Pro, os óculos Ray-Ban Meta, o mouse Logitech G PRO e os tênis Nike, com onde encontrar cada um.",
+    },
     blog: {
       title: "Blog",
       description:
@@ -408,6 +413,22 @@ export const ptBr: Dictionary = {
         champion: "Campeão",
       },
     },
+    things: {
+      title: "Coisas",
+      lead: "O que eu carrego, visto e uso para trabalhar, todo dia.",
+      tile: "Coisas que eu uso",
+      back: "Pessoal",
+      wall: {
+        label: "Coisas",
+        zoomIn: "Ampliar {name}",
+        zoomOut: "Afastar",
+        previous: "Coisa anterior",
+        next: "Próxima coisa",
+        position: "{index} de {total}",
+        link: "Ver em {store}",
+        facts: "Destaques",
+      },
+    },
     sections: {
       writing: {
         title: "Textos",
@@ -468,7 +489,6 @@ export const ptBr: Dictionary = {
   footer: {
     rights: "Todos os direitos reservados.",
   },
-
 
   common: {
     readMore: "Ler mais",

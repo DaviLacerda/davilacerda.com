@@ -382,7 +382,20 @@
   }
 }
 
+/* The Things wall's card arrives once the camera is on its way (see ThingsWall). */
+@keyframes thing-card {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  [data-thing-card] {
+    animation: thing-card 360ms var(--ease-out) 140ms both;
+  }
+
   [data-bar] {
     animation: bar 640ms var(--ease-out) both;
     animation-delay: calc(var(--b, 0) * 140ms + 320ms);
