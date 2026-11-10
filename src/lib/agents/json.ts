@@ -31,6 +31,7 @@ export function profileJson(lang: Locale) {
       html: absoluteUrl(routes.work(lang)),
       markdown: absoluteUrl(markdownPath({ kind: "work", lang })),
       projects: absoluteUrl(markdownPath({ kind: "projects", lang })),
+      statistics: absoluteUrl(markdownPath({ kind: "statistics", lang })),
       jsonResume: absoluteUrl(agentPaths.resume(lang)),
       alternates: Object.fromEntries(
         otherLocales(lang).map((other) => [
@@ -333,6 +334,12 @@ export function openApiDocument(): JsonValue {
             },
           ],
         },
+      ),
+      "/{lang}/statistics.md": getOperation(
+        "getStatisticsMarkdown",
+        "Statistics on generative AI and AI agents, each with its source, as Markdown",
+        "text/markdown",
+        { parameters: [langParam] },
       ),
       "/{lang}/personal.md": getOperation(
         "getPersonalMarkdown",

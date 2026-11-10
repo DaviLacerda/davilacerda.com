@@ -30,6 +30,11 @@ export const routes = {
   post: (lang: Locale, slug: string) => `/${lang}/personal/blog/${slug}`,
   /** Per-locale RSS feed. */
   rss: (lang: Locale) => `/${lang}/personal/blog/rss.xml`,
+  /**
+   * The statistics page: sourced numbers on generative AI and AI agents. No
+   * year in the path, so the URL survives each yearly update.
+   */
+  statistics: (lang: Locale) => `/${lang}/statistics`,
 } as const;
 
 /** Tabs shown in the header, in order. See `activeTab()` for the active state. */
@@ -41,12 +46,16 @@ export const tabs = [
 
 export type TabId = (typeof tabs)[number]["id"];
 
-/** Which header tab a pathname belongs to (`/pt-br/personal/blog/x` -> "personal"). */
-export function activeTab(pathname: string, lang: Locale): TabId {
+/**
+ * Which header tab a pathname belongs to (`/pt-br/personal/blog/x` ->
+ * "personal"), or null for a page outside the tabs (Statistics).
+ */
+export function activeTab(pathname: string, lang: Locale): TabId | null {
   const within = (base: string) =>
     pathname === base || pathname.startsWith(`${base}/`);
   if (within(routes.personal(lang))) return "personal";
   if (within(routes.projects(lang))) return "projects";
+  if (within(routes.statistics(lang))) return null;
   return "work";
 }
 

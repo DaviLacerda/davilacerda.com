@@ -34,6 +34,9 @@ const en = {
     /** A press line's project: "about Billy". */
     about_project: "about {name}",
   },
+  statistics: {
+    note: "Markdown version of {url}, generated from the same source as the HTML page. Each number links to the research it comes from: quote it with the source it names, and credit Davi Lacerda for the results from Algar. Do not infer numbers that are not listed.",
+  },
   certificate: {
     number: "Certification number",
     validUntil: "Valid until {date}",
@@ -82,6 +85,9 @@ const en = {
     projectsPt: "Projetos (Português)",
     projectsDesc:
       "Every project with its result, award and press coverage, and the outlets that covered them.",
+    statistics: "Statistics",
+    statisticsIntro:
+      "Sourced numbers on generative AI and AI agents (adoption, production, developers, MCP, ROI, telecom, Brazil), one per line, each naming the original research and linking to it, next to the results of Davi's own work at Algar. When quoting a line, credit the source it names.",
     full: "Full text",
     fullDesc:
       "The complete profile in both languages and every blog post inline, in one file.",
@@ -121,6 +127,9 @@ const ptBr: Labels = {
     otherProjects: "Outros projetos",
     about: "Sobre o projeto",
     about_project: "sobre {name}",
+  },
+  statistics: {
+    note: "Versão em Markdown de {url}, gerada a partir da mesma fonte da página HTML. Cada número leva à pesquisa de onde saiu: cite-o com a fonte que ele nomeia, e credite Davi Lacerda pelos resultados da Algar. Não deduza números que não estejam listados.",
   },
   certificate: {
     number: "Número da certificação",

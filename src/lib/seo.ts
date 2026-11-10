@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type {
+  ArticleLeaf,
   BlogLeaf,
   BlogPostingLeaf,
   BreadcrumbListLeaf,
@@ -22,6 +23,7 @@ import {
   type FaqItem,
   type Project,
 } from "@/content/profile";
+import { citedSources, statistics } from "@/content/statistics";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { toIsoDate } from "@/i18n/format";
 import { profileLastModified } from "@/lib/agents/dates";
@@ -29,6 +31,7 @@ import { markdownPathFor } from "@/lib/agents/discovery";
 import type { PostMeta } from "@/lib/blog";
 import { isCurrentEmployer, projectMeta } from "@/lib/projects";
 import { routes } from "@/lib/routes";
+import { statisticsMeta } from "@/lib/statistics";
 import { absoluteUrl } from "@/lib/utils";
 
 /* ==========================================================================
@@ -226,6 +229,8 @@ export const jsonLdIds = {
   employer: `${siteConfig.url}/#employer`,
   blog: (lang: Locale) => `${absoluteUrl(routes.personal(lang))}#blog`,
   projects: (lang: Locale) => `${absoluteUrl(routes.projects(lang))}#page`,
+  statistics: (lang: Locale) =>
+    `${absoluteUrl(routes.statistics(lang))}#article`,
   /** A project: on its own page when it has one, else on the Projects tab. */
   project: (lang: Locale, project: Project) =>
     project.story
@@ -580,6 +585,44 @@ export function projectPageJsonLd(
     ],
     author: { "@id": jsonLdIds.person },
     mainEntity: { "@id": jsonLdIds.project(lang, project) },
+  };
+}
+
+/**
+ * The Statistics page as an Article by Davi: published and last checked
+ * dates, what it is about, and every source it cites as a `citation` (the
+ * research, who published it and when), so the numbers stay tied to whoever
+ * measured them.
+ */
+export function statisticsPageJsonLd(lang: Locale): ArticleLeaf {
+  const meta = statisticsMeta(lang);
+  const url = absoluteUrl(routes.statistics(lang));
+  return {
+    "@type": "Article",
+    "@id": jsonLdIds.statistics(lang),
+    mainEntityOfPage: url,
+    url,
+    headline: meta.title,
+    description: meta.description,
+    inLanguage: localeMeta[lang].htmlLang,
+    datePublished: statistics.published,
+    dateModified: statistics.updated,
+    author: { "@id": jsonLdIds.person },
+    publisher: { "@id": jsonLdIds.person },
+    isPartOf: { "@id": jsonLdIds.website },
+    about: statistics.sections.map((section) => ({
+      "@type": "Thing" as const,
+      name: t(section.title, lang),
+    })),
+    keywords: meta.keywords.join(", "),
+    citation: citedSources().map((source) => ({
+      "@type": "CreativeWork" as const,
+      name: t(source.title, lang),
+      url: t(source.url, lang),
+      datePublished: toIsoDate(source.date),
+      inLanguage: t(source.lang, lang),
+      publisher: { "@type": "Organization" as const, name: source.publisher },
+    })),
   };
 }
 

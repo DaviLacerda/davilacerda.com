@@ -17,6 +17,7 @@ import {
   postMarkdown,
   projectMarkdown,
   projectsMarkdown,
+  statisticsMarkdown,
   workMarkdown,
 } from "./markdown";
 import { getRawPost, getRawPosts } from "./posts";
@@ -158,6 +159,16 @@ export function staticResources() {
           "Every project with its result, award and the press that covered it, as Markdown.",
         mimeType: "text/markdown",
         read: () => projectsMarkdown(lang),
+      },
+      {
+        name: `statistics-${lang}`,
+        uri: absoluteUrl(markdownPath({ kind: "statistics", lang })),
+        title:
+          lang === "en" ? "Statistics (English)" : "Estatísticas (Português)",
+        description:
+          "Sourced statistics on generative AI and AI agents, one per line with the original research, as Markdown.",
+        mimeType: "text/markdown",
+        read: () => statisticsMarkdown(lang),
       },
       {
         name: `personal-${lang}`,

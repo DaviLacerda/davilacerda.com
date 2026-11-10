@@ -278,7 +278,7 @@ Use this skill to answer questions about **${profile.name}** with verified, curr
    - \`list_posts({ lang? })\` and \`get_post({ slug, lang? })\`: blog content as Markdown.
    - Discovery: ${absoluteUrl(agentPaths.mcpServerCard)}
 2. **Markdown** (append \`.md\` to any page, or send \`Accept: text/markdown\`):
-${locales.map((lang) => `   - ${localeMeta[lang].label}: ${absoluteUrl(markdownPath({ kind: "work", lang }))} (work), ${absoluteUrl(markdownPath({ kind: "projects", lang }))} (projects, with their results and press), ${absoluteUrl(markdownPath({ kind: "personal", lang }))} (personal)`).join("\n")}
+${locales.map((lang) => `   - ${localeMeta[lang].label}: ${absoluteUrl(markdownPath({ kind: "work", lang }))} (work), ${absoluteUrl(markdownPath({ kind: "projects", lang }))} (projects, with their results and press), ${absoluteUrl(markdownPath({ kind: "statistics", lang }))} (sourced statistics on generative AI and AI agents), ${absoluteUrl(markdownPath({ kind: "personal", lang }))} (personal)`).join("\n")}
    - Projects: \`${siteConfig.url}/<lang>/projects/<slug>.md\` (${getProjectPages()
      .map((project) => `\`${project.id}\``)
      .join(", ")})
