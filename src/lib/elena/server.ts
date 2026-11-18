@@ -29,11 +29,27 @@ function safeEqual(a: Buffer, b: Buffer): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+let warned = false;
+
 export function mediaKey(): Buffer | null {
-  const raw = process.env.ELENA_MEDIA_KEY;
-  if (!raw) return null;
-  const key = Buffer.from(raw, "base64");
-  return key.length === 32 ? key : null;
+  // Tolerate a value pasted with its name, quotes or spaces around it.
+  const raw = (process.env.ELENA_MEDIA_KEY ?? "")
+    .trim()
+    .replace(/^ELENA_MEDIA_KEY=/, "")
+    .replace(/^["']|["']$/g, "")
+    .trim();
+  const key = raw ? Buffer.from(raw, "base64") : null;
+  if (key?.length === 32) return key;
+  if (!warned) {
+    warned = true;
+    // Says what is wrong without printing the value.
+    console.error(
+      raw
+        ? `[elena] ELENA_MEDIA_KEY decodes to ${key?.length ?? 0} bytes, expected 32 (value length ${raw.length})`
+        : "[elena] ELENA_MEDIA_KEY is not set in this environment",
+    );
+  }
+  return null;
 }
 
 export function checkPin(pin: string): boolean {
