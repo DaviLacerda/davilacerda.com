@@ -37,3 +37,6 @@ next-env.d.ts
 
 # design tooling (tasteskill)
 .taste-skill/
+
+# /elena: raw photos stay local; only private/elena/*.enc is committed
+/fotos/

@@ -974,3 +974,24 @@ curl -s -X POST https://isitagentready.com/api/scan -H 'content-type: applicatio
 - `.md` and JSON renditions are not `noindex`; they send `Link: <html>; rel="canonical"` instead.
 - The RSS URLs advertised in Link headers and llms.txt (`/{lang}/personal/blog/rss.xml`) come
   from the blog work.
+
+## The /elena page
+
+An unlisted gift page (a dating-app intro on a phone, then a small three.js world with the places of
+Davi and Elena's story and an album of cards). It sits outside the site on purpose:
+
+- **Own root layout** (`src/app/elena/layout.tsx`): no header, footer, analytics or agent discovery; its
+  own styles in `elena.css`. `src/proxy.ts` skips `elena` (no locale prefix, no `Link` headers).
+- **Not discoverable:** not in the sitemap, `llms.txt`, nav, MCP or any link; `noindex` in the metadata,
+  an `X-Robots-Tag` header (`next.config.ts`) and on the media route. It is deliberately not listed in
+  `robots.txt` (a `Disallow` line would advertise it).
+- **PIN on the server:** `unlock` (server action) checks the PIN hash in `src/lib/elena/server.ts` and sets
+  an httpOnly cookie (an HMAC of the media key). Four digits is a soft lock: it keeps people out, not a
+  determined guesser.
+- **Encrypted content:** the photos, videos and texts (`content.json`) are committed only as AES-256-GCM
+  ciphertext in `private/elena/*.enc`, written by `yarn elena:pack <dir>`; `/elena/media/<file>` decrypts
+  them after the cookie check (byte ranges for Safari video). Needs `ELENA_MEDIA_KEY` (see `.env.example`).
+  The raw photos stay in the local, git-ignored `fotos/`.
+- **Code:** `src/components/elena/` (lock screen, intro, card reveal, game screen) and `game/` (`kit.ts`
+  materials, canvas textures and the people; `places.ts` the six rooms; `world.ts` the loop, movement,
+  collisions, pickups).

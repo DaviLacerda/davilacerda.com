@@ -112,12 +112,13 @@ export const config = {
     /*
      * Run on every path except:
      * - _next/* (static assets, image optimizer, data), api/*, mcp (the MCP endpoint)
+     * - elena, elena/* (an unlisted page with its own root layout, no locale)
      * - anything with a file extension (favicon.ico, robots.txt, sitemap.xml,
      *   llms.txt, llms-full.txt, rss.xml, manifest.webmanifest, .well-known/*,
      *   images, fonts), except .md (handled above)
      * - extension-less metadata routes: opengraph-image, twitter-image, icon, apple-icon
      */
-    "/((?!_next/|api/|mcp$|mcp/|.*\\..*|opengraph-image|twitter-image|icon|apple-icon).*)",
+    "/((?!_next/|api/|mcp$|mcp/|elena$|elena/|.*\\..*|opengraph-image|twitter-image|icon|apple-icon).*)",
     // Markdown renditions: /en.md, /en/index.md, /en/work/<topic>.md, /en/projects.md,
     // /en/projects/<slug>.md, /en/personal.md, /en/personal/blog/<slug>.md
     "/(.*\\.md)",

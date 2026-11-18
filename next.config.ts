@@ -14,6 +14,33 @@ const nextConfig: NextConfig = {
       "./public/certificates/*.png",
       "./public/images/davi.png",
     ],
+    // The /elena page's encrypted photos, videos and texts (scripts/elena-pack.mjs).
+    "/elena/media/[file]": ["./private/elena/**/*"],
+  },
+  // /elena is unlisted: keep it, and everything under it, out of every index.
+  async headers() {
+    return [
+      {
+        source: "/elena/:path*",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow, noarchive, noimageindex",
+          },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
+      {
+        source: "/elena",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow, noarchive, noimageindex",
+          },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
+    ];
   },
   images: {
     // AVIF first (the certificate prints are mostly flat colour and type),
