@@ -1,4 +1,12 @@
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { SMAAPass } from "three/examples/jsm/postprocessing/SMAAPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 import { media, type Who } from "../types";
 import {
@@ -118,6 +126,15 @@ export class World {
   private partnerOpts: PersonOpts;
   private partnerWho: Who;
   paused = false;
+  private composer!: EffectComposer;
+  private bloom!: UnrealBloomPass;
+  private gtao: GTAOPass | null = null;
+  private smaa: SMAAPass | null = null;
+  private coarse = false;
+  private rooms: { minX: number; maxX: number; minZ: number; maxZ: number }[] =
+    [];
+  private grassUniforms = { uTime: { value: 0 } };
+  private closeness = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -125,30 +142,65 @@ export class World {
     private opts: WorldOptions,
   ) {
     const coarse = window.matchMedia("(pointer: coarse)").matches;
+    this.coarse = coarse;
+    THREE.Cache.enabled = true;
     this.renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: !coarse || window.devicePixelRatio < 2,
+      antialias: false,
       powerPreference: "high-performance",
     });
     this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio, coarse ? 1.6 : 2),
+      Math.min(window.devicePixelRatio, coarse ? 1.5 : 2),
     );
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.0;
 
     this.camera = new THREE.PerspectiveCamera(48, 1, 0.1, 500);
     this.scene.fog = new THREE.Fog("#ffd0e2", 60, 170);
+
+    // image-based light: soft reflections and fill on every material
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(
+      new RoomEnvironment(),
+      0.04,
+    ).texture;
+    this.scene.environmentIntensity = 0.35;
+    pmrem.dispose();
+
+    // post-processing: ambient occlusion (desktop), bloom on lamps, SMAA, tone mapping
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    if (!coarse) {
+      this.gtao = new GTAOPass(this.scene, this.camera, 1, 1);
+      this.gtao.updateGtaoMaterial({
+        radius: 0.6,
+        distanceExponent: 1.5,
+        thickness: 1,
+        scale: 1.2,
+      });
+      this.gtao.blendIntensity = 0.85;
+      this.composer.addPass(this.gtao);
+    }
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.4, 1.15);
+    this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
+    if (!coarse) {
+      this.smaa = new SMAAPass();
+      this.composer.addPass(this.smaa);
+    }
 
     this.partnerWho = opts.skin === "elena" ? "davi" : "elena";
     this.partnerOpts = this.partnerWho === "davi" ? DAVI : ELENA;
 
     this.buildSky();
-    this.scene.add(new THREE.HemisphereLight("#ffe3f1", "#7fb07a", 1.25));
-    this.sun = new THREE.DirectionalLight("#ffe0c2", 2.2);
+    this.scene.add(new THREE.HemisphereLight("#ffe3f1", "#7fb07a", 0.7));
+    this.sun = new THREE.DirectionalLight("#ffe0c2", 2.4);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(coarse ? 1024 : 2048, coarse ? 1024 : 2048);
+    this.sun.shadow.mapSize.set(coarse ? 1024 : 4096, coarse ? 1024 : 4096);
+    this.sun.shadow.radius = 4;
+    this.sun.shadow.normalBias = 0.02;
     Object.assign(this.sun.shadow.camera, {
       left: -24,
       right: 24,
@@ -260,6 +312,7 @@ export class World {
     this.scene.traverse((o) => {
       if (o instanceof THREE.Mesh) o.geometry.dispose();
     });
+    this.composer.dispose();
     this.renderer.dispose();
   }
 
@@ -292,6 +345,9 @@ export class World {
     const w = this.canvas.clientWidth || window.innerWidth;
     const h = this.canvas.clientHeight || window.innerHeight;
     this.renderer.setSize(w, h, false);
+    this.composer?.setSize(w, h);
+    this.composer?.setPixelRatio(this.renderer.getPixelRatio());
+    this.bloom?.resolution.set(w / 2, h / 2);
     this.camera.aspect = w / h;
     this.camera.fov = w / h < 0.8 ? 58 : 48;
     this.camera.updateProjectionMatrix();
@@ -374,9 +430,20 @@ export class World {
     );
     sand.position.set(x, -1.2, z);
     this.scene.add(sand);
+    const rockGeo = new THREE.ConeGeometry(r * 0.9, 7, 18, 6);
+    const rp = rockGeo.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < rp.count; i++) {
+      const k =
+        1 +
+        Math.sin(rp.getX(i) * 1.7 + rp.getY(i) * 2.3) * 0.08 +
+        Math.sin(rp.getZ(i) * 2.9) * 0.06;
+      rp.setX(i, rp.getX(i) * k);
+      rp.setZ(i, rp.getZ(i) * k);
+    }
+    rockGeo.computeVertexNormals();
     const rock = new THREE.Mesh(
-      new THREE.ConeGeometry(r * 0.9, 7, 12, 3),
-      mat("#c7a0b4", { roughness: 1 }),
+      rockGeo,
+      mat("#c49bb2", { roughness: 1, flat: true }),
     );
     rock.rotation.x = Math.PI;
     rock.position.set(x, -5.1, z);
@@ -404,6 +471,7 @@ export class World {
     for (let i = 0; i < chain.length - 1; i++)
       this.buildBridge(chain[i]!, chain[i + 1]!, i);
     this.buildScenery(chain);
+    this.buildGrass(chain);
   }
 
   private buildBridge(a: Disc, b: Disc, index: number) {
@@ -632,6 +700,102 @@ export class World {
     }
   }
 
+  /** Instanced grass blades swaying in the wind, kept off rooms, bridges and paths. */
+  private buildGrass(chain: Disc[]) {
+    const blade = new THREE.PlaneGeometry(0.07, 0.42, 1, 3);
+    blade.translate(0, 0.21, 0);
+    const bp = blade.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < bp.count; i++) {
+      const v = bp.getY(i) / 0.42;
+      bp.setX(i, bp.getX(i) * (1 - v * 0.85));
+    }
+    const material = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+      fog: true,
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib.fog,
+        { uTime: { value: 0 } },
+      ]),
+      vertexShader: `
+        uniform float uTime;
+        attribute vec3 aColor;
+        varying vec3 vColor;
+        varying float vH;
+        #include <fog_pars_vertex>
+        void main() {
+          vec4 world = instanceMatrix * vec4(position, 1.0);
+          vec4 base = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+          float h = position.y / 0.42;
+          float wave = sin(uTime * 1.6 + base.x * 0.35 + base.z * 0.25) * 0.5 + sin(uTime * 2.7 + base.x * 0.9) * 0.2;
+          world.x += wave * h * h * 0.16;
+          world.z += wave * h * h * 0.08;
+          vColor = aColor;
+          vH = h;
+          vec4 mvPosition = viewMatrix * modelMatrix * world;
+          gl_Position = projectionMatrix * mvPosition;
+          #include <fog_vertex>
+        }`,
+      fragmentShader: `
+        varying vec3 vColor;
+        varying float vH;
+        #include <fog_pars_fragment>
+        void main() {
+          vec3 c = mix(vColor * 0.55, vColor * 1.12, vH);
+          gl_FragColor = vec4(c, 1.0);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+          #include <fog_fragment>
+        }`,
+    });
+    material.uniforms.uTime = this.grassUniforms.uTime;
+    const perIsland = this.coarse ? 1400 : 3800;
+    const total = perIsland * chain.length;
+    const mesh = new THREE.InstancedMesh(blade, material, total);
+    const colors = new Float32Array(total * 3);
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const sc = new THREE.Vector3();
+    const pos = new THREE.Vector3();
+    const tint = new THREE.Color();
+    let n = 0;
+    let seed = 77;
+    const r = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    const blocked = (x: number, z: number) =>
+      this.rooms.some(
+        (q2) =>
+          x > q2.minX - 0.3 &&
+          x < q2.maxX + 0.3 &&
+          z > q2.minZ - 0.3 &&
+          z < q2.maxZ + 0.3,
+      ) ||
+      this.bridgeAt(x, z).d < 1.6 ||
+      (x - FINALE.x) ** 2 + (z - FINALE.z) ** 2 < 46;
+    for (const d of chain) {
+      for (let i = 0; i < perIsland * 1.6 && n < total; i++) {
+        const a = r() * Math.PI * 2;
+        const rr = Math.sqrt(r()) * (d.r + 0.2);
+        const x = d.x + Math.cos(a) * rr;
+        const z = d.z + Math.sin(a) * rr;
+        if (blocked(x, z)) continue;
+        pos.set(x, 0, z);
+        q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), r() * Math.PI);
+        const s = 0.6 + r() * 0.8;
+        sc.set(1, s, 1);
+        m.compose(pos, q, sc);
+        mesh.setMatrixAt(n, m);
+        tint
+          .set(r() < 0.12 ? "#c7e89a" : "#79b960")
+          .offsetHSL((r() - 0.5) * 0.04, 0, (r() - 0.5) * 0.08);
+        colors.set([tint.r, tint.g, tint.b], n * 3);
+        n++;
+      }
+    }
+    mesh.count = n;
+    blade.setAttribute("aColor", new THREE.InstancedBufferAttribute(colors, 3));
+    mesh.frustumCulled = false;
+    this.scene.add(mesh);
+  }
+
   private ctxFor(
     place: Place,
     ox: number,
@@ -650,10 +814,12 @@ export class World {
       group,
       collide,
       box: (w, h, d, m, x, y, z, o = {}) => {
-        const mesh = new THREE.Mesh(
-          new THREE.BoxGeometry(w, h, d),
-          o.occlude ? m.clone() : m,
-        );
+        const small = Math.min(w, h, d);
+        const geo =
+          o.occlude || o.shadow === false || small < 0.05
+            ? new THREE.BoxGeometry(w, h, d)
+            : new RoundedBoxGeometry(w, h, d, 3, Math.min(0.06, small * 0.3));
+        const mesh = new THREE.Mesh(geo, o.occlude ? m.clone() : m);
         mesh.position.set(x, y + h / 2, z);
         mesh.castShadow = o.shadow ?? true;
         mesh.receiveShadow = true;
@@ -756,6 +922,14 @@ export class World {
         group.add(l);
       },
       animate: (fn) => this.animations.push(fn),
+      tex: (name, rx, ry) => {
+        const t = this.loader.load(media(name));
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.repeat.set(rx, ry);
+        t.anisotropy = 8;
+        return t;
+      },
     };
   }
 
@@ -764,6 +938,12 @@ export class World {
     group.position.set(cx, 0, cz + ROOM_OFFSET);
     this.scene.add(group);
     place.build(this.ctxFor(place, cx, cz + ROOM_OFFSET, group));
+    this.rooms.push({
+      minX: cx - place.w / 2,
+      maxX: cx + place.w / 2,
+      minZ: cz + ROOM_OFFSET - place.d / 2,
+      maxZ: cz + ROOM_OFFSET + place.d / 2,
+    });
 
     // the land's icon, floating behind the room
     const icon = new THREE.Group();
@@ -1102,13 +1282,24 @@ export class World {
     this.player.animate(t, speed);
 
     const portrait = this.camera.aspect < 0.8;
+    const inside = this.rooms.some(
+      (r) =>
+        this.pos.x > r.minX &&
+        this.pos.x < r.maxX &&
+        this.pos.z > r.minZ &&
+        this.pos.z < r.maxZ,
+    );
+    this.closeness +=
+      ((inside ? 1 : 0) - this.closeness) * Math.min(1, dt * 2.5);
+    const k = this.closeness;
     this.camTarget.set(
       this.pos.x,
-      (portrait ? 12.5 : 11.5) + y,
-      this.pos.z + (portrait ? 11.5 : 12.5),
+      (portrait ? 12.5 : 11.5) * (1 - k * 0.38) + y,
+      this.pos.z + (portrait ? 11.5 : 12.5) * (1 - k * 0.3),
     );
     this.camera.position.lerp(this.camTarget, Math.min(1, dt * 4));
-    this.camera.lookAt(this.pos.x, 1 + y, this.pos.z - 2.5);
+    this.camera.lookAt(this.pos.x, 1 + y + k * 0.3, this.pos.z - 2.5 + k);
+    this.grassUniforms.uTime.value = t;
     this.sun.position.set(this.pos.x - 14, 26, this.pos.z + 10);
     this.sun.target.position.set(this.pos.x, 0, this.pos.z - 4);
 
@@ -1228,7 +1419,7 @@ export class World {
       }
     }
 
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render(dt);
   };
 
   private finaleText() {

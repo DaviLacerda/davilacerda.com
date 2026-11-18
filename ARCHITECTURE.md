@@ -997,4 +997,6 @@ place's photos. It sits outside the site on purpose:
 - **Code:** `src/components/elena/` (lock screen, character select, intro, pack opening, card reveal,
   binder, gallery, game screen) and `game/` (`kit.ts` materials, canvas textures and the people;
   `places.ts` the six rooms and their island themes; `world.ts` islands, bridges, the loop, movement,
-  collisions, packs). Progress lives in the viewer's `localStorage` (`elena-progress-v2`).
+  collisions, packs, instanced grass, and the post-processing chain: GTAO and SMAA on desktop, bloom
+  and ACES tone mapping everywhere, a RoomEnvironment for reflections). Some textures are cut from the
+  photos and video frames (`tex-*.webp`, encrypted like the rest). Progress lives in the viewer's `localStorage` (`elena-progress-v2`).

@@ -7,7 +7,6 @@ import {
   marbleTexture,
   mat,
   type PersonOpts,
-  stoneTexture,
   stripesTexture,
   texMat,
   tileTexture,
@@ -95,6 +94,8 @@ export type Ctx = {
     z: number,
   ) => void;
   animate: (fn: (t: number) => void) => void;
+  /** A texture taken from the photos (served decrypted by the media route), tiled rx by ry. */
+  tex: (name: string, rx: number, ry: number) => THREE.Texture;
 };
 
 export type Place = {
@@ -277,7 +278,9 @@ const panedoca: Place = {
   theme: { grass: "#a8d98f", accent: "#2f4d42", sign: "#f6e7c8" },
   build(c) {
     const green = mat("#2f4d42");
-    const brick = texMat(brickTexture("#e6e2dc", "#b9b3aa", 0.08, [4, 1.6]));
+    const brick = texMat(brickTexture("#dcd8d2", "#a9a39a", 0.1, [3, 2.2]), {
+      roughness: 0.9,
+    });
     room(c, 13, 9, texMat(woodTexture("#c79a6b", [3, 3])), {
       back: brick,
       left: green,
@@ -692,6 +695,41 @@ const caldas: Place = {
 
 /* ---------------- 4. Famiglia Crosara: one month of us ---------------- */
 
+function upholsteredChair(c: Ctx, x: number, z: number, rot: number) {
+  const g = new THREE.Group();
+  const wood = mat("#b07a45", { roughness: 0.55 });
+  const fabric = mat("#cdb59a", { roughness: 1 });
+  addTo(g, new THREE.BoxGeometry(0.62, 0.14, 0.6), fabric, 0, 0.52, 0);
+  const back = addTo(
+    g,
+    new THREE.BoxGeometry(0.62, 0.42, 0.1),
+    fabric,
+    0,
+    0.88,
+    -0.27,
+  );
+  back.rotation.x = -0.12;
+  for (const [lx, lz] of [
+    [-0.26, -0.24],
+    [0.26, -0.24],
+    [-0.26, 0.24],
+    [0.26, 0.24],
+  ] as const) {
+    const leg = addTo(
+      g,
+      new THREE.CylinderGeometry(0.03, 0.025, 0.5, 8),
+      wood,
+      lx,
+      0.25,
+      lz,
+    );
+    leg.rotation.x = lz > 0 ? 0.12 : -0.12;
+  }
+  g.position.set(x, 0.12, z);
+  g.rotation.y = rot;
+  c.group.add(g);
+}
+
 const famiglia: Place = {
   id: "famiglia",
   label: "Famiglia Crosara",
@@ -700,107 +738,153 @@ const famiglia: Place = {
   radius: 15,
   theme: { grass: "#a3d48c", accent: "#1f2a26", sign: "#f6d58f" },
   build(c) {
-    const stone = texMat(stoneTexture([4, 1.4]));
+    // the white stone wall, the beige plaster wall and the bamboo screen, from the photos
+    const stone = texMat(c.tex("tex-stone.webp", 4, 1.6), { roughness: 0.95 });
+    const plaster = mat("#e9d7bf", { roughness: 0.95 });
     const darkGreen = mat("#1f2a26");
     room(
       c,
       17,
       12,
-      texMat(tileTexture("#bdb8b0", "#a8a39b", [8, 6]), { roughness: 0.5 }),
-      { back: stone, left: darkGreen, right: darkGreen },
+      texMat(tileTexture("#c9c2b8", "#b3aca2", [8, 6]), { roughness: 0.35 }),
+      { back: stone, left: plaster, right: darkGreen },
       4.4,
     );
-    const brick = texMat(brickTexture("#9c4b30", "#5e2c1c", 0.12, [3, 1], 13));
-    c.box(0.5, 2.4, 0.5, brick, -1.6, 0.12, -5.6);
-    c.box(0.5, 2.4, 0.5, brick, 1.6, 0.12, -5.6);
+    // brick arch with the blue-lit room behind it
+    const brick = texMat(brickTexture("#a5532f", "#5e2c1c", 0.14, [2, 1], 13));
+    c.box(0.55, 2.6, 0.55, brick, 3.0, 0.12, -5.6);
+    c.box(0.55, 2.6, 0.55, brick, 6.2, 0.12, -5.6);
     const arch = new THREE.Mesh(
-      new THREE.TorusGeometry(1.6, 0.25, 8, 20, Math.PI),
+      new THREE.TorusGeometry(1.6, 0.28, 12, 32, Math.PI),
       brick,
     );
-    arch.position.set(0, 2.5, -5.6);
+    arch.position.set(4.6, 2.7, -5.6);
+    arch.castShadow = true;
     c.group.add(arch);
-    c.box(2.7, 2.4, 0.05, glow("#2a6fb0", 1.2), 0, 0.12, -5.82);
-    const bamboo = mat("#c9a24a", { roughness: 0.7 });
-    for (let i = 0; i < 22; i++)
-      c.cyl(0.06, 0.06, 4.2, bamboo, -8.1, 0.12, -5.5 + i * 0.5);
-    c.box(0.06, 4.0, 0.06, glow("#ffd27a", 2.2), -8.25, 0.2, 0);
+    c.box(2.7, 2.6, 0.05, glow("#3b82d6", 1.1), 4.6, 0.12, -5.66);
+    // upholstered bench along the stone wall, with the warm LED under the plants
+    c.box(7.5, 0.5, 0.8, mat("#9c8f84", { roughness: 1 }), -3.2, 0.12, -5.2, {
+      collide: true,
+    });
+    c.box(7.5, 0.7, 0.25, mat("#8d8076", { roughness: 1 }), -3.2, 0.62, -5.55);
+    c.box(7.5, 0.05, 0.08, glow("#fff1c9", 2.4), -3.2, 1.36, -5.6);
+    for (let i = 0; i < 5; i++) plant(c, -6.4 + i * 1.6, -5.6, 0.7, "#f4f1ea");
+    // bamboo screen on the right, from the video
+    const bamboo = texMat(c.tex("tex-bamboo.webp", 3, 1), { roughness: 0.7 });
+    c.box(0.12, 4.2, 6, bamboo, 7.9, 0.12, 1.5);
+    const cane = mat("#caa255", { roughness: 0.5 });
+    for (let i = 0; i < 16; i++)
+      c.cyl(0.05, 0.05, 4.3, cane, 7.6 - (i % 2) * 0.12, 0.12, -1.3 + i * 0.38);
+    c.box(0.06, 4.0, 0.06, glow("#ffd27a", 2.4), 7.85, 0.2, -1.6);
     c.box(
       1.0,
       1.1,
-      5.5,
-      texMat(tileTexture("#1f5a46", "#14382c", [2, 4])),
-      7.6,
+      2.5,
+      texMat(tileTexture("#1f5a46", "#14382c", [2, 2])),
+      7.4,
       0.12,
-      -2.4,
+      -3.8,
       { collide: true },
     );
-    c.box(1.1, 2.6, 1.2, glow("#7fd6ff", 1.0), 7.8, 0.12, 1.2, {
-      collide: true,
-    });
-    c.box(1.1, 2.8, 1.4, mat("#a8794e"), 7.8, 0.12, 2.6, { collide: true });
-    const cloth = mat("#e9e3d6", { roughness: 1 });
-    const chairWood = mat("#d8a865");
+    c.box(1.1, 2.6, 0.05, glow("#9fe2ff", 0.8), 7.0, 0.12, -5.62);
+    // round tables with beige cloths and upholstered chairs
+    const cloth = mat("#d9cbb8", { roughness: 1 });
     for (const [tx, tz] of [
-      [-4.5, -3],
-      [4.0, -3.2],
-      [-4.6, 1.6],
-      [3.6, 2.6],
+      [-4.8, -2.4],
+      [0.4, -2.8],
+      [-4.6, 2.2],
+      [3.4, 2.4],
     ] as const) {
-      c.cyl(0.8, 0.8, 0.8, cloth, tx, 0.12, tz, { collide: true, seg: 18 });
-      chair(c, tx, tz + 1.2, Math.PI, chairWood, undefined, true);
-      chair(c, tx, tz - 1.2, 0, chairWood, undefined, true);
+      c.cyl(0.95, 1.05, 0.8, cloth, tx, 0.12, tz, { collide: true, seg: 32 });
+      for (const [cx2, cz2, rot] of [
+        [0, 1.25, Math.PI],
+        [0, -1.25, 0],
+        [1.25, 0, -Math.PI / 2],
+        [-1.25, 0, Math.PI / 2],
+      ] as const)
+        upholsteredChair(c, tx + cx2, tz + cz2, rot);
+      for (const gx of [-0.3, 0.3])
+        c.cyl(
+          0.05,
+          0.03,
+          0.25,
+          new THREE.MeshPhysicalMaterial({
+            color: "#ffffff",
+            transmission: 0.9,
+            roughness: 0.05,
+            thickness: 0.1,
+          }),
+          tx + gx,
+          0.92,
+          tz + 0.2,
+        );
       c.cyl(
-        0.05,
-        0.03,
-        0.25,
-        new THREE.MeshStandardMaterial({
-          color: "#ffffff",
-          transparent: true,
-          opacity: 0.5,
-        }),
-        tx + 0.3,
-        0.92,
-        tz,
+        0.18,
+        0.18,
+        0.02,
+        mat("#5b5f58", { roughness: 0.4 }),
+        tx,
+        0.93,
+        tz - 0.3,
       );
     }
-    c.box(1.6, 0.08, 1.2, mat("#d8a865"), -0.2, 0.92, 0.2, { collide: true });
-    c.box(0.12, 0.8, 0.12, chairWood, -0.2, 0.12, 0.2);
-    chair(c, -0.2, 1.3, Math.PI, chairWood, undefined, true);
-    chair(c, -0.2, -0.9, 0, chairWood, undefined, true);
-    c.photo("famiglia-1.webp", 0.9, 1.2, -5.0, 1.4, -5.68);
-    c.photo("famiglia-3.webp", 0.9, 1.2, 4.6, 1.4, -5.68);
-    const wicker = glow("#e8671c", 0.9);
+    // their table, wood with cross-back chairs, in the middle
+    const chairWood = mat("#d8a865", { roughness: 0.55 });
+    c.box(1.6, 0.08, 1.2, chairWood, -0.6, 0.92, 0.6, { collide: true });
+    c.box(0.12, 0.8, 0.12, chairWood, -0.6, 0.12, 0.6);
+    chair(c, -0.6, 1.7, Math.PI, chairWood, undefined, true);
+    chair(c, -0.6, -0.5, 0, chairWood, undefined, true);
+    c.photo("famiglia-1.webp", 0.9, 1.2, -7.6, 1.6, 2.0, Math.PI / 2);
+    c.photo("famiglia-3.webp", 0.9, 1.2, -7.6, 1.6, -1.0, Math.PI / 2);
+    // wicker pendant lamps: elongated woven pills glowing warm
+    const wicker = new THREE.MeshStandardMaterial({
+      color: "#e09a55",
+      emissive: "#ff9a40",
+      emissiveIntensity: 1.6,
+      roughness: 0.8,
+    });
+    const wire = mat("#222");
     const lampMeshes: THREE.Mesh[] = [];
-    for (const [lx, lz, ly] of [
-      [-4.5, -3, 3.0],
-      [4.0, -3.2, 3.2],
-      [-4.6, 1.6, 2.8],
-      [3.6, 2.6, 3.0],
-      [-0.2, 0.2, 3.0],
-      [0, -4.2, 3.4],
+    for (const [lx, lz, ly, tall] of [
+      [-4.8, -2.4, 3.0, 1.2],
+      [0.4, -2.8, 3.3, 1.0],
+      [-4.6, 2.2, 2.9, 1.25],
+      [3.4, 2.4, 3.1, 0.9],
+      [-0.6, 0.6, 3.0, 1.1],
+      [-2.4, -4.4, 3.5, 0.8],
+      [1.6, -4.0, 3.4, 0.7],
     ] as const) {
-      c.cyl(0.01, 0.01, 4.6 - ly, mat("#222"), lx, ly + 0.5, lz);
+      c.cyl(0.008, 0.008, 4.6 - ly, wire, lx, ly + tall * 0.5, lz);
       const l = addTo(
         c.group,
-        new THREE.SphereGeometry(0.4, 10, 8),
+        new THREE.CapsuleGeometry(0.3, tall * 0.5, 8, 20),
         wicker,
         lx,
         ly,
         lz,
       );
-      l.scale.set(1, 1.15, 1);
+      l.castShadow = false;
       lampMeshes.push(l);
+      const ring = addTo(
+        c.group,
+        new THREE.TorusGeometry(0.31, 0.015, 6, 24),
+        mat("#8a5a2a"),
+        lx,
+        ly,
+        lz,
+      );
+      ring.rotation.x = Math.PI / 2;
     }
     c.animate((t) =>
       lampMeshes.forEach(
-        (l, i) => (l.rotation.z = Math.sin(t * 0.8 + i) * 0.05),
+        (l, i) => (l.rotation.z = Math.sin(t * 0.8 + i) * 0.04),
       ),
     );
-    c.light("#ffb066", 14, 16, 0, 3.5, -0.5);
-    plant(c, -2.8, -5.2, 1.3);
-    plant(c, 2.8, -5.2, 1.3);
-    plant(c, -7.4, 5.0, 1.1);
-    c.sign("Famiglia Crosara", 0, 4.6, -5.8, {
+    c.light("#ffb066", 18, 14, -2.5, 3.2, -0.5);
+    c.light("#ffb066", 12, 12, 3, 3.2, 1.5);
+    plant(c, -7.2, 4.8, 1.2);
+    plant(c, 1.4, -5.3, 1.1);
+    c.sign("Famiglia Crosara", -1.6, 4.6, -5.8, {
       bg: "#1f2a26",
       fg: "#f6d58f",
       w: 768,
@@ -814,29 +898,29 @@ const famiglia: Place = {
         bottom: "#111111",
         beard: true,
       },
-      2.4,
+      3.2,
       -4.3,
       -0.3,
       "🎻 ♪ ♫",
       "violin",
     );
-    c.partner(1.4, 0.4, -0.5);
-    c.pack(-0.2, 2.4);
+    c.partner(0.9, 0.9, -0.5);
+    c.pack(-0.6, 2.6);
   },
   landmark(g, animate) {
     // a giant violin
     addTo(
       g,
-      new THREE.SphereGeometry(1.1, 14, 10),
-      mat("#9a4416", { roughness: 0.4 }),
+      new THREE.SphereGeometry(1.1, 24, 16),
+      mat("#9a4416", { roughness: 0.35 }),
       0,
       -0.6,
       0,
     ).scale.set(1, 1.1, 0.35);
     addTo(
       g,
-      new THREE.SphereGeometry(0.85, 14, 10),
-      mat("#9a4416", { roughness: 0.4 }),
+      new THREE.SphereGeometry(0.85, 24, 16),
+      mat("#9a4416", { roughness: 0.35 }),
       0,
       0.9,
       0,
