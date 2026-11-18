@@ -2,39 +2,67 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { CardReveal } from "./card-reveal";
+import { Binder } from "./binder";
+import { PackOpening } from "./pack-opening";
 import { chime } from "./sound";
-import { media, type ChatItem, type Content } from "./types";
+import {
+  media,
+  other,
+  type ChatItem,
+  type Content,
+  type Profile as ProfileData,
+  type Who,
+} from "./types";
 
-type Stage = "lines" | "profile" | "match" | "chat" | "card";
+type Stage = "lines" | "profile" | "match" | "chat" | "pack" | "binder";
 
 /**
- * The beginning, on a phone: Davi's profile on the dating app (photos, bio,
- * interests), Elena likes it, it's a match, their first conversation replays,
- * and the first card is revealed.
+ * The beginning, on a phone: the other person's profile on the dating app
+ * (the only one to swipe), a like, the match, their first conversation, and
+ * the first card pack.
  */
 export function TinderIntro({
   content,
+  me,
   onDone,
 }: {
   content: Content;
+  me: Who;
   onDone: () => void;
 }) {
   const [stage, setStage] = useState<Stage>("lines");
+  const them = other(me);
 
-  if (stage === "card") {
+  if (stage === "pack") {
     const card = content.cards.tinder;
     return (
       <div className="screen screen-pink">
         {card && (
-          <CardReveal
-            image={media(card.image)}
-            title={card.title}
-            badge="Carta 1 de 7"
-            action="Começar a nossa história"
-            onDone={onDone}
+          <PackOpening
+            label="O match"
+            cards={[
+              {
+                image: media(card.image),
+                title: card.title,
+                badge: "Carta 1 de 8",
+              },
+            ]}
+            onDone={() => setStage("binder")}
           />
         )}
+      </div>
+    );
+  }
+
+  if (stage === "binder") {
+    return (
+      <div className="screen screen-pink">
+        <Binder
+          content={content}
+          cards={["tinder"]}
+          fresh={["tinder"]}
+          primary={{ label: "Começar a nossa história", onClick: onDone }}
+        />
       </div>
     );
   }
@@ -51,13 +79,13 @@ export function TinderIntro({
           <div className="phone-notch" aria-hidden />
           <StatusBar />
           {stage === "profile" && (
-            <Profile content={content} onLike={() => setStage("match")} />
+            <Profile profile={content[them]} onLike={() => setStage("match")} />
           )}
           {stage === "match" && (
-            <Match content={content} onNext={() => setStage("chat")} />
+            <Match content={content} me={me} onNext={() => setStage("chat")} />
           )}
           {stage === "chat" && (
-            <Chat content={content} onDone={() => setStage("card")} />
+            <Chat content={content} me={me} onDone={() => setStage("pack")} />
           )}
         </div>
       )}
@@ -128,13 +156,12 @@ function Flame() {
 }
 
 function Profile({
-  content,
+  profile: davi,
   onLike,
 }: {
-  content: Content;
+  profile: ProfileData;
   onLike: () => void;
 }) {
-  const { davi } = content;
   const [photo, setPhoto] = useState(0);
   const [drag, setDrag] = useState(0);
   const [leaving, setLeaving] = useState<"like" | null>(null);
@@ -256,12 +283,14 @@ function Profile({
           </section>
           <section className="pf-section">
             <h3>❝ Sobre mim</h3>
-            <p>{davi.about}</p>
+            <p className="pf-about">{davi.about}</p>
           </section>
-          <section className="pf-section">
-            <h3>❝ {davi.prompt.title}</h3>
-            <p className="pf-big">{davi.prompt.answer}</p>
-          </section>
+          {davi.prompts.map(([q, a]) => (
+            <section key={q} className="pf-section">
+              <h3>❝ {q}</h3>
+              <p className="pf-big">{a}</p>
+            </section>
+          ))}
           <section className="pf-section">
             <h3>Informações básicas</h3>
             <ul className="pf-list">
@@ -289,12 +318,14 @@ function Profile({
               ))}
             </dl>
           </section>
-          <section className="pf-section">
-            <h3>♫ Minha música</h3>
-            <p>
-              <strong>{davi.song.title}</strong> · {davi.song.artist}
-            </p>
-          </section>
+          {davi.song && (
+            <section className="pf-section">
+              <h3>♫ Minha música</h3>
+              <p>
+                <strong>{davi.song.title}</strong> · {davi.song.artist}
+              </p>
+            </section>
+          )}
         </div>
       </div>
       {nope && (
@@ -323,7 +354,17 @@ function Profile({
   );
 }
 
-function Match({ content, onNext }: { content: Content; onNext: () => void }) {
+function Match({
+  content,
+  me,
+  onNext,
+}: {
+  content: Content;
+  me: Who;
+  onNext: () => void;
+}) {
+  const them = content[other(me)];
+  const mine = content[me];
   return (
     <div className="match">
       <div className="match-hearts" aria-hidden>
@@ -334,15 +375,18 @@ function Match({ content, onNext }: { content: Content; onNext: () => void }) {
         ))}
       </div>
       <h2 className="match-title">Deu match!</h2>
-      <p>Você e {content.davi.name} curtiram um ao outro.</p>
+      <p>Você e {them.name} curtiram um ao outro.</p>
       <div className="match-faces">
         {/* eslint-disable-next-line @next/next/no-img-element -- authenticated media */}
         <img
-          src={media(content.elena.photos[2] ?? content.elena.photos[0] ?? "")}
-          alt="Elena"
+          src={media(mine.photos[me === "elena" ? 2 : 0] ?? "")}
+          alt={mine.name}
         />
         {/* eslint-disable-next-line @next/next/no-img-element -- authenticated media */}
-        <img src={media(content.davi.photos[0] ?? "")} alt="Davi" />
+        <img
+          src={media(them.photos[me === "elena" ? 0 : 2] ?? "")}
+          alt={them.name}
+        />
         <span>♥</span>
       </div>
       <button type="button" className="btn-primary" onClick={onNext}>
@@ -352,7 +396,16 @@ function Match({ content, onNext }: { content: Content; onNext: () => void }) {
   );
 }
 
-function Chat({ content, onDone }: { content: Content; onDone: () => void }) {
+function Chat({
+  content,
+  me,
+  onDone,
+}: {
+  content: Content;
+  me: Who;
+  onDone: () => void;
+}) {
+  const them = content[other(me)];
   const items = content.chat;
   const [shown, setShown] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -381,22 +434,22 @@ function Chat({ content, onDone }: { content: Content; onDone: () => void }) {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [shown, typing]);
 
-  const avatar = media(content.davi.photos[0] ?? "");
+  const avatar = media(them.photos[me === "elena" ? 0 : 2] ?? "");
 
   return (
     <div className="chat">
       <header className="chat-header">
         {/* eslint-disable-next-line @next/next/no-img-element -- authenticated media */}
         <img src={avatar} alt="" />
-        <span>{content.davi.name}</span>
+        <span>{them.name}</span>
       </header>
       <div className="chat-list" ref={listRef}>
-        <p className="chat-system">Você deu match com Davi em 8/8/26</p>
+        <p className="chat-system">Você deu match com {them.name} em 8/8/26</p>
         {items.slice(0, shown).map((item, i) => (
-          <ChatRow key={i} item={item} avatar={avatar} />
+          <ChatRow key={i} item={item} avatar={avatar} me={me} />
         ))}
         {typing && (
-          <div className={`bubble-row ${typing === "elena" ? "me" : ""}`}>
+          <div className={`bubble-row ${typing === me ? "me" : ""}`}>
             <div className="bubble typing">
               <i />
               <i />
@@ -427,10 +480,27 @@ function Chat({ content, onDone }: { content: Content; onDone: () => void }) {
   );
 }
 
-function ChatRow({ item, avatar }: { item: ChatItem; avatar: string }) {
+function ChatRow({
+  item,
+  avatar,
+  me: who,
+}: {
+  item: ChatItem;
+  avatar: string;
+  me: Who;
+}) {
   if ("day" in item) return <p className="chat-day">{item.day}</p>;
-  if ("system" in item) return <p className="chat-system">{item.system} ❤️</p>;
-  const me = item.from === "elena";
+  if ("event" in item) {
+    return (
+      <p className="chat-system">
+        {who === "elena"
+          ? "Você curtiu a foto do Davi"
+          : "Elena curtiu sua foto"}{" "}
+        ❤️
+      </p>
+    );
+  }
+  const me = item.from === who;
   return (
     <>
       {item.time && <p className="chat-time">{item.time}</p>}

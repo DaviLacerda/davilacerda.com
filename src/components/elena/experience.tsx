@@ -4,31 +4,49 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
 import { TinderIntro } from "./tinder-intro";
-import { media, type Content } from "./types";
+import { media, type Content, type Who } from "./types";
 
 const Game = dynamic(() => import("./game-screen").then((m) => m.Game), {
   ssr: false,
-  loading: () => <Loading text="Montando o nosso mundinho…" />,
+  loading: () => <Loading text="Montando as nossas ilhas…" />,
 });
 
-const STORAGE = "elena-progress-v1";
+const CharacterSelect = dynamic(
+  () => import("./character-select").then((m) => m.CharacterSelect),
+  {
+    ssr: false,
+    loading: () => <Loading text="Separando as roupas…" />,
+  },
+);
 
-type Progress = { intro: boolean; collected: string[]; done: boolean };
+const STORAGE = "elena-progress-v2";
+
+type Progress = {
+  skin: Who | null;
+  intro: boolean;
+  /** Cards in the binder. */
+  cards: string[];
+  /** Islands whose pack was opened. */
+  opened: string[];
+  done: boolean;
+};
+
+const EMPTY: Progress = {
+  skin: null,
+  intro: false,
+  cards: [],
+  opened: [],
+  done: false,
+};
 
 function readProgress(): Progress {
   try {
     const raw = localStorage.getItem(STORAGE);
-    if (raw)
-      return {
-        intro: false,
-        collected: [],
-        done: false,
-        ...(JSON.parse(raw) as Partial<Progress>),
-      };
+    if (raw) return { ...EMPTY, ...(JSON.parse(raw) as Partial<Progress>) };
   } catch {
     // private mode or blocked storage: start fresh
   }
-  return { intro: false, collected: [], done: false };
+  return EMPTY;
 }
 
 function saveProgress(p: Progress) {
@@ -47,6 +65,8 @@ export function Loading({ text }: { text: string }) {
     </div>
   );
 }
+
+const uniq = (a: string[]) => Array.from(new Set(a));
 
 export function Experience() {
   const [content, setContent] = useState<Content | null>(null);
@@ -67,9 +87,10 @@ export function Experience() {
       .catch(() => setFailed(true));
   }, []);
 
-  const update = useCallback((patch: Partial<Progress>) => {
+  const update = useCallback((patch: (p: Progress) => Partial<Progress>) => {
     setProgress((p) => {
-      const next = { ...(p ?? readProgress()), ...patch };
+      const base = p ?? readProgress();
+      const next = { ...base, ...patch(base) };
       saveProgress(next);
       return next;
     });
@@ -80,15 +101,16 @@ export function Experience() {
   if (!content || !progress)
     return <Loading text="Carregando as nossas memórias…" />;
 
+  if (!progress.skin)
+    return <CharacterSelect onSelect={(skin) => update(() => ({ skin }))} />;
+
   if (!progress.intro) {
     return (
       <TinderIntro
         content={content}
+        me={progress.skin}
         onDone={() =>
-          update({
-            intro: true,
-            collected: Array.from(new Set([...progress.collected, "tinder"])),
-          })
+          update((p) => ({ intro: true, cards: uniq([...p.cards, "tinder"]) }))
         }
       />
     );
@@ -96,14 +118,21 @@ export function Experience() {
 
   return (
     <Game
+      key={progress.skin}
       content={content}
-      collected={progress.collected}
-      onCollect={(id) =>
-        update({ collected: Array.from(new Set([...progress.collected, id])) })
+      skin={progress.skin}
+      cards={progress.cards}
+      opened={progress.opened}
+      onOpenPack={(island, cards) =>
+        update((p) => ({
+          opened: uniq([...p.opened, island]),
+          cards: uniq([...p.cards, ...cards]),
+        }))
       }
-      onFinish={() => update({ done: true })}
-      onReplayIntro={() => update({ intro: false })}
-      onReset={() => update({ intro: false, collected: [], done: false })}
+      onFinish={() => update(() => ({ done: true }))}
+      onReplayIntro={() => update(() => ({ intro: false }))}
+      onChangeSkin={() => update(() => ({ skin: null }))}
+      onReset={() => update(() => EMPTY)}
     />
   );
 }

@@ -557,3 +557,59 @@ export const DAVI: PersonOpts = {
   glasses: true,
   scale: 1.08,
 };
+
+/** Front of a card pack: foil gradient, a big heart and the island's name. */
+export function packTexture(label: string) {
+  return canvasTexture(256, 384, (g) => {
+    const grad = g.createLinearGradient(0, 0, 256, 384);
+    grad.addColorStop(0, "#ff7eb3");
+    grad.addColorStop(0.45, "#ffc6dc");
+    grad.addColorStop(0.55, "#c9b6ff");
+    grad.addColorStop(1, "#ff5c95");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 256, 384);
+    g.fillStyle = "rgba(255,255,255,.18)";
+    for (let i = -384; i < 384; i += 28) {
+      g.beginPath();
+      g.moveTo(i, 0);
+      g.lineTo(i + 384, 384);
+      g.lineTo(i + 398, 384);
+      g.lineTo(i + 14, 0);
+      g.fill();
+    }
+    g.fillStyle = "#8f1d4a";
+    g.fillRect(0, 0, 256, 34);
+    g.fillRect(0, 350, 256, 34);
+    g.fillStyle = "#fff";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = "600 20px Georgia, serif";
+    g.fillText("NOSSA HISTÓRIA", 128, 18);
+    g.font = "150px serif";
+    g.fillText("♥", 128, 185);
+    g.font = "600 26px Georgia, serif";
+    let size = 26;
+    while (g.measureText(label).width > 230 && size > 12) {
+      size -= 2;
+      g.font = `600 ${size}px Georgia, serif`;
+    }
+    g.fillText(label, 128, 300);
+    g.font = "600 16px Georgia, serif";
+    g.fillText("PACOTE DE CARTAS", 128, 367);
+  });
+}
+
+/** Cover for a photo that is still locked: a question mark on pink. */
+export function lockedTexture() {
+  return canvasTexture(128, 160, (g) => {
+    g.fillStyle = "#ffd6e7";
+    g.fillRect(0, 0, 128, 160);
+    g.fillStyle = "#e63d7a";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = "700 80px Georgia, serif";
+    g.fillText("?", 64, 72);
+    g.font = "600 13px Georgia, serif";
+    g.fillText("abra o pacote", 64, 135);
+  });
+}

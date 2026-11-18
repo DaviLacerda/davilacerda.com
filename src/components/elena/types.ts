@@ -1,52 +1,71 @@
 /** Shape of the encrypted content.json served at /elena/media/content.json. */
 
+export type Who = "davi" | "elena";
+
 export type ChatItem =
   | { day: string }
-  | { system: string }
-  | { from: "davi" | "elena"; text: string; time?: string; heart?: boolean };
+  | { event: "elena-liked" }
+  | { from: Who; text: string; time?: string; heart?: boolean };
 
 export type Card = { image: string; title: string };
 
-export type Memory = {
+export type Profile = {
+  name: string;
+  age: number;
+  photos: string[];
+  lookingFor: string;
+  about: string;
+  prompts: [string, string][];
+  basics: string[];
+  interests: string[];
+  more: [string, string][];
+  song?: { title: string; artist: string };
+};
+
+export type Island = {
   place: string;
   title: string;
   text: string;
   photos: string[];
   videos: string[];
-  davi: string;
-  card?: string;
+  /** Cards inside the island's pack, in reveal order. */
+  cards: string[];
+  /** What each person says there, keyed by who is speaking. */
+  lines: Record<Who, string>;
 };
 
 export type Content = {
   intro: { lines: string[] };
-  davi: {
-    name: string;
-    age: number;
-    photos: string[];
-    lookingFor: string;
-    about: string;
-    prompt: { title: string; answer: string };
-    basics: string[];
-    interests: string[];
-    more: [string, string][];
-    song: { title: string; artist: string };
-  };
-  elena: { name: string; age: number; photos: string[] };
+  davi: Profile;
+  elena: Profile;
   chat: ChatItem[];
   cards: Record<string, Card>;
-  memories: Record<string, Memory>;
+  islands: Record<string, Island>;
   finale: { title: string; message: string; signature: string };
 };
 
 export const media = (name: string) => `/elena/media/${name}`;
 
-/** Order of the album: the intro's card first, then the walk. */
+/** Islands in the order of the story. */
+export const ISLAND_ORDER = [
+  "panedoca",
+  "casa-vo",
+  "caldas",
+  "famiglia",
+  "casa",
+  "cinema",
+] as const;
+
+/** Binder order: the match first, then the walk. */
 export const CARD_ORDER = [
   "tinder",
   "panedoca",
   "casa-vo",
   "caldas",
+  "famiglia",
   "pedido",
   "compromisso",
-  "famiglia",
+  "cinema",
 ] as const;
+
+export const other = (who: Who): Who => (who === "davi" ? "elena" : "davi");

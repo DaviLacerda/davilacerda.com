@@ -977,8 +977,10 @@ curl -s -X POST https://isitagentready.com/api/scan -H 'content-type: applicatio
 
 ## The /elena page
 
-An unlisted gift page (a dating-app intro on a phone, then a small three.js world with the places of
-Davi and Elena's story and an album of cards). It sits outside the site on purpose:
+An unlisted gift page: pick a character (Davi or Elena), a dating-app intro on a phone with the other
+person's profile, then a three.js world of floating islands (one per place of their story, joined by
+bridges). Each island hides a card pack; opening it adds its cards to the binder and uncovers that
+place's photos. It sits outside the site on purpose:
 
 - **Own root layout** (`src/app/elena/layout.tsx`): no header, footer, analytics or agent discovery; its
   own styles in `elena.css`. `src/proxy.ts` skips `elena` (no locale prefix, no `Link` headers).
@@ -992,6 +994,7 @@ Davi and Elena's story and an album of cards). It sits outside the site on purpo
   ciphertext in `private/elena/*.enc`, written by `yarn elena:pack <dir>`; `/elena/media/<file>` decrypts
   them after the cookie check (byte ranges for Safari video). Needs `ELENA_MEDIA_KEY` (see `.env.example`).
   The raw photos stay in the local, git-ignored `fotos/`.
-- **Code:** `src/components/elena/` (lock screen, intro, card reveal, game screen) and `game/` (`kit.ts`
-  materials, canvas textures and the people; `places.ts` the six rooms; `world.ts` the loop, movement,
-  collisions, pickups).
+- **Code:** `src/components/elena/` (lock screen, character select, intro, pack opening, card reveal,
+  binder, gallery, game screen) and `game/` (`kit.ts` materials, canvas textures and the people;
+  `places.ts` the six rooms and their island themes; `world.ts` islands, bridges, the loop, movement,
+  collisions, packs). Progress lives in the viewer's `localStorage` (`elena-progress-v2`).

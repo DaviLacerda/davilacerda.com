@@ -2,97 +2,127 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { CardReveal } from "./card-reveal";
+import { Binder } from "./binder";
+import { Gallery } from "./gallery";
 import { type Bubble, World } from "./game/world";
+import { PackOpening } from "./pack-opening";
 import { chime } from "./sound";
-import { CARD_ORDER, type Content, media, type Memory } from "./types";
+import {
+  CARD_ORDER,
+  type Content,
+  ISLAND_ORDER,
+  media,
+  other,
+  type Who,
+} from "./types";
 
 type Props = {
   content: Content;
-  collected: string[];
-  onCollect: (id: string) => void;
+  skin: Who;
+  cards: string[];
+  opened: string[];
+  onOpenPack: (islandId: string, cards: string[]) => void;
   onFinish: () => void;
   onReplayIntro: () => void;
+  onChangeSkin: () => void;
   onReset: () => void;
 };
 
+type Overlay =
+  | { kind: "pack"; island: string }
+  | { kind: "binder"; fresh: string[]; island?: string }
+  | { kind: "gallery"; island: string; unlocked: boolean }
+  | { kind: "finale" }
+  | null;
+
+const cardNumber = (id: string) =>
+  `Carta ${CARD_ORDER.indexOf(id as (typeof CARD_ORDER)[number]) + 1} de ${CARD_ORDER.length}`;
+
 export function Game({
   content,
-  collected,
-  onCollect,
+  skin,
+  cards,
+  opened,
+  onOpenPack,
   onFinish,
   onReplayIntro,
+  onChangeSkin,
   onReset,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const worldRef = useRef<World | null>(null);
   const [bubble, setBubble] = useState<Bubble>(null);
   const [next, setNext] = useState<string | null>(null);
-  const [memory, setMemory] = useState<string | null>(null);
-  const [album, setAlbum] = useState(false);
-  const [finale, setFinale] = useState(false);
+  const [near, setNear] = useState<string | null>(null);
+  const [overlay, setOverlay] = useState<Overlay>(null);
   const [help, setHelp] = useState(true);
-  const collectedRef = useRef(collected);
+  const openedRef = useRef(opened);
   useEffect(() => {
-    collectedRef.current = collected;
-  }, [collected]);
+    openedRef.current = opened;
+  }, [opened]);
 
   const labels = useMemo(
     () =>
       Object.fromEntries(
-        Object.entries(content.memories).map(([id, m]) => [
-          id,
-          `${m.place}: ${m.title}`,
-        ]),
+        Object.entries(content.islands).map(([id, i]) => [id, i.place]),
       ),
     [content],
   );
+  const partner = other(skin);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const lines = Object.fromEntries(
-      Object.entries(content.memories).flatMap(([id, m]) => [
-        [id, m.davi],
-        ...(id === "pedido" ? [["casa", m.davi]] : []),
-      ]),
-    );
     const world = new World(
       canvas,
       {
-        onPickup: (id) => {
-          chime("pickup");
-          setMemory(id);
+        onNear: setNear,
+        onPackTap: (id) => {
+          world.paused = true;
+          setOverlay({ kind: "pack", island: id });
         },
         onFinale: () => {
           chime("finale");
           world.celebrate();
-          setFinale(true);
+          setOverlay({ kind: "finale" });
         },
         onBubble: setBubble,
         onNext: setNext,
       },
-      lines,
-      labels,
-      collectedRef.current,
+      {
+        skin,
+        lines: Object.fromEntries(
+          Object.entries(content.islands).map(([id, i]) => [
+            id,
+            i.lines[partner],
+          ]),
+        ),
+        labels,
+        opened: openedRef.current,
+      },
     );
     worldRef.current = world;
     return () => {
       world.dispose();
       worldRef.current = null;
     };
-  }, [content, labels]);
+  }, [content, labels, skin, partner]);
 
-  const cardsHave = CARD_ORDER.filter((id) => collected.includes(id)).length;
-
-  const finishMemory = (id: string) => {
-    onCollect(id);
-    worldRef.current?.collect(id);
-    setMemory(null);
+  const resume = () => {
+    setOverlay(null);
     if (worldRef.current) worldRef.current.paused = false;
   };
 
-  const current = memory ? content.memories[memory] : null;
+  const openPack = (id: string) => {
+    if (worldRef.current) worldRef.current.paused = true;
+    setOverlay({ kind: "pack", island: id });
+  };
+
+  const have = CARD_ORDER.filter((id) => cards.includes(id)).length;
+  const island =
+    overlay && "island" in overlay && overlay.island
+      ? content.islands[overlay.island]
+      : null;
 
   return (
     <div className="game">
@@ -102,36 +132,54 @@ export function Game({
         <button
           type="button"
           className="hud-pill"
-          onClick={() => setAlbum(true)}
+          onClick={() => {
+            if (worldRef.current) worldRef.current.paused = true;
+            setOverlay({ kind: "binder", fresh: [] });
+          }}
         >
-          <span className="hud-heart">♥</span> {cardsHave}/{CARD_ORDER.length}{" "}
-          cartas
+          <span className="hud-heart">♥</span> Binder {have}/{CARD_ORDER.length}
         </button>
-        {next && <p className="hud-next">Próximo: {next}</p>}
+        {next && <p className="hud-next">Próxima ilha: {next}</p>}
       </header>
 
-      {bubble && (
+      {bubble && !overlay && (
         <div className="bubble-3d" style={{ left: bubble.x, top: bubble.y }}>
           {bubble.text}
         </div>
       )}
 
-      <Joystick onMove={(x, y) => worldRef.current?.setStick(x, y)} />
+      <Joystick
+        onMove={(x, y) => worldRef.current?.setStick(x, y)}
+        onTap={(x, y) => worldRef.current?.pick(x, y)}
+      />
+
+      {near && !overlay && (
+        <button
+          type="button"
+          className="open-pack"
+          onClick={() => openPack(near)}
+        >
+          🎁 Abrir o pacote
+        </button>
+      )}
 
       {help && (
         <div className="help" onClick={() => setHelp(false)}>
           <div className="help-card">
-            <h2>Nossa história, em 3D</h2>
+            <h2>Ilhas da nossa história</h2>
             <p>
-              Caminhe pelos lugares que a gente viveu junto e encontre os
-              corações ♥. Cada um guarda uma memória e uma carta para o seu
-              álbum.
+              Cada ilha é um lugar que a gente viveu. Atravesse as pontes,
+              encontre o pacote de cartas escondido em cada uma, abra e guarde
+              as cartas no binder. As fotos de cada lugar só aparecem depois que
+              o pacote é aberto.
             </p>
             <p className="help-controls">
               <span className="only-touch">
-                Arraste o dedo na tela para andar.
+                Arraste o dedo na tela para andar e toque no pacote para abrir.
               </span>
-              <span className="only-mouse">Ande com W A S D ou as setas.</span>
+              <span className="only-mouse">
+                Ande com W A S D ou as setas e clique no pacote para abrir.
+              </span>
             </p>
             <button type="button" className="btn-primary">
               Vamos!
@@ -140,64 +188,145 @@ export function Game({
         </div>
       )}
 
-      {current && memory && (
-        <MemoryModal
-          id={memory}
-          memory={current}
+      {overlay?.kind === "pack" && island && (
+        <div className="overlay">
+          <PackOpening
+            label={island.place}
+            cards={island.cards.flatMap((id) => {
+              const c = content.cards[id];
+              return c
+                ? [
+                    {
+                      image: media(c.image),
+                      title: c.title,
+                      badge: cardNumber(id),
+                    },
+                  ]
+                : [];
+            })}
+            onDone={() => {
+              onOpenPack(overlay.island, island.cards);
+              worldRef.current?.markOpened(overlay.island);
+              setOverlay({
+                kind: "binder",
+                fresh: island.cards,
+                island: overlay.island,
+              });
+            }}
+          />
+        </div>
+      )}
+
+      {overlay?.kind === "binder" && (
+        <Binder
           content={content}
-          index={
-            CARD_ORDER.indexOf(current.card as (typeof CARD_ORDER)[number]) + 1
+          cards={cards}
+          fresh={overlay.fresh}
+          onClose={overlay.island ? undefined : resume}
+          primary={
+            overlay.island
+              ? {
+                  label: "Ver as fotos desbloqueadas ✨",
+                  onClick: () =>
+                    setOverlay({
+                      kind: "gallery",
+                      island: overlay.island!,
+                      unlocked: true,
+                    }),
+                }
+              : undefined
           }
-          onDone={() => finishMemory(memory)}
-        />
-      )}
-
-      {album && (
-        <Album
-          content={content}
-          collected={collected}
-          onClose={() => setAlbum(false)}
-          onReplayIntro={onReplayIntro}
-          onReset={() => {
-            if (
-              window.confirm("Recomeçar do zero? O álbum volta a ficar vazio.")
-            )
-              onReset();
+          onPhotos={(cardId) => {
+            const id = Object.keys(content.islands).find((k) =>
+              content.islands[k]?.cards.includes(cardId),
+            );
+            if (id)
+              setOverlay({ kind: "gallery", island: id, unlocked: false });
           }}
+          footer={
+            overlay.island ? null : (
+              <>
+                <button type="button" onClick={onReplayIntro}>
+                  Rever o match
+                </button>
+                <button type="button" onClick={onChangeSkin}>
+                  Trocar personagem
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Recomeçar do zero? O binder volta a ficar vazio.",
+                      )
+                    )
+                      onReset();
+                  }}
+                >
+                  Recomeçar
+                </button>
+              </>
+            )
+          }
         />
       )}
 
-      {finale && (
+      {overlay?.kind === "gallery" && island && (
+        <Gallery island={island} unlocked={overlay.unlocked} onClose={resume} />
+      )}
+
+      {overlay?.kind === "finale" && (
         <Finale
           content={content}
           onClose={() => {
             onFinish();
-            setFinale(false);
-            setAlbum(true);
-            if (worldRef.current) worldRef.current.paused = false;
+            setOverlay({ kind: "binder", fresh: [] });
           }}
         />
       )}
+
+      <p className="hud-progress" aria-hidden>
+        {ISLAND_ORDER.map((id) => (
+          <i key={id} className={opened.includes(id) ? "on" : ""} />
+        ))}
+      </p>
     </div>
   );
 }
 
-/* ---------------- joystick: drag anywhere on the canvas ---------------- */
+/* ---------------- joystick: drag anywhere; a short tap picks ---------------- */
 
-function Joystick({ onMove }: { onMove: (x: number, y: number) => void }) {
+function Joystick({
+  onMove,
+  onTap,
+}: {
+  onMove: (x: number, y: number) => void;
+  onTap: (x: number, y: number) => void;
+}) {
   const [origin, setOrigin] = useState<{
     x: number;
     y: number;
     id: number;
   } | null>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
+  const moved = useRef(false);
   const R = 56;
+
+  const end = (e: React.PointerEvent) => {
+    if (origin && !moved.current) onTap(e.clientX, e.clientY);
+    setOrigin(null);
+    onMove(0, 0);
+  };
 
   return (
     <div
       className="joystick-zone"
       onPointerDown={(e) => {
-        if (e.pointerType === "mouse") return;
+        moved.current = false;
+        if (e.pointerType === "mouse") {
+          setOrigin({ x: e.clientX, y: e.clientY, id: e.pointerId });
+          return;
+        }
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         setOrigin({ x: e.clientX, y: e.clientY, id: e.pointerId });
         setKnob({ x: 0, y: 0 });
@@ -207,6 +336,8 @@ function Joystick({ onMove }: { onMove: (x: number, y: number) => void }) {
         let dx = e.clientX - origin.x;
         let dy = e.clientY - origin.y;
         const d = Math.hypot(dx, dy);
+        if (d > 8) moved.current = true;
+        if (e.pointerType === "mouse") return;
         if (d > R) {
           dx = (dx / d) * R;
           dy = (dy / d) * R;
@@ -214,201 +345,18 @@ function Joystick({ onMove }: { onMove: (x: number, y: number) => void }) {
         setKnob({ x: dx, y: dy });
         onMove(dx / R, dy / R);
       }}
-      onPointerUp={() => {
-        setOrigin(null);
-        onMove(0, 0);
-      }}
+      onPointerUp={end}
       onPointerCancel={() => {
         setOrigin(null);
         onMove(0, 0);
       }}
     >
-      {origin && (
+      {origin && (knob.x !== 0 || knob.y !== 0) && (
         <div className="joystick" style={{ left: origin.x, top: origin.y }}>
           <div
             className="joystick-knob"
             style={{ transform: `translate(${knob.x}px, ${knob.y}px)` }}
           />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ---------------- a memory: photos, videos, then the card ---------------- */
-
-function MemoryModal({
-  id,
-  memory,
-  content,
-  index,
-  onDone,
-}: {
-  id: string;
-  memory: Memory;
-  content: Content;
-  index: number;
-  onDone: () => void;
-}) {
-  const [step, setStep] = useState<"memory" | "card">("memory");
-  const slides = [
-    ...memory.photos.map((p) => ({ kind: "photo" as const, src: p })),
-    ...memory.videos.map((v) => ({ kind: "video" as const, src: v })),
-  ];
-  const [slide, setSlide] = useState(0);
-  const card = memory.card ? content.cards[memory.card] : undefined;
-
-  if (step === "card" && card) {
-    return (
-      <div className="overlay">
-        <CardReveal
-          image={media(card.image)}
-          title={card.title}
-          badge={`Carta ${index} de ${CARD_ORDER.length}`}
-          onDone={onDone}
-        />
-      </div>
-    );
-  }
-
-  const current = slides[slide];
-  return (
-    <div className="overlay">
-      <article className="memory" key={id}>
-        <p className="memory-place">📍 {memory.place}</p>
-        <h2>{memory.title}</h2>
-        {current && (
-          <div className="memory-media">
-            {current.kind === "photo" ? (
-              // eslint-disable-next-line @next/next/no-img-element -- authenticated media
-              <img src={media(current.src)} alt="" />
-            ) : (
-              <video
-                key={current.src}
-                src={media(current.src)}
-                controls
-                playsInline
-                autoPlay
-                preload="metadata"
-              />
-            )}
-            {slides.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  className="media-nav prev"
-                  onClick={() =>
-                    setSlide((s) => (s - 1 + slides.length) % slides.length)
-                  }
-                  aria-label="Anterior"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  className="media-nav next"
-                  onClick={() => setSlide((s) => (s + 1) % slides.length)}
-                  aria-label="Próxima"
-                >
-                  ›
-                </button>
-                <div className="media-dots">
-                  {slides.map((s, i) => (
-                    <i key={s.src} className={i === slide ? "is-on" : ""} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-        <p className="memory-text">{memory.text}</p>
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() => (card ? setStep("card") : onDone())}
-        >
-          {card ? "Revelar a carta ♥" : "Continuar o caminho"}
-        </button>
-      </article>
-    </div>
-  );
-}
-
-/* ---------------- album ---------------- */
-
-function Album({
-  content,
-  collected,
-  onClose,
-  onReplayIntro,
-  onReset,
-}: {
-  content: Content;
-  collected: string[];
-  onClose: () => void;
-  onReplayIntro: () => void;
-  onReset: () => void;
-}) {
-  const [open, setOpen] = useState<string | null>(null);
-  const openCard = open ? content.cards[open] : null;
-  return (
-    <div className="overlay" onClick={onClose}>
-      <section className="album" onClick={(e) => e.stopPropagation()}>
-        <header>
-          <h2>Nosso álbum</h2>
-          <button
-            type="button"
-            className="album-close"
-            onClick={onClose}
-            aria-label="Fechar"
-          >
-            ✕
-          </button>
-        </header>
-        <div className="album-grid">
-          {CARD_ORDER.map((id, i) => {
-            const card = content.cards[id];
-            const have = collected.includes(id);
-            return (
-              <button
-                key={id}
-                type="button"
-                className={`album-slot ${have ? "have" : ""}`}
-                disabled={!have}
-                onClick={() => setOpen(id)}
-              >
-                {have && card ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- authenticated media
-                  <img src={media(card.image)} alt={card.title} />
-                ) : (
-                  <span>
-                    <b>?</b>
-                    <small>Nº {i + 1}</small>
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        <footer className="album-footer">
-          <button type="button" onClick={onReplayIntro}>
-            Rever o match
-          </button>
-          <button type="button" onClick={onReset}>
-            Recomeçar
-          </button>
-        </footer>
-      </section>
-      {openCard && (
-        <div
-          className="album-zoom"
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen(null);
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- authenticated media */}
-          <img src={media(openCard.image)} alt={openCard.title} />
         </div>
       )}
     </div>
@@ -443,7 +391,7 @@ function Finale({
                 key={id}
                 src={media(card.image)}
                 alt=""
-                style={{ ["--i" as string]: i - 3 }}
+                style={{ ["--i" as string]: i - 3.5 }}
               />
             ) : null;
           })}
@@ -452,7 +400,7 @@ function Finale({
         <p>{content.finale.message}</p>
         <p className="finale-sign">{content.finale.signature}</p>
         <button type="button" className="btn-primary" onClick={onClose}>
-          Ver o nosso álbum
+          Ver o nosso binder
         </button>
       </article>
     </div>
