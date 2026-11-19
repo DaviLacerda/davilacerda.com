@@ -2965,7 +2965,7 @@ button {
   transform: rotateY(calc(180deg + var(--tx) * 14deg))
     rotateX(calc(var(--ty) * -10deg));
   transition: transform 0.7s cubic-bezier(0.3, 1.4, 0.4, 1);
-  animation: rip2-card-in 0.7s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+  animation: rip2-card-in 0.7s cubic-bezier(0.2, 1.2, 0.4, 1);
 }
 /* entry uses the independent translate/scale properties so it never
    fights the tilt transform */
@@ -2973,13 +2973,9 @@ button {
   from {
     translate: 0 40vh;
     scale: 0.6;
-    opacity: 0;
   }
-  to {
-    translate: 0 0;
-    scale: 1;
-    opacity: 1;
-  }
+  /* no opacity here: an opacity animation flattens preserve-3d and the
+     card shows its front mirrored */
 }
 .rip2-card.is-flipped {
   transform: rotateY(calc(var(--tx) * 14deg)) rotateX(calc(var(--ty) * -10deg));
@@ -3177,4 +3173,18 @@ button {
   top: calc(16px + env(safe-area-inset-top));
   right: 16px;
   font-weight: 700;
+}
+
+/* belt and braces: never let a face show through mirrored, even if some
+   browser flattens the 3D context */
+.rip2-card .rip2-face.rip2-front {
+  transition: visibility 0s 0.2s;
+}
+.rip2-card:not(.is-flipped) .rip2-face.rip2-front {
+  visibility: hidden;
+  transition: none;
+}
+.rip2-card.is-flipped .rip2-face.rip2-back {
+  visibility: hidden;
+  transition: visibility 0s 0.2s;
 }
