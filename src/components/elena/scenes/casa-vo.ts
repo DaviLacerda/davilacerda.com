@@ -1865,7 +1865,8 @@ function build(ctx: SceneCtx) {
     new THREE.Vector3(L + 0.015, 1.58, sbz - 0.45),
     90,
   );
-  ctx.pack(L + 0.26, 0.897, sbz + 0.2, 110);
+  // at the free end of the sideboard, past the end chair, so it can be reached
+  ctx.pack(L + 0.26, 0.897, sbz - 1.0, 110);
 
   bakeStatic(root, keep);
 

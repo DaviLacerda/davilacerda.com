@@ -241,6 +241,7 @@ export class Interior {
       },
       ambient: (name, volume = 0.5) => {
         this.audioVolume = volume;
+        if (this.disposed) return;
         const a = new Audio(media(name));
         a.loop = true;
         a.volume = 0;
@@ -683,11 +684,22 @@ export class Interior {
     this.resize();
   }
 
+  /** Pause or resume the place's ambient sound (e.g. while a video plays). */
+  setAmbientPaused(paused: boolean) {
+    if (!this.audio) return;
+    if (paused) this.audio.pause();
+    else if (!this.disposed) this.audio.play().catch(() => undefined);
+  }
+
   dispose() {
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
     this.releasePointer();
-    this.audio?.pause();
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = "";
+      this.audio = null;
+    }
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("resize", this.resize);

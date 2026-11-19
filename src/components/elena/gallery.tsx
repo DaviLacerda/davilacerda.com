@@ -15,8 +15,8 @@ export function Gallery({
   onClose: () => void;
 }) {
   const slides = [
-    ...island.photos.map((src) => ({ kind: "photo" as const, src })),
     ...island.videos.map((src) => ({ kind: "video" as const, src })),
+    ...island.photos.map((src) => ({ kind: "photo" as const, src })),
   ];
   const [slide, setSlide] = useState(0);
   const current = slides[slide];
@@ -41,7 +41,16 @@ export function Gallery({
                 controls
                 playsInline
                 autoPlay
-                preload="metadata"
+                preload="auto"
+                ref={(v) => {
+                  // start on its own; if the browser blocks sound, start muted
+                  if (!v || v.dataset.started) return;
+                  v.dataset.started = "1";
+                  v.play().catch(() => {
+                    v.muted = true;
+                    v.play().catch(() => undefined);
+                  });
+                }}
               />
             )}
             {slides.length > 1 && (

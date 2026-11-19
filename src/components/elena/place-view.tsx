@@ -53,6 +53,10 @@ export function PlaceView({
     y: number;
   } | null>(null);
   const [step, setStep] = useState<Step>("play");
+  // the place's ambient sound stops while the pack, binder and videos are open
+  useEffect(() => {
+    interiorRef.current?.setAmbientPaused(step !== "play");
+  }, [step]);
   const [third, setThird] = useState(false);
   const [locked, setLocked] = useState(false);
   const island = content.islands[id];
