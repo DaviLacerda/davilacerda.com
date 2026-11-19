@@ -517,19 +517,16 @@ function shellMaterial(hair: string) {
         vec2 cell = floor(hc);
         float h = hh12(cell);
         float h2 = hh12(cell + 17.0);
-        vec2 f = fract(hc) - 0.5;
-        f.x += (h2 - 0.5) * 0.4;
-        float len = (0.25 + 0.75 * h) * vShell.y;
-        float thick = 0.48 - vShell.x * 0.28;
-        bool core = vShell.x < 0.3 && vShell.y > 0.5 + 0.3 * h;
-        if (!core && (h2 > vShell.y * 1.15 || len < vShell.x || abs(f.x) > thick)) discard;`,
+        // solid volume with a soft, rounded edge: outer layers shrink toward the dense core
+        float edge = 0.12 + 0.72 * vShell.x + (h - 0.5) * 0.06;
+        if (vShell.y < edge) discard;`,
       )
       .replace(
         "#include <color_fragment>",
-        "#include <color_fragment>\ndiffuseColor.rgb *= mix(0.35, 1.25, vShell.x) * (0.8 + 0.4 * h2);",
+        "#include <color_fragment>\ndiffuseColor.rgb *= mix(0.7, 1.08, vShell.x) * (0.93 + 0.14 * h2);",
       );
   };
-  m.customProgramCacheKey = () => "hair-shell-1";
+  m.customProgramCacheKey = () => "hair-shell-2";
   return m;
 }
 
@@ -890,16 +887,16 @@ const LEG = {
   ],
 };
 const AD = [
-  -0.03, -0.024, -0.016, -0.007, 0.01, 0.05, 0.1, 0.16, 0.22, 0.27, 0.305,
+  -0.026, -0.021, -0.014, -0.006, 0.01, 0.05, 0.1, 0.16, 0.22, 0.27, 0.305,
   0.325, 0.35, 0.39, 0.45, 0.52, 0.565, 0.582,
 ];
 const ARM = {
   rx: [
-    0.0, 0.028, 0.042, 0.05, 0.055, 0.054, 0.048, 0.046, 0.044, 0.04, 0.037,
+    0.0, 0.032, 0.042, 0.047, 0.05, 0.051, 0.048, 0.046, 0.044, 0.04, 0.037,
     0.037, 0.039, 0.039, 0.034, 0.027, 0.024, 0.0,
   ],
   rz: [
-    0.0, 0.032, 0.046, 0.054, 0.058, 0.058, 0.05, 0.048, 0.045, 0.041, 0.039,
+    0.0, 0.036, 0.046, 0.051, 0.054, 0.055, 0.05, 0.048, 0.045, 0.041, 0.039,
     0.039, 0.042, 0.041, 0.035, 0.028, 0.026, 0.0,
   ],
 };
@@ -1034,7 +1031,8 @@ function dims(look: Look, fp = false): Dims {
   );
   const armR = (d: number, phi: number) => {
     const m =
-      (f ? 0.9 : 1) *
+      (f ? 0.95 : 1) *
+      lerp(0.86, 1, sstep(-0.02, 0.07, d)) *
       lerp(
         1 + fb * 0.55,
         1 + fb * 0.35,
@@ -1080,9 +1078,9 @@ function torsoWeights(d: Dims, p: THREE.Vector3): Wt {
   const sb = sideBones(s);
   const ax = Math.abs(p.x);
   const arm =
-    0.5 *
-    sstep(0.55 * d.shX, 0.95 * d.shX, ax) *
-    sstep(0.735 * H, 0.79 * H, y) *
+    0.72 *
+    sstep(0.45 * d.shX, 0.92 * d.shX, ax) *
+    sstep(0.72 * H, 0.78 * H, y) *
     (1 - sstep(0.835 * H, 0.855 * H, y));
   const clav =
     0.45 *
@@ -1119,7 +1117,7 @@ function legWeights(d: Dims, p: THREE.Vector3, s: number): Wt {
 
 function armWeights(d: Dims, dist: number, s: number): Wt {
   const sb = sideBones(s);
-  const top = 0.55 * sstep(0.03, -0.05, dist);
+  const top = 0.3 * sstep(0.02, -0.04, dist);
   const e = sstep(d.upperLen - 0.035, d.upperLen + 0.04, dist);
   const h =
     0.4 *
@@ -1169,7 +1167,7 @@ function buildBodySkin(
   fp: boolean,
   cover: Cover,
 ) {
-  const SH = 0.007;
+  const SH = 0.012;
   const H = d.H;
   const knee = tint(skin, 1.03, 0.94, 0.92);
   // torso
@@ -1271,7 +1269,7 @@ function topSpec(style: TopStyle, d: Dims) {
     0.024 * H * Math.pow(Math.max(0, Math.sin(phi)), 2) +
     0.004 * H * Math.max(0, -Math.sin(phi));
   const vneck = (phi: number) =>
-    crew(phi) - 0.05 * H * Math.pow(Math.max(0, Math.sin(phi)), 6);
+    crew(phi) - 0.03 * H * Math.pow(Math.max(0, Math.sin(phi)), 10);
   const tank = (phi: number) => {
     const c = Math.abs(Math.cos(phi));
     const strap = gauss(c - 0.6, 0.11);
@@ -1357,7 +1355,7 @@ function buildTop(
   const spec = topSpec(style, d);
   const base = col(outfit.top);
   const H = d.H;
-  const cols = 48;
+  const cols = 64;
   const rows = 30;
   const loose = 0.004 * d.fb;
   const radius = (y: number, phi: number) => {
@@ -1391,20 +1389,28 @@ function buildTop(
       const ii = clamp(i - 1, 0, rows - 1);
       const y = rowY(ii, phi);
       const r = radius(y, phi);
-      const inset = i === 0 || i === rows + 1 ? -0.004 : 0;
-      const lift = i === 0 ? 0.004 : i === rows + 1 ? -0.004 : 0;
+      // flat turned-in hem and collar edges (fabric thickness), plus a ribbed collar band
+      const inset = i === 0 ? -0.009 : i === rows + 1 ? -0.007 : 0;
+      const rib =
+        ii >= rows - 3 && i <= rows && style !== "tank" && style !== "dress"
+          ? 0.003
+          : 0;
+      const band = ii <= 1 && i >= 1 ? 0.0015 : 0;
+      const lift = 0;
       return V(
-        (r + inset) * Math.cos(phi),
+        (r + inset + rib + band) * Math.cos(phi),
         y + lift,
-        d.torsoCz(y) + (r + inset) * Math.sin(phi),
+        d.torsoCz(y) + (r + inset + rib + band) * Math.sin(phi),
       );
     },
     color: (p, i) => {
       let c = base;
       if (style === "hoodie" && (i <= 3 || i >= rows))
         c = tint(base, 0.85, 0.85, 0.85);
-      if (style === "jersey" && i >= rows - 1)
+      if (style === "jersey" && i >= rows - 2)
         c = col(outfit.printColor ?? "#ff8a1f");
+      else if (i >= rows - 2 && style !== "tank" && style !== "dress")
+        c = tint(base, 0.88, 0.88, 0.88);
       return c;
     },
     weights: (p) => torsoWeights(d, p),
@@ -1412,7 +1418,7 @@ function buildTop(
   });
   // sleeves
   if (spec.sleeve > 0) {
-    const ad = warp(-0.038 * d.k, spec.sleeve, 16, () => 1);
+    const ad = warp(-0.028 * d.k, spec.sleeve, 16, () => 1);
     for (const s of [-1, 1]) {
       grid(m, {
         rows: ad.length + 1,
@@ -1425,14 +1431,14 @@ function buildTop(
           const rr = draped(
             (dd) => d.armR(-dd, phi),
             -dist,
-            0.038,
-            0.25,
+            0.028,
+            0.7,
             spec.sleeveOff + fl + 0.004 * d.fb,
           );
-          const r = i === ad.length ? rr - 0.005 : rr;
+          const r = i === ad.length ? rr - 0.006 : rr;
           return armPoint(
             d,
-            dist - (i === ad.length ? 0.004 : 0),
+            dist - (i === ad.length ? 0.001 : 0),
             phi,
             s,
             r - d.armR(dist, phi),
@@ -2145,7 +2151,7 @@ function headModel(face: Face, hs: number): HeadModel {
   const W = face.w;
   const ex = 0.0318 * Math.sqrt(W);
   const ey = 0.008;
-  const ez = 0.0728;
+  const ez = 0.0708;
   const lip = (x: number, y: number, z: number) => {
     const u = sdEll(
       x,
@@ -2153,10 +2159,10 @@ function headModel(face: Face, hs: number): HeadModel {
       z,
       0,
       -0.0458,
-      0.0962,
+      0.0968,
       0.0215 * face.mouth,
-      0.0064 * face.lip,
-      0.0108,
+      0.0068 * face.lip,
+      0.0124,
     );
     const l = sdEll(
       x,
@@ -2164,10 +2170,10 @@ function headModel(face: Face, hs: number): HeadModel {
       z,
       0,
       -0.0585,
-      0.0942,
+      0.0948,
       0.0195 * face.mouth,
-      0.0078 * face.lip,
-      0.0108,
+      0.0082 * face.lip,
+      0.0124,
     );
     return smin(u, l, 0.005);
   };
@@ -2236,14 +2242,14 @@ function headModel(face: Face, hs: number): HeadModel {
       );
       d = smin(
         d,
-        sdEll(x, y, z, s * 0.05 * W, -0.003, 0.052, 0.022, 0.013, 0.022),
-        0.015,
+        sdEll(x, y, z, s * 0.052 * W, -0.005, 0.054, 0.026, 0.015, 0.024),
+        0.011,
       );
     }
     d = smin(
       d,
-      sdEll(x, y, z, 0, 0.034, 0.079, 0.052 * W, 0.014, 0.017 * face.brow),
-      0.015,
+      sdEll(x, y, z, 0, 0.033, 0.0815, 0.052 * W, 0.0125, 0.0172 * face.brow),
+      0.011,
     );
     d = smin(d, sdEll(x, y, z, 0, -0.046, 0.077, 0.033, 0.03, 0.026), 0.016);
     // nose
@@ -2253,12 +2259,12 @@ function headModel(face: Face, hs: number): HeadModel {
       y,
       z,
       0,
-      0.016,
-      0.0885,
+      0.019,
+      0.0905,
       0,
       -0.016,
       0.107 + 0.006 * (nk - 1),
-      0.0055 * nk,
+      0.0062 * nk,
       0.0088 * nk,
     );
     n = smin(
@@ -2292,7 +2298,7 @@ function headModel(face: Face, hs: number): HeadModel {
         ),
         0.005,
       );
-    d = smin(d, n, 0.008);
+    d = smin(d, n, 0.006);
     d = smin(d, lip(x, y, z), 0.006);
     // mouth line
     d = smax(
@@ -2302,7 +2308,7 @@ function headModel(face: Face, hs: number): HeadModel {
     );
     // eye sockets
     for (const s of [-1, 1])
-      d = smax(d, -(Math.hypot(x - s * ex, y - ey, z - ez) - 0.0134), 0.004);
+      d = smax(d, -(Math.hypot(x - s * ex, y - ey, z - ez) - 0.0129), 0.004);
     // neck
     d = smin(
       d,
@@ -2511,8 +2517,8 @@ function buildHead(
   };
 
   // grid on a warped sphere: dense on the face
-  const C = lite ? 56 : 84;
-  const R = lite ? 44 : 66;
+  const C = lite ? 56 : 76;
+  const R = lite ? 44 : 60;
   const phis = warp(-Math.PI, Math.PI, C, (a) => 1 + 3.2 * gauss(a, 0.95));
   const lams = warp(
     -Math.PI / 2,
@@ -2624,8 +2630,8 @@ function buildHead(
   const eyes: THREE.Mesh[] = [];
   const lids: THREE.Group[] = [];
   const lidRest: number[] = [];
-  const rEye = 0.0118 * hs;
-  const rLid = 0.0127 * hs;
+  const rEye = 0.0112 * hs;
+  const rLid = 0.0121 * hs;
   const eyeMat = new THREE.MeshPhysicalMaterial({
     map: eyeTexture(look.eyes ?? "#3a2414"),
     roughness: 0.35,
@@ -2638,7 +2644,7 @@ function buildHead(
   const lashLen = female ? 0.0058 : 0.004;
   const upperGeo = (s: number) => {
     const um = new Mesher();
-    const theta1 = 1.86;
+    const theta1 = 2.0;
     const cap = new THREE.SphereGeometry(rLid, 28, 10, 0, TAU, 0, theta1);
     um.geo(cap, null, lidSkin);
     const R0 = rLid * Math.sin(theta1);
@@ -2675,7 +2681,7 @@ function buildHead(
   };
   const lowerGeo = () => {
     const lm = new Mesher();
-    const theta2 = 1.81;
+    const theta2 = 1.95;
     const cap = new THREE.SphereGeometry(
       rLid * 0.995,
       28,
@@ -2710,7 +2716,7 @@ function buildHead(
     eyes.push(eye);
     const pivot = new THREE.Group();
     pivot.position.copy(center);
-    const rest = -0.78;
+    const rest = -0.93;
     pivot.rotation.set(rest, 0, s * 0.05);
     const upper = new THREE.Mesh(upperGeo(s), mats.skin);
     upper.castShadow = false;
@@ -2721,7 +2727,7 @@ function buildHead(
     lidRest.push(rest);
     const lowerM = new THREE.Matrix4().compose(
       center,
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(0.625, 0, -s * 0.06)),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0.76, 0, -s * 0.06)),
       V(1, 1, 1),
     );
     m.geo(lowerG, lowerM, lidSkin);
@@ -2799,7 +2805,7 @@ function buildHead(
       SR - 1,
       (l) => 1 + 1.6 * gauss(l + 0.2, 0.6),
     );
-    const L = lite ? 4 : 7;
+    const L = lite ? 2 : 3;
     const info: {
       p: THREE.Vector3;
       n: THREE.Vector3;
@@ -2822,7 +2828,7 @@ function buildHead(
         const thick =
           hm > 0.01
             ? sideT * hs
-            : 0.0042 * hs * (0.7 + 0.5 * sstep(-0.06, -0.095, p.y / hs));
+            : 0.0065 * hs * (0.7 + 0.5 * sstep(-0.06, -0.095, p.y / hs));
         row.push({
           p,
           n,
@@ -2842,11 +2848,13 @@ function buildHead(
         wrap: true,
         at: (i, j) => {
           const c = info[i]![j]!;
-          return c.p.clone().addScaledVector(c.n, c.thick * f + 0.0004);
+          return c.p.clone().addScaledVector(c.n, c.thick * f + 0.0006);
         },
         color: (_p, i, j) => {
           const c = info[i]![j]!;
-          return c.beardM > c.hairM ? tint(hair, 1.9, 1.75, 1.6) : hair;
+          return c.beardM > c.hairM
+            ? tint(hair, 1.55, 1.42, 1.3)
+            : tint(hair, 1.25, 1.18, 1.12);
         },
         skip: (i, j) => {
           let mx = 0;
@@ -2945,8 +2953,8 @@ function glasses(hs: number, w: number) {
       curveSegments: 6,
     });
     const mtx = new THREE.Matrix4().compose(
-      V(s * ex, 0.0095, 0.094),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.06, -s * 0.12, 0)),
+      V(s * ex, 0.0065, 0.0955),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0.08, -s * 0.12, 0)),
       V(1, 1, 1),
     );
     fm.geo(geo, mtx, new THREE.Color(1, 1, 1));
@@ -2960,7 +2968,7 @@ function glasses(hs: number, w: number) {
     const arm = new THREE.BoxGeometry(0.004, 0.007, 0.105);
     const hingeX = s * (ex + 0.028);
     const amtx = new THREE.Matrix4().compose(
-      V(s * 0.0775 * w, 0.012, 0.045),
+      V(s * 0.0775 * w, 0.01, 0.044),
       new THREE.Quaternion().setFromEuler(new THREE.Euler(0.03, s * -0.1, 0)),
       V(1, 1, 1),
     );
@@ -2978,14 +2986,14 @@ function glasses(hs: number, w: number) {
     const hinge = new THREE.BoxGeometry(0.012, 0.012, 0.01);
     fm.geo(
       hinge,
-      new THREE.Matrix4().makeTranslation(hingeX + s * 0.002, 0.012, 0.091),
+      new THREE.Matrix4().makeTranslation(hingeX + s * 0.002, 0.01, 0.09),
       new THREE.Color(1, 1, 1),
     );
   }
   const bridge = new THREE.TorusGeometry(0.009, 0.0025, 6, 12, Math.PI);
   fm.geo(
     bridge,
-    new THREE.Matrix4().makeTranslation(0, 0.014, 0.0975),
+    new THREE.Matrix4().makeTranslation(0, 0.0115, 0.0985),
     new THREE.Color(1, 1, 1),
   );
   const frame = new THREE.Mesh(fm.build(false), frameM);
@@ -3028,7 +3036,10 @@ function buildLongHair(d: Dims, model: HeadModel, look: Look) {
     for (let k = 0; k < 90; k++) {
       const n = sdfNormal(sdfE, p);
       const vol =
-        (o + 0.004 * sstep(0.2, -0.4, n.y) + 0.002) *
+        (o +
+          0.004 * sstep(0.2, -0.4, n.y) +
+          0.004 * sstep(0.5, 0.95, n.y) +
+          0.002) *
         sstep(0, 0.025, p.distanceTo(root));
       pts.push(p.clone().addScaledVector(n, vol).add(O));
       T.add(V(0, -0.16, 0));
@@ -3151,7 +3162,7 @@ function buildLongHair(d: Dims, model: HeadModel, look: Look) {
           return hairCol.clone().multiplyScalar(ao);
         },
         alpha: (_i, j) =>
-          li > 0 && (j === 0 || j === strands.length - 1) ? 0.35 : layer.alpha,
+          li > 0 && (j === 0 || j === strands.length - 1) ? 0.62 : layer.alpha,
         weights: (p) => weights(p),
         uv: (i, j) => [j * 0.16 + li * 0.37, 1 - i / (rows - 1)],
       });
@@ -3165,7 +3176,9 @@ function buildLongHair(d: Dims, model: HeadModel, look: Look) {
     sheet(backCols, false);
     for (const s of [-1, 1]) {
       const fc: { s: number; j: number }[] = [];
-      for (let i = 0; i <= 6; i++) fc.push({ s, j: lerp(0.0, 0.28, i / 6) });
+      // the opaque inner layer stops short of the face, so the visible edge is made of strands
+      for (let i = 0; i <= 6; i++)
+        fc.push({ s, j: lerp(li === 0 ? 0.07 : 0.0, 0.28, i / 6) });
       if (s < 0) fc.reverse();
       sheet(fc, true);
     }
@@ -3882,10 +3895,10 @@ function animator(rig: Rig, seed: number, fp = false) {
       }
     } else if (pose === "wave") {
       const osc = Math.sin(tt * 6.5);
-      b(B.clavR).rotation.z = -0.1;
+      b(B.clavR).rotation.z = -0.16;
       rig.root.updateMatrixWorld(true);
       const wrist = toWorld(
-        V(-d.shX - 0.13 + 0.035 * osc, d.yShoulder + 0.2, 0.1),
+        V(-d.shX - 0.2 + 0.035 * osc, d.yShoulder + 0.12, 0.12),
       );
       twoBone(
         b(B.armR),

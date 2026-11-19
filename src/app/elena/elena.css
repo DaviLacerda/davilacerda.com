@@ -2669,3 +2669,503 @@ button {
   align-items: center;
   gap: 8px;
 }
+
+/* ---------------- pack opening (rip style) ---------------- */
+
+.rip2 {
+  --tx: 0;
+  --ty: 0;
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at 50% 35%,
+    #3b1430 0%,
+    #14060f 60%,
+    #070308 100%
+  );
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.rip2-spot {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 140vmin;
+  height: 140vmin;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgb(255 170 210 / 0.22), transparent 55%);
+  pointer-events: none;
+}
+
+/* the pack */
+.rip2-pack-wrap {
+  --h: min(66vh, 118vw);
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: calc(var(--h) * 0.6);
+  height: var(--h);
+  transform: translate(-50%, -50%) perspective(1100px)
+    rotateY(calc(var(--tx) * 14deg)) rotateX(calc(var(--ty) * -10deg));
+  transition: transform 0.12s ease-out;
+  animation: rip2-in 0.8s cubic-bezier(0.2, 1.25, 0.4, 1);
+}
+@keyframes rip2-in {
+  from {
+    transform: translate(-50%, -20%) scale(0.6) rotate(-10deg);
+    opacity: 0;
+  }
+}
+.rip2-pack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 9%;
+  bottom: 0;
+  border-radius: 10px 10px 16px 16px;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      115deg,
+      rgb(255 255 255 / 0) calc(30% + var(--tx) * 20%),
+      rgb(255 255 255 / 0.55) calc(45% + var(--tx) * 20%),
+      rgb(255 255 255 / 0) calc(60% + var(--tx) * 20%)
+    ),
+    conic-gradient(
+      from calc(200deg + var(--tx) * 40deg) at 50% 40%,
+      #ff3d7f,
+      #ffb347,
+      #fff1a8,
+      #7ff0ff,
+      #b48cff,
+      #ff3d7f
+    );
+  box-shadow:
+    0 40px 80px rgb(0 0 0 / 0.6),
+    inset 0 0 0 2px rgb(255 255 255 / 0.35),
+    inset 0 -30px 60px rgb(0 0 0 / 0.25);
+  z-index: 2;
+}
+.rip2-foil {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      110deg,
+      rgb(255 255 255 / 0.18) 0 2px,
+      transparent 2px 7px
+    ),
+    repeating-linear-gradient(
+      20deg,
+      rgb(0 0 0 / 0.06) 0 1px,
+      transparent 1px 5px
+    );
+  mix-blend-mode: overlay;
+}
+.rip2-glare {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    circle at calc(50% + var(--tx) * 30%) calc(35% + var(--ty) * 25%),
+    rgb(255 255 255 / 0.65),
+    transparent 30%
+  );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+.rip2-art {
+  position: absolute;
+  inset: 10% 9% 11%;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1vh;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(
+    165deg,
+    rgb(70 8 50 / 0.85),
+    rgb(150 20 80 / 0.7)
+  );
+  box-shadow:
+    inset 0 0 0 3px rgb(255 225 170 / 0.85),
+    inset 0 0 40px rgb(255 120 180 / 0.35);
+}
+.rip2-art-top {
+  font-size: clamp(9px, 1.4vh, 13px);
+  letter-spacing: 0.3em;
+  opacity: 0.9;
+}
+.rip2-art-heart {
+  font-size: calc(var(--h) * 0.22);
+  line-height: 1;
+  background: linear-gradient(180deg, #fff6d6, #ff4f8b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 20px rgb(255 80 140 / 0.8));
+}
+.rip2-art-label {
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: calc(var(--h) * 0.06);
+  letter-spacing: 0.03em;
+  padding: 0 6%;
+  line-height: 1.05;
+}
+.rip2-art-count {
+  font-size: clamp(10px, 1.4vh, 13px);
+  opacity: 0.85;
+  padding: 0 8%;
+}
+.rip2-crimp {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4%;
+  background: repeating-linear-gradient(
+    90deg,
+    rgb(0 0 0 / 0.22) 0 3px,
+    rgb(255 255 255 / 0.35) 3px 6px
+  );
+}
+.rip2-crimp.bottom {
+  bottom: 0;
+}
+.rip2-light {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: -8%;
+  height: 30%;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgb(255 248 225 / 1),
+    rgb(255 200 230 / 0.5) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+.rip2-seal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 10%;
+  z-index: 3;
+  cursor: ew-resize;
+  touch-action: none;
+}
+.rip2-strip {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px 10px 0 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.22) 0 3px,
+      rgb(255 255 255 / 0.32) 3px 6px
+    ),
+    linear-gradient(
+      90deg,
+      #b8124f,
+      #ff7eb3 30%,
+      #ffe08a 50%,
+      #ff7eb3 70%,
+      #b8124f
+    );
+  box-shadow: inset 0 -2px 0 rgb(255 255 255 / 0.5);
+}
+.rip2-strip.torn {
+  transform-origin: calc(var(--p) * 100%) 100%;
+  transform: translateY(calc(var(--p) * -34px)) rotate(calc(var(--p) * -22deg));
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.4));
+}
+.rip2-guide {
+  position: absolute;
+  top: 82%;
+  right: 3%;
+  border-top: 2px dashed rgb(255 255 255 / 0.9);
+  animation: rip2-blink 1.2s ease-in-out infinite;
+}
+.rip2-guide::before {
+  content: "✂";
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  font-size: 20px;
+  color: #fff;
+  text-shadow: 0 0 8px #ff4f8b;
+}
+@keyframes rip2-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+.rip2.phase-falling .rip2-pack,
+.rip2.phase-rising .rip2-pack {
+  animation: rip2-glow 1.6s ease forwards;
+}
+@keyframes rip2-glow {
+  30% {
+    box-shadow: 0 0 120px 40px rgb(255 235 210 / 0.9);
+  }
+  100% {
+    box-shadow: 0 0 60px 10px rgb(255 200 230 / 0.3);
+  }
+}
+.rip2.phase-rising .rip2-pack,
+.rip2.phase-rising .rip2-seal {
+  transition:
+    transform 0.9s cubic-bezier(0.5, 0, 0.7, 0.4),
+    opacity 0.9s;
+  transform: translateY(70vh);
+  opacity: 0;
+}
+.rip2-inside {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 14%;
+  height: 80%;
+  z-index: 1;
+}
+.rip2-back.small {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  transform: translateY(calc(var(--i) * 4px));
+}
+.rip2.phase-rising .rip2-inside {
+  transition: transform 1s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.15s;
+  transform: translateY(-38%) scale(1.25);
+  z-index: 4;
+}
+
+/* the card */
+.rip2-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 1400px;
+  padding-bottom: 14vh;
+}
+.rip2-card {
+  --w: min(86vw, calc(70vh * 0.717));
+  position: relative;
+  width: var(--w);
+  aspect-ratio: 1062 / 1482;
+  transform-style: preserve-3d;
+  transform: rotateY(calc(180deg + var(--tx) * 14deg))
+    rotateX(calc(var(--ty) * -10deg));
+  transition: transform 0.7s cubic-bezier(0.3, 1.4, 0.4, 1);
+  animation: rip2-card-in 0.7s cubic-bezier(0.2, 1.2, 0.4, 1);
+}
+@keyframes rip2-card-in {
+  from {
+    transform: translateY(40vh) rotateY(180deg) scale(0.6);
+  }
+}
+.rip2-card.is-flipped {
+  transform: rotateY(calc(var(--tx) * 14deg)) rotateX(calc(var(--ty) * -10deg));
+  transition: transform 0.8s cubic-bezier(0.3, 1.3, 0.4, 1);
+}
+.rip2-card.is-leaving {
+  transition:
+    transform 0.4s ease-in,
+    opacity 0.4s;
+  transform: translateX(120vw) rotate(25deg);
+  opacity: 0;
+}
+.rip2-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 30px 70px rgb(0 0 0 / 0.6);
+}
+.rip2-back {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgb(255 255 255 / 0.1) 0 10px,
+      transparent 10px 20px
+    ),
+    radial-gradient(circle at 50% 45%, #ff7eb3, #c2255c 55%, #5a1a6e);
+  border: 10px solid #ffe6a8;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+}
+.rip2-face.rip2-back {
+  transform: rotateY(180deg);
+}
+.rip2-face.rip2-back::after {
+  content: "♥";
+  font-size: calc(var(--w) * 0.4);
+  color: #fff6d6;
+  text-shadow: 0 0 30px rgb(255 120 180 / 0.9);
+  animation: beat 1.4s infinite;
+}
+.rip2-front img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rip2-holo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent calc(35% + var(--tx) * 25%),
+    rgb(255 255 255 / 0.45) calc(48% + var(--tx) * 25%),
+    transparent calc(60% + var(--tx) * 25%)
+  );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+.rip2-rainbow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    125deg,
+    rgb(255 0 128 / 0.45),
+    rgb(255 200 0 / 0.45),
+    rgb(0 255 200 / 0.45),
+    rgb(100 120 255 / 0.45),
+    rgb(255 0 128 / 0.45)
+  );
+  background-size: 300% 300%;
+  background-position: calc(50% + var(--tx) * 50%) calc(50% + var(--ty) * 50%);
+  mix-blend-mode: color-dodge;
+  opacity: 0.6;
+  animation: rainbow-move 5s linear infinite;
+  pointer-events: none;
+}
+.rip2-card.is-special.is-flipped .rip2-front {
+  box-shadow:
+    0 0 0 3px #ffe6a8,
+    0 0 80px 20px rgb(255 190 120 / 0.65),
+    0 30px 70px rgb(0 0 0 / 0.6);
+}
+.rip2-rays {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  width: 180vmax;
+  height: 180vmax;
+  transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgb(255 220 160 / 0.28) 0 6deg,
+    transparent 6deg 18deg
+  );
+  mask-image: radial-gradient(circle, #000 0%, transparent 45%);
+  animation: rip2-spin 14s linear infinite;
+  pointer-events: none;
+}
+@keyframes rip2-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+.rip2-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 43%,
+    rgb(255 250 235 / 0.9),
+    transparent 45%
+  );
+  animation: rip2-flash 0.7s ease-out forwards;
+  pointer-events: none;
+}
+.rip2-flash.special {
+  animation-duration: 1.2s;
+}
+@keyframes rip2-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.rip2-sparks {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  pointer-events: none;
+}
+.rip2-sparks i {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: radial-gradient(circle, #fff 0 25%, transparent 60%);
+  clip-path: polygon(
+    50% 0,
+    60% 40%,
+    100% 50%,
+    60% 60%,
+    50% 100%,
+    40% 60%,
+    0 50%,
+    40% 40%
+  );
+  --a: calc(var(--i) * 15deg);
+  animation: rip2-spark 1.6s ease-out infinite;
+  animation-delay: calc(var(--i) * -0.07s);
+}
+@keyframes rip2-spark {
+  from {
+    transform: rotate(var(--a)) translateY(0) scale(0.3);
+    opacity: 1;
+  }
+  to {
+    transform: rotate(var(--a)) translateY(-42vmin) scale(1.3);
+    opacity: 0;
+  }
+}
+.rip2-ui {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  color: #fff;
+  text-align: center;
+  pointer-events: none;
+}
+.rip2-ui button {
+  pointer-events: auto;
+}
+.rip2-title {
+  margin: 0;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: clamp(24px, 4vh, 36px);
+  letter-spacing: 0.03em;
+}
+.rip2-hint,
+.rip2-count {
+  margin: 0;
+  color: rgb(255 255 255 / 0.8);
+}
+.rip2-count {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top));
+  right: 16px;
+  font-weight: 700;
+}
