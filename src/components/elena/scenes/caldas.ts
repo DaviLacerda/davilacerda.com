@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   emissive,
   fabric,
@@ -288,19 +289,19 @@ function nightWallTexture() {
 
 /* ---------------- the scene ---------------- */
 
+// LEIA-ME 03 (IMG_5137): Davi in the Dolphins #1 jersey, black shorts and
+// flip-flops; Elena in a beige set under a light-pink striped kimono.
 const OUTFITS: { davi: Outfit; elena: Outfit } = {
   elena: {
-    top: "#ff9fc4",
+    top: "#f6cad6",
     topStyle: "blouse",
-    bottom: "#e9dccb",
+    pattern: "stripes",
+    bottom: "#e3cfb8",
     bottomStyle: "shorts",
-    shoes: "#2a2a2a",
+    shoes: "#d9c4ad",
   },
   davi: {
-    top: "#1fb7b2",
-    topStyle: "jersey",
-    print: "1",
-    printColor: "#ff8a1f",
+    ...WARDROBE.dolphins1,
     bottom: "#1d1f22",
     bottomStyle: "shorts",
     shoes: "#1b1b1b",

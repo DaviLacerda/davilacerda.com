@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   carpet,
   emissive,
@@ -682,20 +683,18 @@ function sideTable(seg: number) {
 
 /* ---------------- the scene ---------------- */
 
+// LEIA-ME 11: the same clothes as dinner at Caramel (10).
 const OUTFITS: { davi: Outfit; elena: Outfit } = {
-  davi: {
-    top: "#3b2a22",
-    topStyle: "tshirt",
-    bottom: "#2c3a52",
-    bottomStyle: "jeans",
-    shoes: "#1c1c1c",
-  },
+  davi: WARDROBE.daviTee,
   elena: {
-    top: "#1d1d1d",
-    topStyle: "tshirt",
-    bottom: "#3a4d6b",
+    top: "#151515",
+    topStyle: "blouse",
+    neckline: "v",
+    sheerSleeves: true,
+    necklace: "long",
+    bottom: "#22252d",
     bottomStyle: "jeans",
-    shoes: "#e6e1d8",
+    shoes: "#141414",
   },
 };
 

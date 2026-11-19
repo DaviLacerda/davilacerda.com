@@ -6,6 +6,7 @@ import {
   mergeVertices,
 } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   concrete,
   emissive,
@@ -744,17 +745,16 @@ function wedgeGeo() {
 
 /* ---------------- the scene ---------------- */
 
+// LEIA-ME 10: Davi in the brown tee with his black glasses; Elena in a black
+// V-neck blouse with sheer short sleeves and a long thin necklace.
 const OUTFITS: { davi: Outfit; elena: Outfit } = {
-  davi: {
-    top: "#5a3b2b",
-    topStyle: "tshirt",
-    bottom: "#2f3542",
-    bottomStyle: "jeans",
-    shoes: "#ececec",
-  },
+  davi: WARDROBE.daviTee,
   elena: {
-    top: "#1d1d1d",
+    top: "#151515",
     topStyle: "blouse",
+    neckline: "v",
+    sheerSleeves: true,
+    necklace: "long",
     bottom: "#22252d",
     bottomStyle: "jeans",
     shoes: "#141414",

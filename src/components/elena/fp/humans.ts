@@ -32,30 +32,124 @@ export type Look = {
   eyes?: string;
   /** Nail color (polish). */
   nails?: string;
+  /** 0 = neutral mouth, 1 = big smile (corners up, cheeks raised). */
+  smile?: number;
+  /** Small stud earrings (their color). */
+  earrings?: string;
+  /** A small mole on the forehead, above the right brow. */
+  mole?: boolean;
 };
 
+/*
+ * The two leads, from their reference sheets (fotos/modelos-3d/referencia):
+ * Davi ~1.82 m, heavy and round (belly, chest, thick arms and legs), short wavy
+ * dark-brown hair with volume on top, a beard dense on the chin and jaw with a
+ * thin moustache and soul patch, dark eyes; Elena ~1.65 m (a head shorter),
+ * curvy, round face with a big smile, very long straight jet-black hair with a
+ * center part, defined dark brows, small pearl earrings, a mole on the forehead.
+ */
 export const LOOKS: Record<Who, Look> = {
   davi: {
-    skin: "#e4b598",
-    hair: "#20150f",
+    skin: "#e2b294",
+    hair: "#24170f",
     hairStyle: "short",
-    height: 1.84,
+    height: 1.82,
     beard: true,
     glasses: true,
-    build: 1.36,
-    eyes: "#3a2213",
+    build: 1.4,
+    eyes: "#2e1b10",
+    smile: 0.3,
   },
   elena: {
-    skin: "#eec4a8",
-    hair: "#0c0908",
+    skin: "#ecc0a2",
+    hair: "#0a0807",
     hairStyle: "long",
-    height: 1.75,
+    height: 1.65,
     female: true,
-    build: 1.34,
-    eyes: "#24140b",
+    build: 1.36,
+    eyes: "#22130a",
     nails: "#5a0c19",
+    smile: 1,
+    earrings: "#f1eadc",
+    mole: true,
   },
 };
+
+/** Their recurring clothes (fotos/modelos-3d/LEIA-ME.txt); scenes spread and tweak these. */
+export const WARDROBE = {
+  /** Brown "Nature Escape" tee, black trousers, grey sneakers (the reference sheet). */
+  daviTee: {
+    top: "#563222",
+    topStyle: "tshirt",
+    logo: "NATURE\nESCAPE\nS 23°30'18\nW 43°10'44",
+    logoColor: "#e9e1d2",
+    bottom: "#222224",
+    bottomStyle: "pants",
+    shoes: "#6f6e6b",
+  },
+  /** Fitted midi dress, navy and beige big-leaf print, square neckline, ruffled straps. */
+  elenaLeafDress: {
+    top: "#1c2546",
+    topStyle: "dress",
+    bottom: "#1c2546",
+    pattern: "leaves",
+    length: "midi",
+    fitted: true,
+    ruffles: true,
+    necklace: "heart",
+    shoes: "#e8d6c0",
+    shoeStyle: "sandal",
+  },
+  /** Long white lace dress with wide straps. */
+  elenaLaceDress: {
+    top: "#f5f0e8",
+    topStyle: "dress",
+    bottom: "#f5f0e8",
+    pattern: "lace",
+    straps: "wide",
+    length: "long",
+    necklace: "heart",
+    shoes: "#e8d6c0",
+    shoeStyle: "sandal",
+  },
+  /** NFL jerseys. */
+  dolphins1: {
+    top: "#1fa9ac",
+    topStyle: "jersey",
+    print: "1",
+    printColor: "#f5822a",
+    bottom: "#2b3448",
+    bottomStyle: "jeans",
+    shoes: "#2a2a2a",
+  },
+  broncos3: {
+    top: "#f4561d",
+    topStyle: "jersey",
+    print: "3",
+    printColor: "#0d2346",
+    bottom: "#2b3448",
+    bottomStyle: "jeans",
+    shoes: "#2a2a2a",
+  },
+  jets8: {
+    top: "#13573f",
+    topStyle: "jersey",
+    print: "8",
+    printColor: "#ffffff",
+    bottom: "#2f3542",
+    bottomStyle: "jeans",
+    shoes: "#2a2a2a",
+  },
+  eagles11: {
+    top: "#0b4a50",
+    topStyle: "jersey",
+    print: "11",
+    printColor: "#ffffff",
+    bottom: "#2f3542",
+    bottomStyle: "jeans",
+    shoes: "#2a2a2a",
+  },
+} satisfies Record<string, Outfit>;
 
 export type Human = {
   group: THREE.Group;
@@ -412,6 +506,156 @@ function printTexture(text: string, color: string) {
   return t;
 }
 
+/** A small chest print: lines of condensed caps, the first one larger. */
+function logoTexture(text: string, color: string) {
+  const key = "logo" + text + color;
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const { c, g } = canvas(256, 192);
+  g.clearRect(0, 0, 256, 192);
+  g.fillStyle = color;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  const lines = text.split("\n");
+  const n = lines.length;
+  lines.forEach((line, i) => {
+    const size = i === 0 ? 54 : i === 1 ? 44 : 22;
+    g.font = `bold ${size}px 'Arial Narrow', 'Roboto Condensed', Impact, sans-serif`;
+    const y = 192 * ((i + 0.7) / (n + 0.4));
+    g.fillText(line, 128, y, 236);
+  });
+  // worn print: speckle it
+  const img = g.getImageData(0, 0, 256, 192);
+  const r = rng(0.61);
+  for (let i = 3; i < img.data.length; i += 4)
+    if (r() < 0.12) img.data[i] = Math.round(img.data[i]! * 0.4);
+  g.putImageData(img, 0, 0);
+  const t = canvasTex(c, true, false);
+  texCache.set(key, t);
+  return t;
+}
+
+/** Tileable fabric prints (sRGB). One tile is mapped to 0.6 m of fabric. */
+const PATTERN_COLORS: Record<NonNullable<Outfit["pattern"]>, string[]> = {
+  // navy, beige, periwinkle, mid blue (the leaf-print midi dress)
+  leaves: ["#1c2546", "#d8b59b", "#6676b4", "#34447c"],
+  // white lace: base, motif shadow, eyelets
+  lace: ["#f5f0e8", "#ddd2c1", "#c7baa6"],
+  stripes: ["#f6cad6", "#fbeef1"],
+};
+
+function patternTexture(
+  kind: NonNullable<Outfit["pattern"]>,
+  colors: string[],
+) {
+  const key = "pat" + kind + colors.join();
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const S = 512;
+  const { c, g } = canvas(S, S);
+  const r = rng(kind === "leaves" ? 0.42 : 0.83);
+  const pal = PATTERN_COLORS[kind].map((d, i) => colors[i] ?? d);
+  g.fillStyle = pal[0]!;
+  g.fillRect(0, 0, S, S);
+  /** Draws f at (x, y) and its wrapped copies so the tile is seamless. */
+  const wrapped = (x: number, y: number, f: (x: number, y: number) => void) => {
+    for (const dx of [-S, 0, S]) for (const dy of [-S, 0, S]) f(x + dx, y + dy);
+  };
+  if (kind === "leaves") {
+    const leaf = (
+      x: number,
+      y: number,
+      len: number,
+      wid: number,
+      ang: number,
+      fill: string,
+      vein: string | null,
+    ) => {
+      g.save();
+      g.translate(x, y);
+      g.rotate(ang);
+      g.beginPath();
+      g.moveTo(-len / 2, 0);
+      g.bezierCurveTo(-len / 4, -wid, len / 4, -wid * 0.9, len / 2, 0);
+      g.bezierCurveTo(len / 4, wid * 0.7, -len / 4, wid * 0.8, -len / 2, 0);
+      g.fillStyle = fill;
+      g.fill();
+      if (vein) {
+        g.strokeStyle = vein;
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(-len / 2, 0);
+        g.quadraticCurveTo(0, -wid * 0.15, len / 2, 0);
+        g.stroke();
+      }
+      g.restore();
+    };
+    // big beige shapes, then blue leaves over them, then navy cut-ins
+    const layers: [string, number, string | null][] = [
+      [pal[1]!, 9, null],
+      [pal[2]!, 10, pal[3]!],
+      [pal[3]!, 7, pal[0]!],
+      [pal[0]!, 6, null],
+    ];
+    for (const [fill, count, vein] of layers)
+      for (let i = 0; i < count; i++) {
+        const x = r() * S;
+        const y = r() * S;
+        const len = 170 + r() * 190;
+        const wid = 34 + r() * 46;
+        const ang = (r() - 0.5) * 2.6;
+        wrapped(x, y, (xx, yy) => leaf(xx, yy, len, wid, ang, fill, vein));
+      }
+  } else if (kind === "lace") {
+    const rose = (x: number, y: number, rad: number) => {
+      g.strokeStyle = pal[1]!;
+      g.lineWidth = 2;
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * TAU;
+        g.beginPath();
+        g.ellipse(
+          x + Math.cos(a) * rad * 0.55,
+          y + Math.sin(a) * rad * 0.55,
+          rad * 0.42,
+          rad * 0.24,
+          a,
+          0,
+          TAU,
+        );
+        g.stroke();
+      }
+      g.fillStyle = pal[2]!;
+      g.beginPath();
+      g.arc(x, y, rad * 0.16, 0, TAU);
+      g.fill();
+    };
+    for (let i = 0; i < 26; i++) {
+      const x = r() * S;
+      const y = r() * S;
+      const rad = 16 + r() * 18;
+      wrapped(x, y, (xx, yy) => rose(xx, yy, rad));
+    }
+    // eyelets
+    g.fillStyle = pal[2]!;
+    for (let i = 0; i < 420; i++) {
+      const x = r() * S;
+      const y = r() * S;
+      const rad = 1.4 + r() * 1.4;
+      wrapped(x, y, (xx, yy) => {
+        g.beginPath();
+        g.arc(xx, yy, rad, 0, TAU);
+        g.fill();
+      });
+    }
+  } else {
+    g.fillStyle = pal[1]!;
+    for (let x = 0; x < S; x += 32) g.fillRect(x, 0, 10, S);
+  }
+  const t = canvasTex(c, true);
+  texCache.set(key, t);
+  return t;
+}
+
 /* ------------------------------------------------------------------ */
 /* materials                                                           */
 /* ------------------------------------------------------------------ */
@@ -530,6 +774,28 @@ function shellMaterial(hair: string) {
   return m;
 }
 
+/** Materials shared by every person (gold, pearls, frames, lenses, prints). */
+const matCache = new Map<string, THREE.Material>();
+function shared<T extends THREE.Material>(key: string, make: () => T): T {
+  let m = matCache.get(key);
+  if (!m) matCache.set(key, (m = make()));
+  return m as T;
+}
+/** Jewelry and buttons: metallic, colored per vertex (gold, pearl white). */
+const jewelryMaterial = () =>
+  shared(
+    "jewelry",
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: "#ffffff",
+        vertexColors: true,
+        metalness: 0.85,
+        roughness: 0.28,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.1,
+      }),
+  );
+
 /* ------------------------------------------------------------------ */
 /* mesh building                                                       */
 /* ------------------------------------------------------------------ */
@@ -590,7 +856,7 @@ class Mesher {
     g: THREE.BufferGeometry,
     m: THREE.Matrix4 | null,
     color: THREE.Color | ((p: THREE.Vector3) => THREE.Color),
-    w: Wt = [[0, 1]],
+    w: Wt | ((p: THREE.Vector3) => Wt) = [[0, 1]],
   ) {
     const src = g.index ? g : g;
     const pos = src.getAttribute("position");
@@ -615,7 +881,7 @@ class Mesher {
         uv ? uv.getY(i) : 0,
         typeof color === "function" ? color(p) : color,
         1,
-        w,
+        typeof w === "function" ? w(p) : w,
       );
     }
     if (src.index)
@@ -944,11 +1210,16 @@ function dims(look: Look, fp = false): Dims {
     ys,
     TORSO.cz.map((v) => v * k),
   );
-  const bust = (f ? 0.05 * (1 + fb * 1.3) : 0.01 + fb * 0.03) * (fp ? 0.6 : 1);
+  const bust =
+    (f ? 0.05 * (1 + fb * 1.5) : 0.012 + fb * 0.045) * (fp ? 0.6 : 1);
   const bx = (f ? 0.082 : 0.074) * k * (1 + fb * 0.3);
   const by = (f ? 0.703 : 0.716) * H;
   const bsx = (f ? 0.055 : 0.06) * (1 + fb * 0.3);
-  const belly = fb * (f ? 0.06 : 0.17) * (fp ? 0.5 : 1);
+  // a heavy man's belly is round and sits low (around the navel), sagging a little
+  const belly = fb * (f ? 0.06 : 0.21) * (fp ? 0.5 : 1);
+  const bellyY = (f ? 0.6 : 0.585) * H;
+  const bellyS = (f ? 0.06 : 0.07) * H;
+  const bellyW = f ? 0.14 : 0.16;
   const glute = (f ? 0.036 : 0.022) * (1 + fb * 1.1);
   const torsoR = (y: number, phi: number) => {
     const s = Math.sin(phi);
@@ -976,7 +1247,11 @@ function dims(look: Look, fp = false): Dims {
         gauss(dy, dy > 0 ? (f ? 0.07 : 0.055) : f ? 0.045 : 0.035);
     }
     // belly
-    r += belly * front * gauss(y - 0.6 * H, 0.06 * H) * gauss(x, 0.14);
+    r +=
+      belly *
+      front *
+      gauss(y - bellyY, y < bellyY ? bellyS * 0.8 : bellyS) *
+      gauss(x, bellyW);
     // glutes
     for (const side of [-1, 1])
       r +=
@@ -995,8 +1270,11 @@ function dims(look: Look, fp = false): Dims {
 
   const lys = LY.map((v) => v * H);
   const thighMul = (y: number) =>
-    lerp(1 + fb * (f ? 0.95 : 0.6), 1 + fb * 0.4, sstep(0.36 * H, 0.3 * H, y)) *
-    (f ? lerp(1.07, 0.98, sstep(0.36 * H, 0.3 * H, y)) : 1);
+    lerp(
+      1 + fb * (f ? 0.95 : 0.7),
+      1 + fb * 0.45,
+      sstep(0.36 * H, 0.3 * H, y),
+    ) * (f ? lerp(1.07, 0.98, sstep(0.36 * H, 0.3 * H, y)) : 1);
   const lrx = spline(lys.slice().reverse(), LEG.rx.map((v) => v * k).reverse());
   const lrf = spline(lys.slice().reverse(), LEG.rf.map((v) => v * k).reverse());
   const lrb = spline(lys.slice().reverse(), LEG.rb.map((v) => v * k).reverse());
@@ -1031,11 +1309,11 @@ function dims(look: Look, fp = false): Dims {
   );
   const armR = (d: number, phi: number) => {
     const m =
-      (f ? 0.95 : 1) *
+      (f ? 0.95 + fb * 0.12 : 1) *
       lerp(0.86, 1, sstep(-0.02, 0.07, d)) *
       lerp(
-        1 + fb * 0.55,
-        1 + fb * 0.35,
+        1 + fb * (f ? 0.6 : 0.65),
+        1 + fb * 0.38,
         sstep(upperLen - 0.04, upperLen + 0.04, d),
       );
     return superR(phi, arx(d) * m, arz(d) * m, 2.1);
@@ -1262,8 +1540,10 @@ function draped(
   return r;
 }
 
-function topSpec(style: TopStyle, d: Dims) {
+function topSpec(outfit: Outfit, d: Dims) {
+  const style: TopStyle = outfit.topStyle ?? "tshirt";
   const H = d.H;
+  const wide = outfit.straps === "wide";
   const crew = (phi: number) =>
     0.842 * H -
     0.024 * H * Math.pow(Math.max(0, Math.sin(phi)), 2) +
@@ -1272,7 +1552,7 @@ function topSpec(style: TopStyle, d: Dims) {
     crew(phi) - 0.03 * H * Math.pow(Math.max(0, Math.sin(phi)), 10);
   const tank = (phi: number) => {
     const c = Math.abs(Math.cos(phi));
-    const strap = gauss(c - 0.6, 0.11);
+    const strap = gauss(c - 0.6, wide ? 0.16 : 0.11);
     const arm = sstep(0.74, 0.9, c);
     const front = Math.sin(phi) > 0;
     const low = lerp(front ? 0.772 * H : 0.79 * H, 0.745 * H, arm);
@@ -1280,69 +1560,100 @@ function topSpec(style: TopStyle, d: Dims) {
   };
   const scoop = (phi: number) =>
     crew(phi) - 0.032 * H * Math.pow(Math.max(0, Math.sin(phi)), 3);
-  switch (style) {
-    case "tank":
-      return {
-        off: 0.004,
-        slope: 0.7,
-        hem: 0.505 * H,
-        neck: tank,
-        sleeve: 0,
-        sleeveOff: 0,
-        flare: 0,
-      };
-    case "dress":
-      return {
-        off: 0.005,
-        slope: 0.6,
-        hem: 0.58 * H,
-        neck: tank,
-        sleeve: 0,
-        sleeveOff: 0,
-        flare: 0,
-      };
-    case "blouse":
-      return {
-        off: 0.009,
-        slope: 0.3,
-        hem: 0.49 * H,
-        neck: scoop,
-        sleeve: 0.3 * d.upperLen,
-        sleeveOff: 0.008,
-        flare: 0.018,
-      };
-    case "jersey":
-      return {
-        off: 0.017,
-        slope: 0.18,
-        hem: 0.47 * H,
-        neck: vneck,
-        sleeve: 0.55 * d.upperLen,
-        sleeveOff: 0.012,
-        flare: 0.01,
-      };
-    case "hoodie":
-      return {
-        off: 0.016,
-        slope: 0.22,
-        hem: 0.485 * H,
-        neck: (phi: number) => crew(phi) + 0.006 * H,
-        sleeve: d.upperLen + d.foreLen - 0.025,
-        sleeveOff: 0.01,
-        flare: 0.003,
-      };
-    default:
-      return {
-        off: 0.008,
-        slope: 0.32,
-        hem: 0.5 * H,
-        neck: crew,
-        sleeve: 0.42 * d.upperLen,
-        sleeveOff: 0.007,
-        flare: 0.008,
-      };
+  /** A deep V (blouses): straight sides down to the sternum. */
+  const deepV = (phi: number) =>
+    crew(phi) -
+    0.075 * H * Math.max(0, 1 - Math.abs(phi - Math.PI / 2) / 0.55) ** 1.2;
+  /** Straight-across front between two straps (dresses). */
+  const square = (phi: number) => {
+    const c = Math.abs(Math.cos(phi));
+    const front = Math.sin(phi) > 0;
+    const low = lerp(
+      front ? 0.768 * H : 0.79 * H,
+      0.748 * H,
+      sstep(0.8, 0.92, c),
+    );
+    const hw = wide ? 0.1 : 0.055;
+    const strap = sstep(hw + 0.05, hw, Math.abs(c - 0.6));
+    return lerp(low, 0.846 * H, strap);
+  };
+  const necks = { crew, v: vneck, scoop, square };
+  const over = outfit.neckline
+    ? outfit.neckline === "v" && style === "blouse"
+      ? deepV
+      : necks[outfit.neckline]
+    : null;
+  const spec = topSpecBase();
+  return over ? { ...spec, neck: over } : spec;
+  function topSpecBase() {
+    switch (style) {
+      case "tank":
+        return {
+          off: 0.004,
+          slope: 0.7,
+          hem: 0.505 * H,
+          neck: tank,
+          sleeve: 0,
+          sleeveOff: 0,
+          flare: 0,
+        };
+      case "dress":
+        return {
+          off: 0.005,
+          slope: 0.6,
+          hem: 0.58 * H,
+          neck: square,
+          sleeve: 0,
+          sleeveOff: 0,
+          flare: 0,
+        };
+      case "blouse":
+        return {
+          off: 0.009,
+          slope: 0.3,
+          hem: 0.49 * H,
+          neck: scoop,
+          sleeve: 0.3 * d.upperLen,
+          sleeveOff: 0.008,
+          flare: 0.018,
+        };
+      case "jersey":
+        return {
+          off: 0.017,
+          slope: 0.18,
+          hem: 0.47 * H,
+          neck: vneck,
+          sleeve: 0.55 * d.upperLen,
+          sleeveOff: 0.012,
+          flare: 0.01,
+        };
+      case "hoodie":
+        return {
+          off: 0.016,
+          slope: 0.22,
+          hem: 0.485 * H,
+          neck: (phi: number) => crew(phi) + 0.006 * H,
+          sleeve: d.upperLen + d.foreLen - 0.025,
+          sleeveOff: 0.01,
+          flare: 0.003,
+        };
+      default:
+        return {
+          off: 0.008,
+          slope: 0.32,
+          hem: 0.5 * H,
+          neck: crew,
+          sleeve: 0.42 * d.upperLen,
+          sleeveOff: 0.007,
+          flare: 0.008,
+        };
+    }
   }
 }
+
+/** Fabric UVs for printed garments: u around the body, v up, in meters / tile (0.6 m tiles, seamless at u = 2). */
+const PRINT_U = 2;
+const PRINT_TILE = 0.6;
 
 function buildTop(
   d: Dims,
@@ -1350,12 +1661,15 @@ function buildTop(
   outfit: Outfit,
   fp: boolean,
   deco: Mesher | null,
+  skin: THREE.Color,
 ) {
   const style: TopStyle = outfit.topStyle ?? "tshirt";
-  const spec = topSpec(style, d);
-  const base = col(outfit.top);
+  const spec = topSpec(outfit, d);
+  const printed = !!outfit.pattern;
+  const base = printed ? new THREE.Color(1, 1, 1) : col(outfit.top);
   const H = d.H;
-  const cols = 64;
+  // straps and square necklines need finer columns
+  const cols = style === "dress" || style === "tank" ? 96 : 64;
   const rows = 30;
   const loose = 0.004 * d.fb;
   const radius = (y: number, phi: number) => {
@@ -1405,6 +1719,7 @@ function buildTop(
     },
     color: (p, i) => {
       let c = base;
+      void p;
       if (style === "hoodie" && (i <= 3 || i >= rows))
         c = tint(base, 0.85, 0.85, 0.85);
       if (style === "jersey" && i >= rows - 2)
@@ -1414,7 +1729,13 @@ function buildTop(
       return c;
     },
     weights: (p) => torsoWeights(d, p),
-    uv: (i, j) => [(j / cols) * 1.0, i * 0.02],
+    uv: (i, j) =>
+      printed
+        ? [
+            ((j / cols) * PRINT_U) / 1,
+            rowY(clamp(i - 1, 0, rows - 1), (j / cols) * TAU) / PRINT_TILE,
+          ]
+        : [(j / cols) * 1.0, i * 0.02],
   });
   // sleeves
   if (spec.sleeve > 0) {
@@ -1452,10 +1773,14 @@ function buildTop(
           }
           if (style === "hoodie" && i >= ad.length - 2)
             return tint(base, 0.85, 0.85, 0.85);
+          // sheer chiffon: the arm shows through (hem band stays solid)
+          if (outfit.sheerSleeves && i < ad.length - 1)
+            return mix(col(outfit.top), skin, 0.5);
           return base;
         },
         weights: (_p, i) => armWeights(d, ad[Math.min(i, ad.length - 1)]!, s),
-        uv: (i, j) => [(j / 20) * 0.35, i * 0.02],
+        uv: (i, j) =>
+          printed ? [(j / 20) * 0.5, i * 0.012] : [(j / 20) * 0.35, i * 0.02],
       });
     }
   }
@@ -1485,17 +1810,188 @@ function buildTop(
   return radius;
 }
 
+type TopRadius = (y: number, phi: number) => number;
+
+/** Small chest print on the left chest, a conforming decal just above the fabric. */
+function buildLogo(d: Dims, m: Mesher, radius: TopRadius) {
+  const H = d.H;
+  const c0 = Math.PI / 2 - 0.42;
+  const span = 0.44;
+  grid(m, {
+    rows: 6,
+    cols: 8,
+    wrap: false,
+    at: (i, j) => {
+      const phi = c0 - (j / 7 - 0.5) * span;
+      const y = lerp(0.722 * H, 0.758 * H, i / 5);
+      const r = radius(y, phi) + 0.0016;
+      return V(r * Math.cos(phi), y, d.torsoCz(y) + r * Math.sin(phi));
+    },
+    color: () => new THREE.Color(1, 1, 1),
+    weights: (p) => torsoWeights(d, p),
+    uv: (i, j) => [j / 7, i / 5],
+  });
+}
+
+/** Ruffles along the straps (same fabric as the top) and buttons down the front. */
+function buildTrims(
+  d: Dims,
+  top: Mesher,
+  jewel: Mesher,
+  outfit: Outfit,
+  radius: TopRadius,
+) {
+  const H = d.H;
+  const spec = topSpec(outfit, d);
+  if (outfit.ruffles) {
+    const hw = outfit.straps === "wide" ? 0.1 : 0.055;
+    const ce = Math.acos(clamp(0.6 + hw + 0.01, 0, 1));
+    const printed = !!outfit.pattern;
+    const fill = printed ? new THREE.Color(1, 1, 1) : col(outfit.top);
+    for (const phi of [ce, Math.PI - ce, -ce, -Math.PI + ce]) {
+      const sx = Math.sign(Math.cos(phi));
+      const y0 = 0.792 * H;
+      const y1 = spec.neck(phi) - 0.002;
+      grid(top, {
+        rows: 3,
+        cols: 14,
+        wrap: false,
+        both: true,
+        at: (i, j) => {
+          const y = lerp(y0, y1, j / 13);
+          const r = radius(y, phi) + 0.0012;
+          const radial = V(Math.cos(phi), 0, Math.sin(phi));
+          const P = V(r * Math.cos(phi), y, d.torsoCz(y) + r * Math.sin(phi));
+          const t = i / 2;
+          const grow = sstep(0, 0.25, j / 13);
+          const dir = radial
+            .clone()
+            .multiplyScalar(0.55)
+            .add(V(sx * 0.65, 0.45, 0))
+            .normalize();
+          return P.addScaledVector(dir, 0.017 * t * grow).addScaledVector(
+            radial,
+            0.006 * t * Math.sin(j * 1.9),
+          );
+        },
+        color: () => fill,
+        weights: (p) => torsoWeights(d, p),
+        uv: (i, j) => [0.3 + j * 0.02, 0.2 + i * 0.03],
+      });
+    }
+  }
+  if (outfit.buttons) {
+    const gold = col(outfit.buttons);
+    const ball = new THREE.SphereGeometry(0.0052, 8, 6);
+    ball.scale(1, 1, 0.55);
+    const yTop = spec.neck(Math.PI / 2) - 0.022;
+    for (let k = 0; k < 5; k++) {
+      const y = yTop - k * 0.042;
+      if (y < spec.hem + 0.03) break;
+      const r = radius(y, Math.PI / 2) + 0.0025;
+      jewel.geo(
+        ball,
+        new THREE.Matrix4().makeTranslation(0, y, d.torsoCz(y) + r),
+        gold,
+        (p) => torsoWeights(d, p),
+      );
+    }
+  }
+}
+
+/** A thin gold chain around the neck, with a small heart (or a long drop). */
+function buildNecklace(
+  d: Dims,
+  jewel: Mesher,
+  outfit: Outfit,
+  radius: TopRadius,
+) {
+  const H = d.H;
+  const spec = topSpec(outfit, d);
+  const long = outfit.necklace === "long";
+  const yFront = long ? 0.735 * H : 0.79 * H;
+  const surf = (y: number, phi: number) => {
+    let r = d.torsoR(y, phi) + 0.0022;
+    if (y < spec.neck(phi) + 0.004) r = Math.max(r, radius(y, phi) + 0.0025);
+    return V(r * Math.cos(phi), y, d.torsoCz(y) + r * Math.sin(phi));
+  };
+  const pts: THREE.Vector3[] = [];
+  const N = 48;
+  for (let i = 0; i <= N; i++) {
+    // from the back of the neck, round the front, back to the back
+    const phi = -Math.PI / 2 + (i / N) * TAU;
+    const f = (Math.sin(phi) + 1) / 2;
+    const y = lerp(0.862 * H, yFront, Math.pow(f, long ? 2.2 : 1.6));
+    pts.push(surf(y, phi));
+  }
+  const gold = col("#d9b061");
+  const curve = new THREE.CatmullRomCurve3(pts, true);
+  jewel.geo(
+    new THREE.TubeGeometry(curve, 96, 0.0008, 4, true),
+    null,
+    gold,
+    (p) => torsoWeights(d, p),
+  );
+  // pendant hanging at the front
+  const front = surf(yFront, Math.PI / 2);
+  const w = (p: THREE.Vector3) => torsoWeights(d, p);
+  if (long) {
+    const bar = new THREE.CylinderGeometry(0.0012, 0.0012, 0.03, 6);
+    jewel.geo(
+      bar,
+      new THREE.Matrix4().makeTranslation(front.x, front.y - 0.016, front.z),
+      gold,
+      w,
+    );
+    return;
+  }
+  const hs = 0.0062;
+  const heart = new THREE.Shape();
+  heart.moveTo(0, -hs);
+  heart.bezierCurveTo(
+    hs * 0.9,
+    -hs * 0.2,
+    hs * 1.1,
+    hs * 0.7,
+    hs * 0.5,
+    hs * 0.75,
+  );
+  heart.bezierCurveTo(hs * 0.2, hs * 0.78, 0, hs * 0.5, 0, hs * 0.3);
+  heart.bezierCurveTo(0, hs * 0.5, -hs * 0.2, hs * 0.78, -hs * 0.5, hs * 0.75);
+  heart.bezierCurveTo(-hs * 1.1, hs * 0.7, -hs * 0.9, -hs * 0.2, 0, -hs);
+  const hg = new THREE.ExtrudeGeometry(heart, {
+    depth: 0.0012,
+    bevelEnabled: true,
+    bevelThickness: 0.0006,
+    bevelSize: 0.0006,
+    bevelSegments: 1,
+    curveSegments: 5,
+  });
+  jewel.geo(
+    hg,
+    new THREE.Matrix4().makeTranslation(front.x, front.y - 0.0075, front.z),
+    col("#f3ede4"),
+    w,
+  );
+}
+
 function buildBottom(d: Dims, m: Mesher, outfit: Outfit, fp: boolean) {
   const H = d.H;
   const dress = outfit.topStyle === "dress";
   const style = dress ? "skirt" : (outfit.bottomStyle ?? "jeans");
-  const baseCol = col(dress ? outfit.top : outfit.bottom);
+  const printed = dress && !!outfit.pattern;
+  const baseCol = printed
+    ? new THREE.Color(1, 1, 1)
+    : col(dress ? outfit.top : outfit.bottom);
   const cols = 44;
   if (style === "skirt") {
     // waist to hem cone with soft folds; front follows the thighs when walking and sitting
     const yTop = dress ? 0.6 * H : 0.585 * H;
-    const hem = dress ? 0.29 * H : 0.37 * H;
-    const rows = 26;
+    const hem = skirtHem(d, outfit);
+    const fitted = !!outfit.fitted;
+    const flare = fitted ? 0.012 : 0.07 * (dress ? 1 : 0.6);
+    const foldK = fitted ? 0.25 : 1;
+    const rows = hem < 0.2 * H ? 34 : 26;
     const seed = hash(outfit.top.length + outfit.bottom.length);
     grid(m, {
       rows: rows + 1,
@@ -1519,9 +2015,9 @@ function buildBottom(d: Dims, m: Mesher, outfit: Outfit, fp: boolean) {
         const t = sstep(d.yHip, hem, y);
         const fold =
           1 +
-          0.07 * t * Math.sin(9 * phi + seed * 6) +
-          0.03 * t * Math.sin(17 * phi + seed * 3);
-        let r = (body + t * 0.07 * (dress ? 1 : 0.6)) * fold;
+          foldK * 0.07 * t * Math.sin(9 * phi + seed * 6) +
+          foldK * 0.03 * t * Math.sin(17 * phi + seed * 3);
+        let r = (body + t * flare) * fold;
         if (i === rows) r -= 0.004;
         return V(
           r * Math.cos(phi),
@@ -1529,9 +2025,24 @@ function buildBottom(d: Dims, m: Mesher, outfit: Outfit, fp: boolean) {
           d.torsoCz(Math.max(y, 0.47 * H)) * (1 - t) + r * Math.sin(phi),
         );
       },
-      color: () => baseCol,
+      color: (p, i, j) => {
+        // pencil skirts: a back slit, read as a dark seam toward the hem
+        if (fitted && p.y < hem + 0.13) {
+          const phi = (j / 56) * TAU;
+          if (Math.abs(phi - 1.5 * Math.PI) < 0.06)
+            return tint(baseCol, 0.35, 0.35, 0.38);
+        }
+        void i;
+        return baseCol;
+      },
       weights: (p) => skirtWeights(d, p, yTop),
-      uv: (i, j) => [j / 56, i * 0.02],
+      uv: (i, j) =>
+        printed
+          ? [
+              (j / 56) * PRINT_U,
+              lerp(yTop, hem, Math.min(i, rows - 1) / (rows - 1)) / PRINT_TILE,
+            ]
+          : [j / 56, i * 0.02],
     });
     if (dress) return;
   }
@@ -1625,6 +2136,23 @@ function buildBottom(d: Dims, m: Mesher, outfit: Outfit, fp: boolean) {
   void fp;
 }
 
+/** Hem height of a dress or skirt. */
+function skirtHem(d: Dims, outfit: Outfit) {
+  const dress = outfit.topStyle === "dress";
+  switch (outfit.length) {
+    case "mini":
+      return 0.38 * d.H;
+    case "midi":
+      return 0.2 * d.H;
+    case "long":
+      return 0.075 * d.H;
+    case "knee":
+      return 0.29 * d.H;
+    default:
+      return dress ? 0.29 * d.H : 0.37 * d.H;
+  }
+}
+
 /** Outer bound of both legs at height y in direction phi (for skirts). */
 function legEnvelope(d: Dims, y: number, phi: number) {
   let best = 0;
@@ -1651,7 +2179,15 @@ function skirtWeights(d: Dims, p: THREE.Vector3, yTop: number): Wt {
     ([b, x]) => [b, x * hip] as [number, number],
   );
   void yTop;
-  return [...w, [B.thighL, thighs * l], [B.thighR, thighs * (1 - l)]];
+  // below the knee a long skirt hangs from the shins (so it falls down when sitting)
+  const kn = sstep(d.yKnee + 0.03, d.yKnee - 0.06, p.y);
+  return [
+    ...w,
+    [B.thighL, thighs * l * (1 - kn)],
+    [B.thighR, thighs * (1 - l) * (1 - kn)],
+    [B.shinL, thighs * l * kn],
+    [B.shinR, thighs * (1 - l) * kn],
+  ];
 }
 
 /* ------------------------------------------------------------------ */
@@ -1845,9 +2381,10 @@ function footGeometry(
   d: Dims,
   skin: THREE.Color,
   shoeColor: string,
-  sandal: boolean,
+  shoeStyle: "sneaker" | "flipflop" | "sandal",
   nails: string | undefined,
 ) {
+  const sandal = shoeStyle !== "sneaker";
   const m = new Mesher();
   const g = -d.yAnkle;
   const L = (d.f ? 0.148 : 0.152) * d.H + (sandal ? 0 : 0.02);
@@ -2024,6 +2561,10 @@ function footGeometry(
         r >= 4 && Math.sin((j / 10) * TAU) > 0.4 ? toeNail : skin,
     });
   }
+  if (shoeStyle === "sandal") {
+    strapSandal(m, d, L, z0, wk, fw, ftop, col(shoeColor));
+    return m.build(false);
+  }
   // flip-flop sole and strap
   const sw = spline(
     ts,
@@ -2073,6 +2614,98 @@ function footGeometry(
   return m.build(false);
 }
 
+/**
+ * Low block-heel sandal around an already built bare foot: lifts the heel,
+ * then adds the sole, a block heel and two wide straps across the toes.
+ */
+function strapSandal(
+  m: Mesher,
+  d: Dims,
+  L: number,
+  z0: number,
+  wk: number,
+  fw: (t: number) => number,
+  ftop: (t: number) => number,
+  c: THREE.Color,
+) {
+  const g = -d.yAnkle;
+  const heelH = 0.032;
+  const sole = 0.008;
+  // raise the foot: the whole foot sits on the sole, the heel gets the heel height
+  const lift = (z: number) =>
+    sole + heelH * sstep(z0 + L * 0.78, z0 + L * 0.35, z);
+  for (let i = 0; i < m.p.length; i += 3)
+    m.p[i + 1] = m.p[i + 1]! + lift(m.p[i + 2]!);
+  const ts = [0, 0.04, 0.12, 0.25, 0.4, 0.55, 0.68, 0.8, 0.9, 0.96, 1];
+  const sw = spline(
+    ts,
+    [0.0, 0.03, 0.036, 0.038, 0.04, 0.045, 0.049, 0.05, 0.045, 0.034, 0.0].map(
+      (v) => v * wk,
+    ),
+  );
+  const dark = tint(c, 0.82, 0.8, 0.78);
+  // sole, following the raised foot
+  grid(m, {
+    rows: 20,
+    cols: 14,
+    wrap: true,
+    at: (i, j) => {
+      const t = i / 19;
+      const phi = (j / 14) * TAU;
+      const end = Math.min(
+        1,
+        Math.sqrt(t / 0.03 + 1e-9),
+        Math.sqrt((1 - t) / 0.05 + 1e-9),
+      );
+      const z = z0 - 0.004 + t * (L + 0.01);
+      const cc = Math.cos(phi);
+      const ss = Math.sin(phi);
+      return V(
+        sw(t) *
+          Math.min(1, end * 1.3) *
+          Math.sign(cc) *
+          Math.pow(Math.abs(cc), 0.4),
+        g +
+          lift(z) -
+          sole / 2 +
+          (sole / 2) * Math.sign(ss) * Math.pow(Math.abs(ss), 0.4),
+        z,
+      );
+    },
+    color: (p) => (p.y < g + lift(p.z) - sole * 0.4 ? dark : c),
+  });
+  // block heel
+  const hw = 0.022 * wk;
+  const heel = new THREE.BoxGeometry(hw * 1.7, heelH + 0.002, 0.05);
+  m.geo(
+    heel,
+    new THREE.Matrix4().makeTranslation(0, g + heelH / 2, z0 + 0.03),
+    dark,
+  );
+  // two wide straps across the forefoot
+  for (const t of [0.6, 0.76]) {
+    const z = z0 + t * L * 0.86;
+    const half = fw(t) + 0.002;
+    const topY = g + ftop(t) + lift(z) + 0.002;
+    const baseY = g + lift(z) - sole * 0.2;
+    grid(m, {
+      rows: 12,
+      cols: 3,
+      wrap: false,
+      both: true,
+      at: (i, j) => {
+        const a = (i / 11) * Math.PI;
+        return V(
+          -half * Math.cos(a) * 1.04,
+          lerp(baseY, topY, Math.pow(Math.sin(a), 0.5)),
+          z + (j - 1) * 0.0085,
+        );
+      },
+      color: () => c,
+    });
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* head                                                                */
 /* ------------------------------------------------------------------ */
@@ -2087,6 +2720,8 @@ type Face = {
   brow: number;
   chin: number;
   neck: number;
+  /** 0..1: mouth corners up, apples of the cheeks raised. */
+  smile: number;
 };
 
 function sdEll(
@@ -2145,6 +2780,8 @@ type HeadModel = {
   sdf: (x: number, y: number, z: number, ears?: boolean) => number;
   eye: THREE.Vector3;
   lipSdf: (x: number, y: number, z: number) => number;
+  /** Height of the mouth line at x (head space, scaled). */
+  mouthY: (x: number) => number;
 };
 
 function headModel(face: Face, hs: number): HeadModel {
@@ -2152,7 +2789,13 @@ function headModel(face: Face, hs: number): HeadModel {
   const ex = 0.0318 * Math.sqrt(W);
   const ey = 0.008;
   const ez = 0.0708;
-  const lip = (x: number, y: number, z: number) => {
+  const sm = face.smile;
+  const mw = face.mouth * (1 + 0.1 * sm);
+  /** Smile: the lips curve up toward the corners. */
+  const lift = (x: number) =>
+    sm * 0.0042 * Math.min(1.3, (x / (0.021 * mw)) ** 2);
+  const lip = (x: number, yIn: number, z: number) => {
+    const y = yIn - lift(x);
     const u = sdEll(
       x,
       y,
@@ -2160,7 +2803,7 @@ function headModel(face: Face, hs: number): HeadModel {
       0,
       -0.0458,
       0.0968,
-      0.0215 * face.mouth,
+      0.0215 * mw,
       0.0068 * face.lip,
       0.0124,
     );
@@ -2169,9 +2812,9 @@ function headModel(face: Face, hs: number): HeadModel {
       y,
       z,
       0,
-      -0.0585,
+      -0.0585 + 0.0012 * sm,
       0.0948,
-      0.0195 * face.mouth,
+      0.0195 * mw,
       0.0082 * face.lip,
       0.0124,
     );
@@ -2232,8 +2875,8 @@ function headModel(face: Face, hs: number): HeadModel {
           y,
           z,
           s * 0.042 * W,
-          -0.024,
-          0.055,
+          -0.024 + 0.006 * sm,
+          0.055 + 0.004 * sm,
           0.026 * face.cheek,
           0.027 * face.cheek,
           0.026,
@@ -2303,9 +2946,17 @@ function headModel(face: Face, hs: number): HeadModel {
     // mouth line
     d = smax(
       d,
-      -sdEll(x, y, z, 0, -0.0518, 0.104, 0.0212 * face.mouth, 0.0011, 0.014),
+      -sdEll(x, y - lift(x), z, 0, -0.0518, 0.104, 0.0212 * mw, 0.0011, 0.014),
       0.0018,
     );
+    // smile: little dimples just outside the mouth corners
+    if (sm > 0)
+      for (const s of [-1, 1])
+        d = smax(
+          d,
+          -sdEll(x, y, z, s * 0.027 * mw, -0.047, 0.094, 0.0035, 0.007, 0.006),
+          0.004 * (1 + sm),
+        );
     // eye sockets
     for (const s of [-1, 1])
       d = smax(d, -(Math.hypot(x - s * ex, y - ey, z - ez) - 0.0129), 0.004);
@@ -2340,6 +2991,7 @@ function headModel(face: Face, hs: number): HeadModel {
     sdf: (x, y, z, ears = false) => raw(x / hs, y / hs, z / hs, ears) * hs,
     eye: V(ex * hs, ey * hs, ez * hs),
     lipSdf: (x, y, z) => lip(x / hs, y / hs, z / hs) * hs,
+    mouthY: (x) => (-0.0518 + lift(x / hs)) * hs,
   };
 }
 
@@ -2392,13 +3044,17 @@ const hairline = spline(
   [0, 18, 34, 48, 60, 68, 74, 80, 88, 108, 122, 140, 160, 180],
   [
     0.074, 0.075, 0.071, 0.058, 0.034, 0.0, -0.016, -0.012, 0.03, 0.03, -0.02,
-    -0.058, -0.068, -0.07,
+    -0.06, -0.074, -0.08,
   ],
 );
-/** Upper edge of a beard (head space), same azimuth convention. */
+/**
+ * Upper edge of a beard (head space), same azimuth convention: moustache
+ * under the nose, low on the cheeks (they stay light), up again into the
+ * sideburns in front of the ears.
+ */
 const beardTop = spline(
   [0, 10, 18, 28, 40, 55, 66, 74, 82],
-  [-0.0345, -0.036, -0.034, -0.032, -0.03, -0.022, -0.013, -0.007, -0.002],
+  [-0.0345, -0.036, -0.04, -0.047, -0.05, -0.04, -0.024, -0.01, -0.002],
 );
 
 type HeadPack = {
@@ -2417,6 +3073,11 @@ function buildHead(
   mats: { skin: THREE.Material },
   female: boolean,
   lite = false,
+  extras: {
+    glasses: "face" | "sun" | "none";
+    glassesColor?: string;
+    headband?: string;
+  } = { glasses: look.glasses ? "face" : "none" },
 ): HeadPack {
   const model = headModel(face, hs);
   const sdf = (x: number, y: number, z: number) => model.sdf(x, y, z);
@@ -2430,8 +3091,10 @@ function buildHead(
 
   const browCurve = (t: number, s: number) => {
     const x = s * lerp(0.012, 0.061, t) * hs;
+    // women: a defined arch; men: thick and nearly straight
+    const arch = female ? 0.011 : 0.006;
     const y =
-      (0.024 + 0.011 * Math.sin(Math.PI * Math.pow(t, 0.75)) - 0.004 * t) * hs +
+      (0.024 + arch * Math.sin(Math.PI * Math.pow(t, 0.75)) - 0.004 * t) * hs +
       E.y;
     return { x, y };
   };
@@ -2456,16 +3119,26 @@ function buildHead(
     if (az > 92) return 0;
     const top = beardTop(az) * hs;
     let m = sstep(top + 0.002, top - 0.006, p.y);
-    m *= sstep(-0.118 * hs, -0.1 * hs, p.y);
+    m *= sstep(-0.13 * hs, -0.11 * hs, p.y);
     m *= sstep(-0.035, 0.0, p.z);
     m *=
       1 - sstep(0.0, 0.0028, -model.lipSdf(p.x, p.y, p.z) * -1 + 0.0015) * 0.0;
     const lipD = model.lipSdf(p.x, p.y, p.z);
     m *= sstep(0.0005, 0.0045, lipD);
-    const dens =
-      0.42 + 0.33 * sstep(30, 8, az) + 0.12 * sstep(-0.07, -0.09, p.y / hs);
-    return clamp(m * dens, 0, 1);
+    return clamp(m * beardDensity(p), 0, 1);
   };
+  /** Dense on the chin and along the jaw, thin moustache, light cheeks, a soul patch. */
+  function beardDensity(p: THREE.Vector3) {
+    const az = Math.abs(deg(Math.atan2(p.x, p.z)));
+    const yn = p.y / hs;
+    const lower = sstep(-0.056, -0.078, yn);
+    const must = sstep(32, 12, az) * gauss(yn + 0.039, 0.0055);
+    let dens = 0.3 + 0.68 * lower + 0.22 * must;
+    // beside the soul patch, under the corners of the mouth: sparse
+    dens *= 1 - 0.55 * gauss(az - 21, 7) * gauss(yn + 0.064, 0.006);
+    dens = Math.max(dens, 0.95 * gauss(az, 9) * gauss(yn + 0.068, 0.007));
+    return dens;
+  }
   const headColor = (p: THREE.Vector3) => {
     let c = skin.clone();
     const lipD = model.lipSdf(p.x, p.y, p.z);
@@ -2504,13 +3177,27 @@ function buildHead(
     c = mix(
       c,
       tint(skin, 0.4, 0.25, 0.25),
-      0.8 * gauss(p.y + 0.0518 * hs, 0.0011) * sstep(0.004, -0.0005, lipD),
+      0.8 *
+        gauss(p.y - model.mouthY(p.x), 0.0011) *
+        sstep(0.004, -0.0005, lipD),
     );
     c = mix(
       c,
       tint(hair, 1.4, 1.4, 1.4),
       0.55 * sstep(0.0055, 0.001, browDist(p)) * sstep(0.06, 0.08, p.z),
     );
+    if (look.mole)
+      c = mix(
+        c,
+        tint(skin, 0.42, 0.3, 0.26),
+        0.9 *
+          sstep(
+            0.0024,
+            0.0012,
+            Math.hypot(p.x + 0.03 * hs, p.y - E.y - 0.05 * hs),
+          ) *
+          sstep(0.05, 0.07, p.z / hs),
+      );
     c = mix(c, tint(hair, 1.15, 1.15, 1.15), 0.92 * hairMask(p));
     c = mix(c, mix(skin, hair, 0.5), 0.55 * beardMask(p));
     return c;
@@ -2716,7 +3403,7 @@ function buildHead(
     eyes.push(eye);
     const pivot = new THREE.Group();
     pivot.position.copy(center);
-    const rest = -0.93;
+    const rest = female ? -0.93 : -0.87;
     pivot.rotation.set(rest, 0, s * 0.05);
     const upper = new THREE.Mesh(upperGeo(s), mats.skin);
     upper.castShadow = false;
@@ -2741,12 +3428,12 @@ function buildHead(
   {
     const bm = new Mesher();
     const r = rng(0.29 + (female ? 0.1 : 0));
-    const count = female ? 170 : 150;
+    const count = lite ? 120 : female ? 210 : 220;
     for (const s of [-1, 1]) {
       for (let i = 0; i < count; i++) {
         const t = Math.pow(r(), 0.85);
         const b = browCurve(t, s);
-        const thick = (female ? 0.0085 : 0.008) * (1 - 0.6 * t) * hs;
+        const thick = (female ? 0.0088 : 0.0105) * (1 - 0.55 * t) * hs;
         const y = b.y + (r() - 0.5) * thick;
         const hit = march(sdf, V(b.x, y, 0.0), V(0, 0, 1), 0.2);
         // march from the front: find surface along -z from z = 0.2
@@ -2796,8 +3483,8 @@ function buildHead(
   // shells: short hair and beard
   if (style === "short" || style === "bun" || look.beard) {
     const sm = new Mesher();
-    const SC = lite ? 40 : 56;
-    const SR = lite ? 30 : 44;
+    const SC = lite ? 40 : 52;
+    const SR = lite ? 30 : 40;
     const sp = warp(-Math.PI, Math.PI, SC, (a) => 1 + 2 * gauss(a, 0.95));
     const sl = warp(
       -Math.PI / 2,
@@ -2805,15 +3492,27 @@ function buildHead(
       SR - 1,
       (l) => 1 + 1.6 * gauss(l + 0.2, 0.6),
     );
-    const L = lite ? 2 : 3;
+    const L = lite ? 2 : 4;
     const info: {
       p: THREE.Vector3;
       n: THREE.Vector3;
       hairM: number;
       beardM: number;
       thick: number;
+      wave: number;
       hc: [number, number];
     }[][] = [];
+    /** Low-frequency lumps (~2 cm): waves and clumps in short hair. */
+    const waveAt = (p: THREE.Vector3) => {
+      const x = p.x / hs;
+      const y = p.y / hs;
+      const z = p.z / hs;
+      const a =
+        Math.sin(x * 140 + 2.2 * Math.sin(z * 95)) *
+        Math.cos(y * 120 + 1.8 * Math.sin(x * 80 + z * 60));
+      const b = Math.sin(z * 170 + y * 60 + 1.5 * Math.cos(x * 110));
+      return clamp(0.5 + 0.38 * a + 0.18 * b, 0, 1);
+    };
     for (let i = 0; i < SR; i++) {
       const row: (typeof info)[number] = [];
       for (let j = 0; j < SC; j++) {
@@ -2822,19 +3521,33 @@ function buildHead(
         const n = sdfNormal(sdf, p);
         const hm = style === "short" || style === "bun" ? hairMask(p) : 0;
         const bmk = beardMask(p);
-        const top = sstep(0.03, 0.11, p.y / hs);
-        const front = sstep(0.02, 0.07, p.z / hs) * top;
-        const sideT = 0.007 + 0.009 * top + 0.012 * front;
+        const yn = p.y / hs;
+        const zn = p.z / hs;
+        const top = sstep(0.03, 0.11, yn);
+        const front = sstep(0.02, 0.07, zn) * top;
+        // a little longer at the back: thicker over the nape
+        const nape = sstep(-0.02, -0.07, zn) * sstep(0.03, -0.04, yn);
+        const wave = waveAt(p);
+        const sideT =
+          (0.008 + 0.014 * top + 0.013 * front + 0.007 * nape) *
+          (0.72 + 0.56 * wave);
+        const az = Math.abs(deg(Math.atan2(p.x, p.z)));
+        const lower = sstep(-0.056, -0.078, yn);
         const thick =
           hm > 0.01
             ? sideT * hs
-            : 0.0065 * hs * (0.7 + 0.5 * sstep(-0.06, -0.095, p.y / hs));
+            : hs *
+              (0.0035 +
+                0.011 * lower * sstep(60, 12, az) +
+                0.0035 * lower +
+                0.003 * gauss(az, 9) * gauss(yn + 0.068, 0.007));
         row.push({
           p,
           n,
           hairM: hm,
           beardM: bmk,
           thick,
+          wave,
           hc: [sp[j]! * 0.1, sl[i]! * 0.1],
         });
       }
@@ -2854,7 +3567,9 @@ function buildHead(
           const c = info[i]![j]!;
           return c.beardM > c.hairM
             ? tint(hair, 1.55, 1.42, 1.3)
-            : tint(hair, 1.25, 1.18, 1.12);
+            : tint(hair, 1.25, 1.18, 1.12).multiplyScalar(
+                0.78 + 0.4 * c.wave * f,
+              );
         },
         skip: (i, j) => {
           let mx = 0;
@@ -2901,27 +3616,117 @@ function buildHead(
     group.add(bun);
   }
 
-  if (look.glasses) group.add(glasses(hs, face.w));
+  if (extras.glasses !== "none")
+    group.add(
+      glasses(hs, face.w, {
+        color: extras.glassesColor,
+        sun: extras.glasses === "sun",
+      }),
+    );
+  // small stud earrings with a pearl drop, under the lobes
+  if (look.earrings) {
+    const jm = new Mesher();
+    const pearl = new THREE.SphereGeometry(0.0042, 10, 8);
+    const stud = new THREE.SphereGeometry(0.0022, 8, 6);
+    for (const s of [-1, 1]) {
+      const x = s * (0.074 * face.w + 0.006) * hs;
+      jm.geo(
+        stud,
+        new THREE.Matrix4().makeTranslation(x, -0.03 * hs, -0.011 * hs),
+        col("#d9b061"),
+      );
+      jm.geo(
+        pearl,
+        new THREE.Matrix4().makeTranslation(
+          x + s * 0.001,
+          -0.0365 * hs,
+          -0.01 * hs,
+        ),
+        col(look.earrings),
+      );
+    }
+    group.add(new THREE.Mesh(jm.build(false), jewelryMaterial()));
+  }
+  // a hair band over the top of the head, ear to ear
+  if (extras.headband) {
+    const bandCol = extras.headband;
+    const pts: THREE.Vector3[] = [];
+    const tilt = 0.32;
+    for (let i = 0; i <= 24; i++) {
+      const a = lerp(-1.42, 1.42, i / 24);
+      const dir = V(
+        Math.sin(a),
+        Math.cos(a) * Math.cos(tilt),
+        Math.cos(a) * Math.sin(tilt) - 0.12,
+      ).normalize();
+      const p = surf(dir);
+      pts.push(p.addScaledVector(sdfNormal(sdf, p), 0.022 * hs));
+    }
+    const band = new THREE.Mesh(
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3(pts),
+        40,
+        0.0045 * hs,
+        6,
+        false,
+      ),
+      shared(
+        "band" + bandCol,
+        () =>
+          new THREE.MeshStandardMaterial({ color: bandCol, roughness: 0.7 }),
+      ),
+    );
+    band.castShadow = true;
+    group.add(band);
+  }
   return { group, eyes, lids, lidRest };
 }
 
-function glasses(hs: number, w: number) {
+/** Black acetate frames (or `color`); `sun` = dark lenses; `folded` = temples folded behind the lenses. */
+function glasses(
+  hs: number,
+  w: number,
+  o: { color?: string; sun?: boolean; folded?: boolean } = {},
+) {
   const g = new THREE.Group();
-  const frameM = new THREE.MeshPhysicalMaterial({
-    color: "#0b0b0c",
-    roughness: 0.28,
-    clearcoat: 1,
-    clearcoatRoughness: 0.15,
-  });
-  const lensM = new THREE.MeshPhysicalMaterial({
-    color: "#eef3ff",
-    roughness: 0.04,
-    metalness: 0,
-    transparent: true,
-    opacity: 0.07,
-    depthWrite: false,
-    envMapIntensity: 0.8,
-  });
+  const fc = o.color ?? "#0b0b0c";
+  const frameM = shared(
+    "frame" + fc,
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: fc,
+        roughness: 0.28,
+        clearcoat: 1,
+        clearcoatRoughness: 0.15,
+      }),
+  );
+  const lensM = o.sun
+    ? shared(
+        "lens-sun",
+        () =>
+          new THREE.MeshPhysicalMaterial({
+            color: "#0e0d0c",
+            roughness: 0.05,
+            transparent: true,
+            opacity: 0.86,
+            depthWrite: false,
+            clearcoat: 1,
+            clearcoatRoughness: 0.02,
+          }),
+      )
+    : shared(
+        "lens",
+        () =>
+          new THREE.MeshPhysicalMaterial({
+            color: "#eef3ff",
+            roughness: 0.04,
+            metalness: 0,
+            transparent: true,
+            opacity: 0.07,
+            depthWrite: false,
+            envMapIntensity: 0.8,
+          }),
+      );
   const rr = (cx: number, cy: number, wdt: number, hgt: number, r: number) => {
     const s = new THREE.Shape();
     const x = cx - wdt / 2;
@@ -2965,24 +3770,38 @@ function glasses(hs: number, w: number) {
       new THREE.Color(1, 1, 1),
     );
     // temple arm
-    const arm = new THREE.BoxGeometry(0.004, 0.007, 0.105);
     const hingeX = s * (ex + 0.028);
-    const amtx = new THREE.Matrix4().compose(
-      V(s * 0.0775 * w, 0.01, 0.044),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(0.03, s * -0.1, 0)),
-      V(1, 1, 1),
-    );
-    fm.geo(arm, amtx, new THREE.Color(1, 1, 1));
-    const tip = new THREE.BoxGeometry(0.0035, 0.006, 0.03);
-    fm.geo(
-      tip,
-      new THREE.Matrix4().compose(
-        V(s * 0.072 * w, -0.002, -0.012),
-        new THREE.Quaternion().setFromEuler(new THREE.Euler(0.7, 0, 0)),
+    if (o.folded) {
+      // folded flat behind the lenses, one over the other
+      const arm = new THREE.BoxGeometry(0.1, 0.006, 0.004);
+      fm.geo(
+        arm,
+        new THREE.Matrix4().makeTranslation(
+          hingeX - s * 0.05,
+          s > 0 ? 0.009 : 0.001,
+          s > 0 ? 0.086 : 0.081,
+        ),
+        new THREE.Color(1, 1, 1),
+      );
+    } else {
+      const arm = new THREE.BoxGeometry(0.004, 0.007, 0.105);
+      const amtx = new THREE.Matrix4().compose(
+        V(s * 0.0775 * w, 0.01, 0.044),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(0.03, s * -0.1, 0)),
         V(1, 1, 1),
-      ),
-      new THREE.Color(1, 1, 1),
-    );
+      );
+      fm.geo(arm, amtx, new THREE.Color(1, 1, 1));
+      const tip = new THREE.BoxGeometry(0.0035, 0.006, 0.03);
+      fm.geo(
+        tip,
+        new THREE.Matrix4().compose(
+          V(s * 0.072 * w, -0.002, -0.012),
+          new THREE.Quaternion().setFromEuler(new THREE.Euler(0.7, 0, 0)),
+          V(1, 1, 1),
+        ),
+        new THREE.Color(1, 1, 1),
+      );
+    }
     const hinge = new THREE.BoxGeometry(0.012, 0.012, 0.01);
     fm.geo(
       hinge,
@@ -3144,7 +3963,7 @@ function buildLongHair(d: Dims, model: HeadModel, look: Look) {
           s,
           j,
           layer.o + (r() - 0.5) * 0.002,
-          (front ? 0.5 : 0.6 - 0.05 * Math.abs(Math.cos(j * 2))) *
+          (front ? 0.52 : 0.64 - 0.05 * Math.abs(Math.cos(j * 2))) *
             layer.len *
             d.k,
         ),
@@ -3388,8 +4207,8 @@ function faceFor(look: Look): Face {
   const fb = Math.max(0, (look.build ?? 1) - 1);
   if (look.female)
     return {
-      w: 1 + fb * 0.12,
-      jaw: 0.97 + fb * 0.12,
+      w: 1 + fb * 0.15,
+      jaw: 0.97 + fb * 0.2,
       cheek: 1.1 + fb * 0.55,
       nose: 0.86,
       lip: 1.12,
@@ -3397,6 +4216,7 @@ function faceFor(look: Look): Face {
       brow: 0.75,
       chin: 0.95,
       neck: 0.95 + fb * 0.2,
+      smile: look.smile ?? 0.3,
     };
   return {
     w: 1 + fb * 0.25,
@@ -3408,6 +4228,7 @@ function faceFor(look: Look): Face {
     brow: 1.05,
     chin: 1.0,
     neck: 1.05 + fb * 0.3,
+    smile: look.smile ?? 0.15,
   };
 }
 
@@ -3497,7 +4318,7 @@ function buildRig(look: Look, outfit: Outfit, fp: boolean): Rig {
   // body
   const bodyM = new Mesher();
   {
-    const ts = topSpec(outfit.topStyle ?? "tshirt", d);
+    const ts = topSpec(outfit, d);
     const dress = outfit.topStyle === "dress";
     const bs = dress ? "skirt" : (outfit.bottomStyle ?? "jeans");
     const legHem =
@@ -3529,14 +4350,75 @@ function buildRig(look: Look, outfit: Outfit, fp: boolean): Rig {
   const topStyle = outfit.topStyle ?? "tshirt";
   const topM = new Mesher();
   const deco = outfit.print ? new Mesher() : null;
-  buildTop(d, topM, outfit, fp, deco);
-  const fabric =
-    topStyle === "blouse" || topStyle === "dress"
-      ? clothMaterial("satin", outfit.top)
-      : topStyle === "jersey"
-        ? clothMaterial("smooth", outfit.top)
-        : clothMaterial("knit", outfit.top);
+  const topRadius = buildTop(d, topM, outfit, fp, deco, skin);
+  const jewelM = new Mesher();
+  buildTrims(d, topM, jewelM, outfit, topRadius);
+  if (outfit.necklace && !fp) buildNecklace(d, jewelM, outfit, topRadius);
+  if (jewelM.count > 0) skinned(jewelM.build(true), jewelryMaterial(), false);
+  let fabric: THREE.MeshPhysicalMaterial;
+  if (outfit.pattern) {
+    const pal = outfit.patternColors ?? PATTERN_COLORS[outfit.pattern];
+    fabric = clothMaterial("smooth", pal[0]);
+    fabric.map = patternTexture(outfit.pattern, outfit.patternColors ?? []);
+  } else
+    fabric =
+      topStyle === "blouse" || topStyle === "dress"
+        ? clothMaterial("satin", outfit.top)
+        : topStyle === "jersey"
+          ? clothMaterial("smooth", outfit.top)
+          : clothMaterial("knit", outfit.top);
   skinned(topM.build(true), fabric);
+  if (outfit.logo) {
+    const lm = new Mesher();
+    buildLogo(d, lm, topRadius);
+    skinned(
+      lm.build(true),
+      shared(
+        "logo" + outfit.logo + (outfit.logoColor ?? ""),
+        () =>
+          new THREE.MeshStandardMaterial({
+            map: logoTexture(outfit.logo!, outfit.logoColor ?? "#ece4d6"),
+            transparent: true,
+            alphaTest: 0.35,
+            roughness: 0.85,
+            polygonOffset: true,
+            polygonOffsetFactor: -2,
+          }),
+      ),
+      false,
+    );
+  }
+  // glasses hanging from the collar (folded, one temple hooked in the neckline)
+  const glassesMode = outfit.glasses ?? (look.glasses ? "face" : "none");
+  if (glassesMode === "collar" && !fp) {
+    const spec = topSpec(outfit, d);
+    const phi = Math.PI / 2 + 0.17;
+    const yTop = spec.neck(phi) - 0.006;
+    const at = (y: number) => {
+      const r = topRadius(y, phi) + 0.009;
+      return V(r * Math.cos(phi), y, d.torsoCz(y) + r * Math.sin(phi));
+    };
+    const top = at(yTop);
+    // hang straight down, resting on whatever sticks out most below (chest, belly)
+    const len = 0.145 * d.hs;
+    let ang = 0;
+    for (let k = 1; k <= 8; k++) {
+      const y = yTop - (len * k) / 8;
+      const p = at(y);
+      ang = Math.max(ang, Math.atan2(p.z - top.z, yTop - y));
+    }
+    const g = glasses(d.hs, 1, { folded: true });
+    g.position.set(0, -0.0065 * d.hs, -0.0955 * d.hs);
+    const hang = new THREE.Group();
+    hang.add(g);
+    // lenses stacked vertically, front facing out, tilted onto the chest
+    hang.rotation.set(-ang, 0, Math.PI / 2 + 0.06);
+    const center = top
+      .clone()
+      .add(V(0, -Math.cos(ang), Math.sin(ang)).multiplyScalar(len / 2));
+    hang.position.copy(center).sub(world[B.chest]!);
+    bones[B.chest]!.add(hang);
+  }
   if (deco && outfit.print) {
     const pm = new THREE.MeshStandardMaterial({
       map: printTexture(outfit.print, outfit.printColor ?? "#ff8a1f"),
@@ -3551,18 +4433,11 @@ function buildRig(look: Look, outfit: Outfit, fp: boolean): Rig {
   const botM = new Mesher();
   buildBottom(d, botM, outfit, fp);
   if (botM.count > 0) {
-    const kind =
-      outfit.topStyle === "dress"
-        ? "satin"
-        : (outfit.bottomStyle ?? "jeans") === "jeans"
-          ? "denim"
-          : "knit";
+    const kind = (outfit.bottomStyle ?? "jeans") === "jeans" ? "denim" : "knit";
     skinned(
       botM.build(true),
-      clothMaterial(
-        kind,
-        outfit.topStyle === "dress" ? outfit.top : outfit.bottom,
-      ),
+      // a dress's skirt is the same fabric as its bodice
+      outfit.topStyle === "dress" ? fabric : clothMaterial(kind, outfit.bottom),
     );
   }
 
@@ -3582,8 +4457,17 @@ function buildRig(look: Look, outfit: Outfit, fp: boolean): Rig {
   bones[B.handR]!.add(handR);
 
   // feet
-  const sandal = outfit.bottomStyle === "shorts";
-  const footG = footGeometry(d, skin, outfit.shoes ?? "#2a2a2a", sandal, nails);
+  const shoeStyle =
+    outfit.shoeStyle ??
+    (outfit.bottomStyle === "shorts" ? "flipflop" : "sneaker");
+  const sandal = shoeStyle !== "sneaker";
+  const footG = footGeometry(
+    d,
+    skin,
+    outfit.shoes ?? "#2a2a2a",
+    shoeStyle,
+    nails,
+  );
   for (const s of [1, -1]) {
     const geo = s > 0 ? footG : mirrorX(footG);
     const mesh = new THREE.Mesh(
@@ -3615,6 +4499,14 @@ function buildRig(look: Look, outfit: Outfit, fp: boolean): Rig {
       { skin: skinMat },
       !!look.female,
       look !== LOOKS.davi && look !== LOOKS.elena,
+      {
+        glasses:
+          glassesMode === "face" || glassesMode === "sun"
+            ? glassesMode
+            : "none",
+        glassesColor: outfit.glassesColor,
+        headband: outfit.headband,
+      },
     );
     const hb = bones[B.head]!;
     head.group.position.copy(d.O).sub(world[B.head]!);

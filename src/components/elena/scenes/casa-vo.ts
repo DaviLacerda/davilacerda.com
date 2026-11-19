@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   concrete,
   fabric,
@@ -432,23 +433,11 @@ function bakeStatic(root: THREE.Object3D, keep: Set<THREE.Object3D>) {
 
 /* ---------------- the scene ---------------- */
 
+// LEIA-ME 02 (30/08): Davi in the turquoise Dolphins #1 jersey and black
+// glasses; Elena in the navy/beige leaf-print dress.
 const OUTFITS: { davi: Outfit; elena: Outfit } = {
-  elena: {
-    top: "#2f4f8f",
-    topStyle: "dress",
-    bottom: "#2f4f8f",
-    bottomStyle: "skirt",
-    shoes: "#c49a72",
-  },
-  davi: {
-    top: "#1fb7b2",
-    topStyle: "jersey",
-    print: "1",
-    printColor: "#ff8a1f",
-    bottom: "#2b3448",
-    bottomStyle: "jeans",
-    shoes: "#2a2a2a",
-  },
+  elena: WARDROBE.elenaLeafDress,
+  davi: WARDROBE.dolphins1,
 };
 
 /*

@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   bricks,
   emissive,
@@ -2875,23 +2876,11 @@ async function build(ctx: SceneCtx) {
 
   /* ---------- people ---------- */
   // what they wore that night: her cream embroidered top, his brown "Nature Escape" tee
+  // LEIA-ME 05: Davi in the brown "Nature Escape" tee with his black glasses;
+  // Elena in the long white lace dress with the heart necklace.
   const outfits: { davi: Outfit; elena: Outfit } = {
-    elena: {
-      top: "#eee5d3",
-      topStyle: "tank",
-      bottom: "#23283a",
-      bottomStyle: "jeans",
-      shoes: "#1a1a1a",
-    },
-    davi: {
-      top: "#4f3324",
-      topStyle: "tshirt",
-      bottom: "#262c3a",
-      bottomStyle: "jeans",
-      shoes: "#efefef",
-      print: "NATURE",
-      printColor: "#e8dccb",
-    },
+    elena: WARDROBE.elenaLaceDress,
+    davi: WARDROBE.daviTee,
   };
   ctx.playerOutfit(outfits);
   const partnerIsElena = ctx.player === "davi";

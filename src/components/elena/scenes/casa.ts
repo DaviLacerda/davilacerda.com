@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   carpet,
   emissive,
@@ -2228,21 +2229,11 @@ const scene: SceneModule = {
     batchStatic(S);
 
     /* ---- people, pack, spawn, exit ---- */
+    // LEIA-ME 06: the same clothes as the dinner (05): Davi's brown tee and
+    // glasses, Elena's white lace dress.
     const outfits = {
-      elena: {
-        top: "#f6f1ea",
-        topStyle: "blouse" as const,
-        bottom: "#1f2633",
-        bottomStyle: "jeans" as const,
-        shoes: "#1a1a1a",
-      },
-      davi: {
-        top: "#5a3b2b",
-        topStyle: "tshirt" as const,
-        bottom: "#232a36",
-        bottomStyle: "jeans" as const,
-        shoes: "#2a2622",
-      },
+      elena: WARDROBE.elenaLaceDress,
+      davi: WARDROBE.daviTee,
     };
     ctx.playerOutfit(outfits);
     const spawnX = RX - 0.6;

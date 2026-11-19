@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import { concrete, pbr, repeat, seeded } from "../fp/materials";
 import type { Outfit, SceneModule } from "../fp/types";
 
@@ -54,16 +55,15 @@ const DOOR_X = 22; // the stair aisle and the tunnel behind the couple
 const ROW_Z = rowOff(K) + T / 2; // 71.65: the middle of the couple's step
 const OUTER = -6; // ground level outside the bowl
 
+// LEIA-ME 04: Davi in the green Jets #8 jersey with thick black sunglasses;
+// Elena in the leaf-print dress with white rectangular sunglasses.
 const OUTFITS: { davi: Outfit; elena: Outfit } = {
-  davi: {
-    top: "#1f5b3a",
-    topStyle: "jersey",
-    print: "8",
-    printColor: "#ffffff",
-    bottom: "#2f3542",
-    bottomStyle: "jeans",
+  davi: { ...WARDROBE.jets8, glasses: "sun" },
+  elena: {
+    ...WARDROBE.elenaLeafDress,
+    glasses: "sun",
+    glassesColor: "#f3f1ec",
   },
-  elena: { top: "#2f4f8f", topStyle: "dress", bottom: "#2f4f8f" },
 };
 
 const v3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);

@@ -13,15 +13,46 @@ export type Pose = "stand" | "sit" | "wave" | "violin" | "talk";
 /** What a person wears in a given place (colors are CSS colors). */
 export type Outfit = {
   top: string;
-  /** "tshirt" | "tank" | "dress" | "jersey" | "blouse" | "hoodie" */
+  /** "tshirt" | "tank" | "dress" | "jersey" | "blouse" | "hoodie" (a dress uses `top` for its color) */
   topStyle?: "tshirt" | "tank" | "dress" | "jersey" | "blouse" | "hoodie";
   bottom: string;
   /** "jeans" | "shorts" | "skirt" | "pants" */
   bottomStyle?: "jeans" | "shorts" | "skirt" | "pants";
   shoes?: string;
+  /** Default: "flipflop" with shorts, "sneaker" otherwise. "sandal" = low block-heel strap sandal. */
+  shoeStyle?: "sneaker" | "flipflop" | "sandal";
   /** Text printed on the chest, e.g. a jersey number. */
   print?: string;
   printColor?: string;
+  /** Small print on the left chest (lines split by "\n"), e.g. "NATURE\nESCAPE". */
+  logo?: string;
+  logoColor?: string;
+  /** Fabric print of the top (and of a dress's skirt). */
+  pattern?: "leaves" | "lace" | "stripes";
+  /** Overrides the pattern's colors (background first). */
+  patternColors?: string[];
+  /** Neckline override (defaults: tshirt crew, jersey v, blouse scoop, dress square). */
+  neckline?: "crew" | "v" | "scoop" | "square";
+  /** Strap width of a tank or dress. */
+  straps?: "thin" | "wide";
+  /** Small ruffles on the straps. */
+  ruffles?: boolean;
+  /** Hem of a dress or skirt (default "knee"). */
+  length?: "mini" | "knee" | "midi" | "long";
+  /** Pencil cut: the skirt hugs hips and legs instead of flaring (gets a back slit). */
+  fitted?: boolean;
+  /** Small buttons down the front (their color, e.g. gold). */
+  buttons?: string;
+  /** Sheer short sleeves (blouse). */
+  sheerSleeves?: boolean;
+  /** Where the glasses are today: default is the look's own glasses on the face. */
+  glasses?: "face" | "collar" | "sun" | "none";
+  /** Frame color (default black). */
+  glassesColor?: string;
+  /** Thin gold chain: with a small heart pendant, or a long thin one. */
+  necklace?: "heart" | "long";
+  /** Hair band color. */
+  headband?: string;
 };
 
 export type SceneCtx = {

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   bricks,
   concrete,
@@ -52,20 +53,20 @@ const H = 4.2;
 const ST = { x0: -3.2, x1: 3.2, z0: Z0, z1: -6.3, h: 0.38 };
 const COUPLE = { x: -3.3, z: -3.8 };
 
+// LEIA-ME 07: Davi in the brown tee with his glasses hanging from the collar;
+// Elena in a black wide-strap dress with gold buttons and the heart necklace.
 const OUTFITS: { davi: Outfit; elena: Outfit } = {
-  davi: {
-    top: "#5a3b2b",
-    topStyle: "tshirt",
-    bottom: "#2f3542",
-    bottomStyle: "jeans",
-    shoes: "#2a2523",
-  },
+  davi: { ...WARDROBE.daviTee, glasses: "collar" },
   elena: {
-    top: "#1d1d1d",
-    topStyle: "blouse",
-    bottom: "#22252d",
-    bottomStyle: "jeans",
-    shoes: "#141414",
+    top: "#161616",
+    topStyle: "dress",
+    bottom: "#161616",
+    straps: "wide",
+    buttons: "#d6ab52",
+    necklace: "heart",
+    length: "knee",
+    shoes: "#1a1a1a",
+    shoeStyle: "sandal",
   },
 };
 

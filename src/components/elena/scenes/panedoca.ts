@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   bricks,
   concrete,
@@ -716,17 +717,14 @@ function stoneBrickMaterial() {
 
 /* ---------------- the scene ---------------- */
 
+// LEIA-ME 01: Elena in a sleeveless light grey/cream textured top; Davi is not
+// in the photos, so he wears his reference outfit.
 const outfits: { davi: Outfit; elena: Outfit } = {
-  davi: {
-    top: "#5a3b2b",
-    topStyle: "tshirt",
-    bottom: "#2f3542",
-    bottomStyle: "jeans",
-    shoes: "#f2f2f2",
-  },
+  davi: WARDROBE.daviTee,
   elena: {
-    top: "#f3eee6",
+    top: "#e4dfd6",
     topStyle: "tank",
+    straps: "wide",
     bottom: "#22252d",
     bottomStyle: "jeans",
     shoes: "#f2f2f2",

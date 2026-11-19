@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   bricks,
   emissive,
@@ -2193,20 +2194,11 @@ const scene: SceneModule = {
       90,
     );
 
+    // LEIA-ME 09: Davi in the brown tee, glasses hanging from the collar;
+    // Elena in the long white lace dress and her necklace.
     const outfits: { davi: Outfit; elena: Outfit } = {
-      davi: {
-        top: "#5a3b2b",
-        topStyle: "tshirt",
-        bottom: "#2f3542",
-        bottomStyle: "jeans",
-        shoes: "#1c1c1c",
-      },
-      elena: {
-        top: "#f6f1ea",
-        topStyle: "dress",
-        bottom: "#f6f1ea",
-        shoes: "#e9e2d6",
-      },
+      davi: { ...WARDROBE.daviTee, glasses: "collar" },
+      elena: WARDROBE.elenaLaceDress,
     };
     ctx.playerOutfit(outfits);
     if (ctx.player === "davi") {

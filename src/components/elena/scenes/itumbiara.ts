@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { WARDROBE } from "../fp/humans";
 import {
   concrete,
   emissive,
@@ -747,20 +748,19 @@ function nightTex() {
 
 /* ---------------- the scene ---------------- */
 
+// LEIA-ME 08 (night, Torresmo): Davi in the dark-green Eagles #11 jersey and
+// black glasses; Elena in a cream wide-strap top with a band in her hair.
 const OUTFITS: { davi: Outfit; elena: Outfit } = {
-  davi: {
-    top: "#1f4d3a",
-    topStyle: "jersey",
-    print: "11",
-    printColor: "#ffffff",
-    bottom: "#2f3542",
-    bottomStyle: "jeans",
-  },
+  davi: WARDROBE.eagles11,
   elena: {
-    top: "#f3eee6",
-    topStyle: "blouse",
+    top: "#efe5d3",
+    topStyle: "tank",
+    straps: "wide",
+    headband: "#d9c4a4",
     bottom: "#22252d",
     bottomStyle: "jeans",
+    shoes: "#e8d6c0",
+    shoeStyle: "sandal",
   },
 };
 

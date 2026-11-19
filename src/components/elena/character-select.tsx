@@ -3,34 +3,27 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-import { LOOKS, makeHuman } from "./fp/humans";
+import { LOOKS, makeHuman, WARDROBE } from "./fp/humans";
 import type { Outfit } from "./fp/types";
 import type { Who } from "./types";
 
+/** Their reference-sheet outfits (fotos/modelos-3d/referencia). */
 const OUTFITS: Record<Who, Outfit> = {
-  elena: {
-    top: "#f3eee6",
-    topStyle: "tank",
-    bottom: "#22252d",
-    bottomStyle: "jeans",
-    shoes: "#f2f2f2",
-  },
-  davi: {
-    top: "#5a3b2b",
-    topStyle: "tshirt",
-    bottom: "#2f3542",
-    bottomStyle: "jeans",
-    shoes: "#f2f2f2",
-  },
+  elena: WARDROBE.elenaLeafDress,
+  davi: { ...WARDROBE.daviTee, glasses: "collar" },
 };
 
 const OPTIONS: { who: Who; name: string; look: string }[] = [
   {
     who: "elena",
     name: "Elena",
-    look: "Cabelo preto comprido e blusinha branca",
+    look: "Cabelo preto comprido e vestido de folhas",
   },
-  { who: "davi", name: "Davi", look: "Óculos, barba e a camiseta marrom" },
+  {
+    who: "davi",
+    name: "Davi",
+    look: "Barba, camiseta marrom e óculos na gola",
+  },
 ];
 
 /** A little turntable with the character, rendered live. */

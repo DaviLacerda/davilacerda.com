@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { LOOKS, makeHuman } from "../fp/humans";
+import { LOOKS, makeHuman, WARDROBE } from "../fp/humans";
 import { concrete, pbr, repeat } from "../fp/materials";
 import type { SceneModule } from "../fp/types";
 
@@ -30,21 +30,11 @@ const scene: SceneModule = {
     const fill = new THREE.PointLight("#ffd9b8", 6, 6, 2);
     fill.position.set(-1.5, 2.2, 0.5);
     ctx.scene.add(fill);
+    // the reference sheets: Davi's brown tee with the glasses on the collar,
+    // Elena's leaf-print midi dress
     const outfits = {
-      davi: {
-        top: "#5a3b2b",
-        topStyle: "tshirt" as const,
-        bottom: "#2f3542",
-        bottomStyle: "jeans" as const,
-        shoes: "#f2f2f2",
-      },
-      elena: {
-        top: "#f3eee6",
-        topStyle: "tank" as const,
-        bottom: "#22252d",
-        bottomStyle: "jeans" as const,
-        shoes: "#f2f2f2",
-      },
+      davi: { ...WARDROBE.daviTee, glasses: "collar" as const },
+      elena: WARDROBE.elenaLeafDress,
     };
     ctx.playerOutfit(outfits);
     // row 1 (z = -2): the two leads, facing the spawn
@@ -52,13 +42,10 @@ const scene: SceneModule = {
     ctx.person(
       LOOKS.davi,
       {
-        top: "#1fa7a8",
-        topStyle: "jersey",
+        ...WARDROBE.dolphins1,
         bottom: "#23252b",
         bottomStyle: "shorts",
         shoes: "#1b1b1b",
-        print: "1",
-        printColor: "#ff6a1a",
       },
       0.5,
       -2,
@@ -66,19 +53,7 @@ const scene: SceneModule = {
       "wave",
     );
     // row 2 (z = -4): poses
-    ctx.person(
-      LOOKS.elena,
-      {
-        top: "#f1ece2",
-        topStyle: "dress",
-        bottom: "#f1ece2",
-        shoes: "#d9c3a8",
-      },
-      -1.6,
-      -4,
-      0,
-      "sit",
-    );
+    ctx.person(LOOKS.elena, WARDROBE.elenaLaceDress, -1.6, -4, 0, "sit");
     ctx.person(
       { skin: "#d6a283", hair: "#2a2a2a", hairStyle: "short", height: 1.78 },
       {
@@ -154,8 +129,12 @@ const scene: SceneModule = {
     }
     // a walker, driven directly
     const walker = makeHuman(LOOKS.elena, {
-      top: "#3a5f8f",
-      topStyle: "tshirt",
+      top: "#151515",
+      topStyle: "blouse",
+      neckline: "v",
+      sheerSleeves: true,
+      necklace: "long",
+      headband: "#d9c4a4",
       bottom: "#22252d",
       bottomStyle: "jeans",
       shoes: "#f2f2f2",
