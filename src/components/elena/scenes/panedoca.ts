@@ -2036,8 +2036,8 @@ const scene: SceneModule = {
     });
 
     /* ---------- the game ---------- */
-    // the pack waits on the counter, behind the stack of pizza boxes
-    ctx.pack(2.58, 1.06, cz0 + 0.18, -15);
+    // the pack waits on their own table, by the vase (easy to find and reach)
+    ctx.pack(lx(-2.95), TOP + 0.005, hz - 0.18, 75);
     ctx.ambient("amb-panedoca.m4a", 0.45);
     ctx.spawn(1.75, Z1 - 0.8, 55);
     ctx.exit(1.75, Z1 - 0.25, 0.55);

@@ -586,13 +586,13 @@ export class Interior {
         .clone()
         .add(new THREE.Vector3(0, 0.16, 0));
       const dist = target.distanceTo(this.camera.position);
-      if (dist < 2.2) {
+      if (dist < 2.6) {
         // looking roughly at it (within ~14 degrees), or very close on touch screens
         const eye = this.camera.getWorldPosition(new THREE.Vector3());
         const view = this.camera.getWorldDirection(new THREE.Vector3());
         const toPack = target.clone().sub(eye).normalize();
         focus =
-          view.dot(toPack) > Math.cos(THREE.MathUtils.degToRad(14)) ||
+          view.dot(toPack) > Math.cos(THREE.MathUtils.degToRad(17)) ||
           (this.quality === "low" && dist < 1.4);
       }
     }

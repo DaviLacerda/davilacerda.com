@@ -88,18 +88,8 @@ export function MapGame({
     setTimeout(() => setWarp(null), 3600);
   };
 
-  // the story starts (and resumes) right inside the next chapter
-  const started = useRef(false);
-  useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    const first = ISLAND_ORDER.find((id) => !opened.includes(id));
-    // deferred a tick: the teleport sets state
-    const t = first ? setTimeout(() => teleport(first), 0) : undefined;
-    return () => clearTimeout(t);
-    // only once, on arrival
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // the map is the hub: chapters unlock one by one, in order
+  const [nope, setNope] = useState<string | null>(null);
   const nextId = ISLAND_ORDER.find((id) => !opened.includes(id)) ?? null;
   const allDone = ISLAND_ORDER.every((id) => opened.includes(id));
   const have = CARD_ORDER.filter((id) => cards.includes(id)).length;
@@ -271,22 +261,38 @@ export function MapGame({
         const pin = PINS[id];
         if (!pin) return null;
         const done = opened.includes(id);
+        const locked = !done && id !== nextId;
         return (
           <button
             key={id}
             type="button"
-            className={`map-pin ${done ? "is-done" : ""} ${id === nextId ? "is-next" : ""} ${id === selected ? "is-selected" : ""}`}
+            aria-disabled={locked}
+            className={`map-pin ${done ? "is-done" : ""} ${id === nextId ? "is-next" : ""} ${id === selected ? "is-selected" : ""} ${locked ? "is-locked" : ""} ${nope === id ? "is-nope" : ""}`}
             style={{ left: `${pin.x * 100}%`, top: `${14 + pin.y * 52}%` }}
             onClick={() => {
+              if (locked) {
+                navigator.vibrate?.(30);
+                setNope(id);
+                setTimeout(() => setNope((n) => (n === id ? null : n)), 1600);
+                return;
+              }
               chime("pop");
               setSelected(id);
             }}
           >
-            <span className="map-pin-dot">{done ? "♥" : i + 1}</span>
+            <span className="map-pin-dot">
+              {done ? "♥" : locked ? "🔒" : i + 1}
+            </span>
             <span className="map-pin-label">{content.islands[id]?.place}</span>
           </button>
         );
       })}
+      {nope && (
+        <p className="map-toast" role="status">
+          🔒 Complete o capítulo{" "}
+          {ISLAND_ORDER.indexOf(nope as (typeof ISLAND_ORDER)[number])} primeiro
+        </p>
+      )}
       {allDone && (
         <button
           type="button"
@@ -310,7 +316,7 @@ export function MapGame({
             <button
               type="button"
               className="btn-primary"
-              onClick={() => setOverlay({ kind: "place", id: selected })}
+              onClick={() => teleport(selected)}
             >
               {opened.includes(selected) ? "Visitar de novo" : "Entrar"}
             </button>
@@ -348,7 +354,11 @@ export function MapGame({
             if (after)
               return {
                 label: `${content.islands[after]?.place ?? ""} · ${PINS[after]?.when ?? ""}`,
-                go: () => teleport(after),
+                go: () => {
+                  setOverlay(null);
+                  setSelected(after);
+                  chime("pop");
+                },
               };
             return {
               label: "O último capítulo 💗",

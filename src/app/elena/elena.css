@@ -3188,3 +3188,40 @@ button {
   visibility: hidden;
   transition: visibility 0s 0.2s;
 }
+
+/* map: chapters unlock in order */
+.map-pin.is-locked {
+  filter: grayscale(1) brightness(0.7);
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+.map-pin.is-locked .map-pin-dot {
+  font-size: 0.8em;
+}
+.map-pin.is-nope {
+  animation: map-nope 0.4s ease;
+}
+@keyframes map-nope {
+  20%,
+  60% {
+    translate: -6px 0;
+  }
+  40%,
+  80% {
+    translate: 6px 0;
+  }
+}
+.map-toast {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  translate: -50% 0;
+  z-index: 5;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgb(20 10 30 / 0.85);
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+}

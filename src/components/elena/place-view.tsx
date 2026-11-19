@@ -142,7 +142,7 @@ export function PlaceView({
             </button>
             {done && next && (
               <button type="button" className="place-next" onClick={next.go}>
-                ✨ Próximo capítulo
+                🗺️ Próximo no mapa
               </button>
             )}
             <button type="button" onClick={onExit}>
@@ -211,10 +211,10 @@ export function PlaceView({
         <div className="overlay">
           <article className="teleport-card">
             <p className="teleport-kicker">Pacote guardado no binder ✨</p>
-            <h2>Próximo capítulo</h2>
+            <h2>Próximo capítulo liberado no mapa</h2>
             <p className="teleport-next">{next.label}</p>
             <button type="button" className="btn-primary" onClick={next.go}>
-              ✨ Teletransportar
+              🗺️ Ir para o mapa
             </button>
             <button type="button" className="map-link" onClick={resume}>
               Ficar mais um pouco aqui
