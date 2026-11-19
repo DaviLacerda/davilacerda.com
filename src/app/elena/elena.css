@@ -3225,3 +3225,28 @@ button {
   font-size: 14px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
 }
+
+/* the padlocked last chapter */
+.final-lock {
+  text-align: center;
+}
+.final-lock-icon {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 8px;
+  animation: beat 1.6s infinite;
+}
+.final-lock-error {
+  color: #ffb4c8;
+  font-size: 14px;
+}
+.map-pin.is-final .map-pin-dot {
+  background: linear-gradient(
+    135deg,
+    #fff1b8,
+    #e2a94a 40%,
+    #ff9ad1 70%,
+    #9fd8ff
+  );
+  color: #2a1020;
+}

@@ -3,6 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Binder } from "./binder";
+import {
+  clearFinalCard,
+  FINAL_CARD,
+  FINAL_PLACE,
+  FINAL_WHEN,
+  FinalChapter,
+  readFinalCard,
+} from "./final-chapter";
 import { Gallery } from "./gallery";
 import { PlaceView } from "./place-view";
 import { chime } from "./sound";
@@ -46,6 +54,8 @@ type Overlay =
   | { kind: "binder" }
   | { kind: "gallery"; id: string }
   | { kind: "finale" }
+  | { kind: "final" }
+  | { kind: "final-binder" }
   | null;
 
 /**
@@ -54,7 +64,7 @@ type Overlay =
  * of the story. Pick a pin, read its chapter, enter it in first person.
  */
 export function MapGame({
-  content,
+  content: baseContent,
   skin,
   cards,
   opened,
@@ -65,6 +75,25 @@ export function MapGame({
   onReset,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
+  // the last card is printed from the photo they send, kept on this device
+  const [finalCard, setFinalCard] = useState<string | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after mount
+    setFinalCard(readFinalCard());
+  }, []);
+  const content = useMemo(
+    () =>
+      finalCard
+        ? {
+            ...baseContent,
+            cards: {
+              ...baseContent.cards,
+              [FINAL_CARD]: { image: finalCard, title: "Dois meses" },
+            },
+          }
+        : baseContent,
+    [baseContent, finalCard],
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [warp, setWarp] = useState<{ id: string; index: number } | null>(null);
@@ -289,21 +318,31 @@ export function MapGame({
       })}
       {nope && (
         <p className="map-toast" role="status">
-          🔒 Complete o capítulo{" "}
-          {ISLAND_ORDER.indexOf(nope as (typeof ISLAND_ORDER)[number])} primeiro
+          {nope === "final"
+            ? `🔒 ${FINAL_PLACE}: complete todos os capítulos primeiro`
+            : `🔒 Complete o capítulo ${ISLAND_ORDER.indexOf(nope as (typeof ISLAND_ORDER)[number])} primeiro`}
         </p>
       )}
-      {allDone && (
-        <button
-          type="button"
-          className="map-pin is-next is-final"
-          style={{ left: "50%", top: "45%" }}
-          onClick={() => setOverlay({ kind: "finale" })}
-        >
-          <span className="map-pin-dot">♥</span>
-          <span className="map-pin-label">O último capítulo</span>
-        </button>
-      )}
+      <button
+        type="button"
+        aria-disabled={!allDone}
+        className={`map-pin is-final ${finalCard ? "is-done" : allDone ? "is-next" : "is-locked"} ${nope === "final" ? "is-nope" : ""}`}
+        style={{ left: "46%", top: `${14 + 0.62 * 52}%` }}
+        onClick={() => {
+          if (finalCard) return setOverlay({ kind: "finale" });
+          if (!allDone) {
+            navigator.vibrate?.(30);
+            setNope("final");
+            setTimeout(() => setNope((n) => (n === "final" ? null : n)), 1600);
+            return;
+          }
+          chime("pop");
+          setOverlay({ kind: "final" });
+        }}
+      >
+        <span className="map-pin-dot">{finalCard ? "♥" : "🔒"}</span>
+        <span className="map-pin-label">{FINAL_PLACE}</span>
+      </button>
 
       {sel && selected && (
         <aside className="map-card">
@@ -361,8 +400,8 @@ export function MapGame({
                 },
               };
             return {
-              label: "O último capítulo 💗",
-              go: () => teleport("finale"),
+              label: `${FINAL_PLACE} · ${FINAL_WHEN} 🔒`,
+              go: () => setOverlay({ kind: "final" }),
             };
           })()}
           onExit={() => {
@@ -425,13 +464,35 @@ export function MapGame({
                       "Recomeçar do zero? O binder volta a ficar vazio.",
                     )
                   )
-                    onReset();
+                    clearFinalCard();
+                  onReset();
                 }}
               >
                 Recomeçar
               </button>
             </>
           }
+        />
+      )}
+      {overlay?.kind === "final" && (
+        <FinalChapter
+          onClose={() => setOverlay(null)}
+          onDone={(card) => {
+            setFinalCard(card);
+            onOpenPack("casa-massas", [FINAL_CARD]);
+            setOverlay({ kind: "final-binder" });
+          }}
+        />
+      )}
+      {overlay?.kind === "final-binder" && (
+        <Binder
+          content={content}
+          cards={[...new Set([...cards, FINAL_CARD])]}
+          fresh={[FINAL_CARD]}
+          primary={{
+            label: "Binder completo 💗 Ver a última página",
+            onClick: () => setOverlay({ kind: "finale" }),
+          }}
         />
       )}
       {overlay?.kind === "finale" && (

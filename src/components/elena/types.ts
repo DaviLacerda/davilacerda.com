@@ -44,7 +44,8 @@ export type Content = {
   finale: { title: string; message: string; signature: string };
 };
 
-export const media = (name: string) => `/elena/media/${name}`;
+export const media = (name: string) =>
+  name.startsWith("data:") ? name : `/elena/media/${name}`;
 
 /** Islands in the order of the story. */
 export const ISLAND_ORDER = [
@@ -76,9 +77,14 @@ export const CARD_ORDER = [
   "alpendre",
   "caramel",
   "cinema",
+  "dois-meses",
 ] as const;
 
 export const other = (who: Who): Who => (who === "davi" ? "elena" : "davi");
 
 /** Cards printed as special editions (shiny / legendary): they shine more. */
-export const SPECIAL_CARDS: string[] = ["compromisso", "famiglia"];
+export const SPECIAL_CARDS: string[] = [
+  "compromisso",
+  "famiglia",
+  "dois-meses",
+];
