@@ -372,65 +372,98 @@ const NOISE = /* glsl */ `
   }
 `;
 
-/** The film: a slow sunset over the sea, clouds drifting, a sailboat on the horizon. */
+/**
+ * The film they watched on 19/10 was "Verity", a dark thriller: an original
+ * mood scene, not the film's art. A lonely house on a hill on a stormy night,
+ * one warm window lit (someone writing late), rain, lightning, and now and
+ * then the title typed out over a page, letter by letter.
+ */
 const SCREEN_FRAG = /* glsl */ `
   uniform float uTime;
+  uniform sampler2D uTitle;
   varying vec2 vUv;
   ${NOISE}
   void main() {
     float t = uTime;
     vec2 p = vec2((vUv.x - 0.5) * 2.39, vUv.y);
-    float hz = 0.36;
-    float sunH = 0.07 + 0.13 * (0.5 + 0.5 * cos(t * 0.03));
-    vec2 sun = vec2(0.32 + 0.04 * sin(t * 0.011), hz + sunH);
-    float warm = 1.0 - sunH * 2.5;
-    vec3 col;
-    if (p.y > hz) {
-      float h = (p.y - hz) / (1.0 - hz);
-      vec3 low = mix(vec3(1.0, 0.45, 0.16), vec3(1.0, 0.32, 0.18), warm);
-      vec3 mid = mix(vec3(0.75, 0.38, 0.42), vec3(0.62, 0.22, 0.38), warm);
-      vec3 high = vec3(0.10, 0.12, 0.30);
-      col = mix(low, mid, smoothstep(0.0, 0.35, h));
-      col = mix(col, high, smoothstep(0.3, 1.0, h));
-      // clouds: stretched fbm bands drifting sideways, lit from the sun
-      vec2 cp = vec2(p.x * 1.2 + t * 0.012, p.y * 4.5);
-      float c = fbm(cp * vec2(1.5, 1.0) + vec2(0.0, fbm(cp * 0.7 + t * 0.004)));
-      float band = smoothstep(0.45, 0.75, c) * smoothstep(hz + 0.03, hz + 0.2, p.y) * (1.0 - smoothstep(0.75, 1.0, p.y));
-      float lit = exp(-length(p - sun) * 2.2);
-      vec3 cloud = mix(vec3(0.28, 0.12, 0.2), vec3(1.4, 0.62, 0.38), lit);
-      col = mix(col, cloud, band * 0.85);
-    } else {
-      // sea: darker, reflects the sky, sun glitter column
-      float d = (hz - p.y) / hz;
-      col = mix(vec3(0.55, 0.25, 0.22), vec3(0.03, 0.05, 0.12), smoothstep(0.0, 0.6, d));
-      float w = noise(vec2(p.x * 26.0, p.y * 140.0 - t * 0.6)) * noise(vec2(p.x * 9.0 + t * 0.05, p.y * 60.0));
-      float col_w = exp(-pow((p.x - sun.x) / (0.05 + d * 0.3), 2.0));
-      col += vec3(1.6, 0.8, 0.4) * col_w * smoothstep(0.35, 0.7, w) * (1.2 - d);
-      col += vec3(0.25, 0.12, 0.1) * smoothstep(0.55, 0.8, w) * (1.0 - d);
+    // lightning: rare double flashes
+    float cyc = mod(t, 11.0);
+    float flash = exp(-pow((cyc - 7.0) * 9.0, 2.0)) + 0.6 * exp(-pow((cyc - 7.35) * 12.0, 2.0));
+    // stormy sky
+    vec2 cp = vec2(p.x * 1.1 + t * 0.02, p.y * 2.2);
+    float c = fbm(cp + vec2(fbm(cp * 0.6 - t * 0.01), 0.0));
+    vec3 col = mix(vec3(0.015, 0.02, 0.035), vec3(0.07, 0.08, 0.11), smoothstep(0.3, 0.8, c));
+    col *= 0.7 + 0.5 * vUv.y;
+    col += vec3(0.5, 0.55, 0.7) * flash * (0.35 + 0.65 * smoothstep(0.35, 0.75, c));
+    // the hill and the house (gabled, a chimney, one lit window upstairs)
+    float hill = 0.3 + 0.07 * exp(-pow(p.x * 1.6, 2.0)) + 0.015 * fbm(vec2(p.x * 5.0, 3.0));
+    vec2 h = p - vec2(0.1, hill + 0.02);
+    float body = step(abs(h.x), 0.16) * step(0.0, h.y) * step(h.y, 0.17);
+    float roof = step(0.17, h.y) * step(h.y, 0.17 + 0.11 * (1.0 - abs(h.x) / 0.19));
+    float chim = step(abs(h.x - 0.09), 0.018) * step(0.17, h.y) * step(h.y, 0.29);
+    float house = max(max(body, roof), chim);
+    float ground = step(p.y, hill);
+    // a bare tree beside the house
+    vec2 tp = p - vec2(-0.32, hill);
+    float trunk = step(abs(tp.x + 0.01 * sin(tp.y * 30.0)), 0.008) * step(0.0, tp.y) * step(tp.y, 0.22);
+    float crown = step(0.12, tp.y) * step(length((tp - vec2(0.0, 0.2)) * vec2(1.0, 1.4)), 0.12) * step(0.55, fbm(tp * 40.0));
+    float sil = max(max(house, ground), max(trunk, crown));
+    vec3 silCol = vec3(0.008, 0.008, 0.012) + vec3(0.12, 0.13, 0.17) * flash * 0.4;
+    col = mix(col, silCol, sil);
+    // the warm window, flickering like a desk lamp behind a curtain
+    vec2 w = h - vec2(-0.06, 0.1);
+    float win = step(abs(w.x), 0.028) * step(abs(w.y), 0.032);
+    float lamp = 0.85 + 0.15 * noise(vec2(t * 3.0, 1.0));
+    col = mix(col, vec3(1.6, 0.95, 0.45) * lamp, win * (1.0 - step(abs(w.x), 0.003)) * (1.0 - step(abs(w.y), 0.003)));
+    col += vec3(0.5, 0.3, 0.12) * exp(-length(w * vec2(1.0, 1.2)) * 28.0) * 0.6;
+    // rain
+    vec2 rp = vec2(p.x * 90.0 + p.y * 12.0, p.y * 8.0 + t * 9.0);
+    float rain = step(0.985, hash(floor(rp))) * smoothstep(0.0, 0.6, fract(rp.y));
+    col += vec3(0.22, 0.24, 0.3) * rain * (0.4 + flash);
+    // every 22 s: a page fills the screen and the title is typed out on it
+    float seg = mod(t, 22.0);
+    float page = smoothstep(14.0, 14.8, seg) * (1.0 - smoothstep(20.8, 21.6, seg));
+    if (page > 0.0) {
+      vec3 paper = vec3(0.86, 0.83, 0.76) * (0.9 + 0.1 * fbm(p * 12.0));
+      paper *= 1.0 - 0.5 * dot(vUv - 0.5, vUv - 0.5);
+      // faint typed lines
+      float ln = step(0.6, fract(p.y * 34.0)) * step(0.35, hash(vec2(floor(p.x * 40.0), floor(p.y * 34.0))));
+      paper = mix(paper, vec3(0.3, 0.28, 0.26), ln * 0.35 * step(abs(p.x), 0.8) * step(abs(p.y - 0.5), 0.42));
+      // the title, revealed left to right like a typewriter
+      vec2 tu = vec2((vUv.x - 0.5) / 0.5 + 0.5, (vUv.y - 0.5) / 0.22 + 0.5);
+      float typed = clamp((seg - 15.2) / 2.6, 0.0, 1.0);
+      if (tu.x > 0.0 && tu.x < 1.0 && tu.y > 0.0 && tu.y < 1.0 && tu.x < typed) {
+        float ink = texture2D(uTitle, tu).r;
+        paper = mix(paper, vec3(0.06, 0.04, 0.04), ink);
+      }
+      col = mix(col, paper * 0.95, page);
     }
-    // sun disc and glow
-    float sd = length(p - sun);
-    col += vec3(1.3, 0.6, 0.28) * exp(-sd * 5.0) * 0.8;
-    col = mix(col, vec3(3.2, 2.2, 1.3), smoothstep(0.045, 0.038, sd) * step(hz, p.y));
-    // islands / hills silhouettes
-    float ridgeL = hz + 0.09 * smoothstep(-0.1, -1.2, p.x) * (0.6 + 0.6 * fbm(vec2(p.x * 3.0, 1.0)));
-    float ridgeR = hz + 0.05 * smoothstep(0.75, 1.2, p.x) * (0.5 + fbm(vec2(p.x * 4.0, 7.0)));
-    float ridge = max(ridgeL, ridgeR);
-    col = mix(col, vec3(0.05, 0.03, 0.07), smoothstep(ridge + 0.002, ridge - 0.002, p.y) * step(hz - 0.004, p.y));
-    // a sailboat crossing very slowly
-    float bx = -1.3 + mod(t * 0.008, 2.6);
-    vec2 bq = p - vec2(bx, hz);
-    float hull = step(abs(bq.x), 0.025) * step(-0.004, bq.y) * step(bq.y, 0.004);
-    float sail = step(0.0, bq.y) * step(bq.y, 0.05) * step(abs(bq.x + 0.003), 0.02 * (1.0 - bq.y / 0.05));
-    col = mix(col, vec3(0.03, 0.02, 0.04), max(hull, sail));
     // film look: vignette, grain, flicker
     vec2 v = vUv - 0.5;
     col *= 1.0 - dot(v * vec2(0.9, 1.4), v * vec2(0.9, 1.4)) * 0.9;
     col *= 0.97 + 0.03 * sin(t * 23.0);
-    col += (hash(vUv * 900.0 + fract(t)) - 0.5) * 0.008;
+    col += (hash(vUv * 900.0 + fract(t)) - 0.5) * 0.012;
     gl_FragColor = vec4(max(col, 0.0) * 0.95, 1.0);
   }
 `;
+
+/** The title, typed in a typewriter face, as a mask texture. */
+function titleTex() {
+  const c = document.createElement("canvas");
+  c.width = 1024;
+  c.height = 256;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#000";
+  g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = "#fff";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.font = '700 150px "Courier New", Courier, monospace';
+  g.fillText("VERITY", c.width / 2, c.height / 2 + 6);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.NoColorSpace;
+  return tex;
+}
 
 const SCREEN_VERT = /* glsl */ `
   varying vec2 vUv;
@@ -1063,7 +1096,8 @@ const scene: SceneModule = {
 
     /* ---------- seats, tables, lamps (instanced) ---------- */
     const partnerRow = 2;
-    const partnerSeat = { j: 2, s: 0 }; // left seat of the center-right pair
+    // Davi: they sat in the corner pair (end of the row, by the entrance aisle)
+    const partnerSeat = { j: 0, s: 0 };
     const out = recliner(true, seg);
     const seats: THREE.Matrix4[] = [];
     const tables: THREE.Matrix4[] = [];
@@ -1477,7 +1511,7 @@ const scene: SceneModule = {
 
     /* ---------- the screen, its light and the projector beam ---------- */
     const screenMat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
+      uniforms: { uTime: { value: 0 }, uTitle: { value: titleTex() } },
       vertexShader: SCREEN_VERT,
       fragmentShader: SCREEN_FRAG,
     });
