@@ -44,7 +44,7 @@ const RUN = 3.0;
 export class Interior {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene = new THREE.Scene();
-  readonly camera = new THREE.PerspectiveCamera(70, 1, 0.08, 200);
+  readonly camera = new THREE.PerspectiveCamera(70, 1, 0.08, 320);
   private composer: EffectComposer;
   private bloom: UnrealBloomPass;
   private clock = new THREE.Clock();
