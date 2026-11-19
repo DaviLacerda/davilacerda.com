@@ -1996,7 +1996,7 @@ const scene: SceneModule = {
     // Davi: "rosas, anel e chocolate estavam naquele porta baú preto" — an open
     // black gift chest on the granite, with the roses, the chocolates and the
     // ring box inside it
-    const CH = { x: TB.x + 0.12, z: TB.z + 0.02, w: 0.5, d: 0.32, h: 0.22 };
+    const CH = { x: TB.x + 0.47, z: TB.z + 0.17, w: 0.42, d: 0.28, h: 0.22 };
     {
       const chestMat = new THREE.MeshStandardMaterial({
         color: "#101012",
@@ -2070,30 +2070,15 @@ const scene: SceneModule = {
           false,
         ),
       );
-      // the lid, hinged at the back and standing open
-      const lid = new THREE.Group();
-      lid.add(
-        mesh(
-          new THREE.BoxGeometry(CH.w, 0.03, CH.d),
-          chestMat,
-          0,
-          0.015,
-          CH.d / 2,
-        ),
+      // the carrying handle arching over the open top
+      const handle = mesh(
+        new THREE.TorusGeometry(CH.w * 0.32, 0.009, 8, 24, Math.PI),
+        chestMat,
+        0,
+        CH.h,
+        0,
       );
-      lid.add(
-        mesh(
-          new THREE.BoxGeometry(CH.w + 0.004, 0.012, 0.004),
-          gold,
-          0,
-          0.015,
-          CH.d + 0.002,
-          false,
-        ),
-      );
-      lid.position.set(0, CH.h, -CH.d / 2);
-      lid.rotation.x = -1.9;
-      chest.add(lid);
+      chest.add(handle);
       chest.position.set(CH.x, y0, CH.z);
       chest.rotation.y = -0.15;
       S.add(chest);
@@ -2139,6 +2124,27 @@ const scene: SceneModule = {
     rb.position.set(CH.x + 0.06, y0 + 0.014, CH.z + 0.07);
     rb.rotation.y = 0.5;
     S.add(rb);
+    // the yellow cardboard box with the round black box on it
+    {
+      const kraft = new THREE.MeshStandardMaterial({
+        color: "#c9a256",
+        roughness: 0.9,
+      });
+      const box = new THREE.Group();
+      box.add(mesh(new THREE.BoxGeometry(0.26, 0.2, 0.22), kraft, 0, 0.1, 0));
+      box.add(
+        mesh(
+          new THREE.CylinderGeometry(0.1, 0.1, 0.08, 28),
+          new THREE.MeshStandardMaterial({ color: "#121212", roughness: 0.35 }),
+          0.02,
+          0.24,
+          0.01,
+        ),
+      );
+      box.position.set(TB.x + 0.5, y0, TB.z - 0.2);
+      box.rotation.y = -0.2;
+      S.add(box);
+    }
     // the letter and a glass plate stay on the granite beside the chest
     const envelope = mesh(
       new THREE.BoxGeometry(0.22, 0.003, 0.11),
