@@ -466,62 +466,6 @@ function exteriorTexture() {
   });
 }
 
-function posterTexture(kind: number) {
-  return canvasTex(512, 720, (g, rand) => {
-    if (kind === 0) {
-      g.fillStyle = "#e9dcc2";
-      g.fillRect(0, 0, 512, 720);
-      g.fillStyle = "#d9583a";
-      g.beginPath();
-      g.arc(330, 220, 90, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "#2f4a5a";
-      g.beginPath();
-      g.moveTo(0, 520);
-      g.lineTo(160, 300);
-      g.lineTo(220, 330);
-      g.lineTo(300, 260);
-      g.lineTo(512, 520);
-      g.closePath();
-      g.fill();
-      g.fillStyle = "#1f6f8a";
-      g.fillRect(0, 520, 512, 200);
-      g.fillStyle = "#e9dcc2";
-      for (let i = 0; i < 30; i++)
-        g.fillRect(rand() * 512, 540 + rand() * 160, 20 + rand() * 40, 2);
-      g.fillStyle = "#1c1c1c";
-      g.font = "700 92px Georgia, serif";
-      g.textAlign = "center";
-      g.fillText("NAPOLI", 256, 130);
-    } else {
-      g.fillStyle = "#1e3b33";
-      g.fillRect(0, 0, 512, 720);
-      g.fillStyle = "#c8321e";
-      g.beginPath();
-      g.ellipse(256, 380, 150, 170, 0, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "rgba(255,190,160,0.45)";
-      g.beginPath();
-      g.ellipse(200, 320, 40, 60, -0.5, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "#3f7a2a";
-      for (let i = 0; i < 6; i++) {
-        g.save();
-        g.translate(256, 215);
-        g.rotate((i / 6) * Math.PI * 2);
-        g.beginPath();
-        g.ellipse(0, -30, 14, 40, 0, 0, Math.PI * 2);
-        g.fill();
-        g.restore();
-      }
-      g.fillStyle = "#efe6d2";
-      g.font = "italic 700 64px Georgia, serif";
-      g.textAlign = "center";
-      g.fillText("Pomodoro", 256, 640);
-    }
-  });
-}
-
 function fireTexture() {
   return canvasTex(256, 160, (g, rand) => {
     g.fillStyle = "#0a0503";
@@ -579,6 +523,29 @@ function labelTexture() {
     g.font = "700 26px Arial, sans-serif";
     g.fillText("ÁGUA MINERAL", 20, 40);
     g.fillText("ÁGUA MINERAL", 150, 40);
+  });
+}
+
+/** The branded wrapping paper of the pizzeria ("PANE DOCA Bakehouse", black on white). */
+function paperTexture() {
+  return canvasTex(512, 512, (g) => {
+    g.fillStyle = "#f3f1ec";
+    g.fillRect(0, 0, 512, 512);
+    g.fillStyle = "#2a2a2a";
+    g.textAlign = "center";
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 2; col++) {
+        g.save();
+        g.translate(130 + col * 260 + (row % 2) * 60, 100 + row * 170);
+        g.rotate(-0.25);
+        g.font = "800 54px Arial, sans-serif";
+        g.fillText("PANE", 0, 0);
+        g.fillText("DOCA", 0, 52);
+        g.font = "italic 20px Georgia, serif";
+        g.fillText("Bakehouse", 0, 80);
+        g.restore();
+      }
+    }
   });
 }
 
@@ -650,7 +617,7 @@ function stoneBrickMaterial() {
   const rows = 16;
   const bh = n / rows;
   const bw = bh * 4.1;
-  a.g.fillStyle = "#6f6a65";
+  a.g.fillStyle = "#bdb5ad";
   a.g.fillRect(0, 0, n, n);
   h.g.fillStyle = "#1a1a1a";
   h.g.fillRect(0, 0, n, n);
@@ -665,11 +632,11 @@ function stoneBrickMaterial() {
       const hh = bh - 5;
       const tone = rand();
       const base =
-        tone < 0.15
-          ? [192, 181, 178]
-          : tone < 0.3
-            ? [212, 208, 200]
-            : [200 + rand() * 14, 195 + rand() * 12, 187 + rand() * 12];
+        tone < 0.2
+          ? [128, 117, 115]
+          : tone < 0.4
+            ? [158, 149, 144]
+            : [138 + rand() * 16, 128 + rand() * 14, 124 + rand() * 14];
       const v = 150 + rand() * 40;
       for (const shift of [-n, 0, n]) {
         const X = px + shift;
@@ -710,6 +677,11 @@ function stoneBrickMaterial() {
         const col = rand() < 0.5 ? "90,90,90" : "200,200,200";
         const lw = 1 + rand() * 2;
         for (const shift of [-n, 0, n]) {
+          a.g.strokeStyle = `rgba(${col === "90,90,90" ? "60,50,48" : "235,228,222"},0.22)`;
+          a.g.lineWidth = lw;
+          a.g.beginPath();
+          a.g.arc(cx + shift, cy, rad, s0, s1);
+          a.g.stroke();
           h.g.strokeStyle = `rgba(${col},0.35)`;
           h.g.lineWidth = lw;
           h.g.beginPath();
@@ -1005,73 +977,104 @@ const scene: SceneModule = {
       }
     }
     // ledge cap with the LED strip grazing the bricks
+    const capMat = pbr(plaster("#d6cdc0", 83), { roughness: 0.8 });
     B.add(
       unitBox,
-      darkWood,
-      M(lx(-3.92), 1.11, bMid, 0, 0, 0, 0.16, 0.04, bLen),
+      capMat,
+      M(lx(-3.9), 1.09, bMid, 0, 0, 0, 0.2, 0.05, bLen),
       1,
     );
     B.add(
       unitBox,
       ledWarm,
-      M(lx(-3.985), 1.137, bMid, 0, 0, 0, 0.02, 0.012, bLen),
+      M(lx(-3.985), 1.12, bMid, 0, 0, 0, 0.02, 0.012, bLen),
     );
     ctx.wall(W0, bz0 - 0.1, benchFront, Z1);
 
     // partitions with a cyan LED in the corner; the last one is the grey-green pillar of the corner, against the front wall
     for (const z of bayEdges) {
+      const corner = z > 1;
+      const depth = corner ? 1.7 : 0.96;
+      const ph = corner ? H : 2.4;
       B.add(
         unitBox,
         partMat,
-        M(lx(-3.52), 1.2, z, 0, 0, 0, 0.96, 2.4, 0.12),
+        M(W0 + depth / 2, ph / 2, z, 0, 0, 0, depth, ph, 0.12),
         1,
       );
-      B.add(
-        unitBox,
-        blackMetal,
-        M(lx(-3.04), 1.2, z, 0, 0, 0, 0.012, 2.4, 0.125),
-      );
+      if (!corner)
+        B.add(
+          unitBox,
+          blackMetal,
+          M(W0 + depth, 1.2, z, 0, 0, 0, 0.012, 2.4, 0.125),
+        );
+      // the teal LED runs up the edge where the partition meets the bricks
       for (const s of [-1, 1])
         if (z + s * 0.062 < Z1)
           B.add(
             unitBox,
             ledCyan,
-            M(lx(-3.965), 1.75, z + s * 0.062, 0, 0, 0, 0.012, 1.25, 0.008),
+            M(
+              lx(-3.97),
+              (1.12 + ph) / 2,
+              z + s * 0.062,
+              0,
+              0,
+              0,
+              0.01,
+              ph - 1.12,
+              0.008,
+            ),
           );
-      ctx.wall(W0, z - 0.07, lx(-3.0), Math.min(Z1, z + 0.07));
+      ctx.wall(W0, z - 0.07, W0 + depth, Math.min(Z1, z + 0.07));
     }
-    // brass sconces on the bricks, one per bay
-    for (const z of bayCenters) {
-      B.add(unitBox, brass, M(lx(-3.97), 1.95, z, 0, 0, 0, 0.06, 0.3, 0.22));
+    // black switch plates on the pillar, facing the couple's table (as in the photos)
+    for (const y of [1.62, 1.86]) {
       B.add(
         unitBox,
-        ledWarm,
-        M(lx(-3.935), 1.795, z, 0, 0, 0, 0.012, 0.01, 0.18),
+        blackMetal,
+        M(lx(-3.86), y, Z1 - 0.125, 0, 0, 0, 0.1, 0.17, 0.012),
       );
       B.add(
         unitBox,
-        ledWarm,
-        M(lx(-3.935), 2.105, z, 0, 0, 0, 0.012, 0.01, 0.18),
+        new THREE.MeshStandardMaterial({ color: "#e8e6e0", roughness: 0.5 }),
+        M(lx(-3.86), y, Z1 - 0.132, 0, 0, 0, 0.06, 0.12, 0.004),
       );
     }
+    // a small black box on the bricks by the ledge, in the corner
+    B.add(
+      unitBox,
+      blackMetal,
+      M(lx(-3.97), 1.22, Z1 - 0.2, 0, 0, 0, 0.05, 0.1, 0.07),
+    );
     // the brass electrical cover from the photo, by the couple's table
     B.add(
       unitBox,
       brass,
-      M(lx(-3.985), 2.25, hz + 0.6, 0, 0, 0, 0.02, 0.32, 0.26),
+      M(lx(-3.98), 2.2, Z1 - 0.38, 0, 0, 0, 0.025, 0.36, 0.27),
+    );
+    B.add(
+      unitBox,
+      brass,
+      M(lx(-3.965), 2.2, Z1 - 0.38, 0, 0, 0, 0.006, 0.32, 0.23),
+    );
+    B.add(
+      new THREE.SphereGeometry(0.008, 8, 6),
+      brass,
+      M(lx(-3.96), 2.2, Z1 - 0.48),
     );
 
     // cushions (beige and rust, as in the photos)
     const cushion = rbox(0.38, 0.34, 0.12, 0.06, 4);
     B.add(
       cushion,
-      cream,
-      M(lx(-3.76), 0.66, hz + 0.72, 90 * D + 8 * D, -14 * D, 8 * D),
+      rust,
+      M(lx(-3.76), 0.66, hz - 0.5, 90 * D + 8 * D, -14 * D, 8 * D),
     );
     B.add(
       cushion,
-      rust,
-      M(lx(-3.76), 0.66, oz2 - 0.65, 90 * D - 10 * D, -14 * D, -6 * D),
+      cream,
+      M(lx(-3.76), 0.66, hz - 0.82, 90 * D - 6 * D, -14 * D, -6 * D),
     );
 
     /* ---------- tables and chairs ---------- */
@@ -1128,7 +1131,7 @@ const scene: SceneModule = {
     // the two booth tables, and one small two-top in the middle of the room
     const TX = lx(-2.92);
     for (const z of bayCenters) {
-      addTable(TX, z, 0.8, 0.95);
+      addTable(TX, z, 0.75, 0.8);
       addChair(lx(-2.2), z, -90);
     }
     const mx = 0.75;
@@ -1268,34 +1271,25 @@ const scene: SceneModule = {
       map: pizzaTexture("pesto", 73),
       roughness: 0.78,
     });
-    const pizza = (mat: THREE.Material, x: number, z: number, rot: number) => {
-      plates.push(M(x, TOP, z));
+    const pizza = (
+      mat: THREE.Material,
+      x: number,
+      z: number,
+      rot: number,
+      y = TOP,
+    ) => {
+      plates.push(M(x, y, z));
       const p = new THREE.Mesh(pizzaGeo, mat);
-      p.position.set(x + 0.004, TOP + 0.008, z);
+      p.position.set(x + 0.004, y + 0.008, z);
       p.rotation.y = rot;
       p.castShadow = p.receiveShadow = true;
       root.add(p);
     };
 
-    // the couple's table: partner on the bench, player's chair opposite; the pillar is on the player's left
-    pizza(marg, lx(-3.12), hz - 0.2, 0.3);
-    pizza(pesto, lx(-2.74), hz - 0.12, 1.2);
-    // the other booth, where another couple is eating
-    pizza(pesto, lx(-3.12), oz2 - 0.2, 2);
-    pizza(marg, lx(-2.72), oz2 + 0.15, 4);
-    // knives on napkins for the couple
-    napkins.push(
-      M(lx(-2.62), TOP + 0.002, hz - 0.36, 0),
-      M(lx(-3.3), TOP + 0.002, hz - 0.42, 0),
-    );
-    knives.push(
-      M(lx(-2.62), TOP + 0.006, hz - 0.36, 0),
-      M(lx(-3.3), TOP + 0.006, hz - 0.42, 0),
-    );
     // drinks cluster on the player's left (towards the pillar), as in the video
-    tumblers.push(M(lx(-2.72), TOP, hz + 0.27));
+    tumblers.push(M(lx(-2.66), TOP, hz + 0.1));
     const water = new THREE.Mesh(bottleGeo, glassware);
-    water.position.set(lx(-2.66), TOP, hz + 0.37);
+    water.position.set(lx(-2.72), TOP, hz + 0.24);
     root.add(water);
     const waterIn = new THREE.Mesh(
       lathe([
@@ -1318,13 +1312,13 @@ const scene: SceneModule = {
       new THREE.CylinderGeometry(0.0335, 0.0335, 0.05, 32, 1, true),
       new THREE.MeshStandardMaterial({ map: labelTexture(), roughness: 0.5 }),
     );
-    label.position.set(lx(-2.66), TOP + 0.08, hz + 0.37);
+    label.position.set(lx(-2.72), TOP + 0.08, hz + 0.24);
     root.add(label);
     const cap = new THREE.Mesh(
       new THREE.CylinderGeometry(0.015, 0.015, 0.02, 16),
       new THREE.MeshStandardMaterial({ color: "#111", roughness: 0.6 }),
     );
-    cap.position.set(lx(-2.66), TOP + 0.21, hz + 0.37);
+    cap.position.set(lx(-2.72), TOP + 0.21, hz + 0.24);
     root.add(cap);
     const can = new THREE.Mesh(
       new THREE.CylinderGeometry(0.033, 0.033, 0.115, 32),
@@ -1338,7 +1332,7 @@ const scene: SceneModule = {
         steel,
       ],
     );
-    can.position.set(lx(-2.58), TOP + 0.0575, hz + 0.25);
+    can.position.set(lx(-2.6), TOP + 0.0575, hz + 0.3);
     can.castShadow = true;
     root.add(can);
     const beer = new THREE.Mesh(
@@ -1351,7 +1345,7 @@ const scene: SceneModule = {
         clearcoat: 1,
       }),
     );
-    beer.position.set(lx(-2.58), TOP, hz + 0.42);
+    beer.position.set(lx(-2.6), TOP, hz + 0.36);
     beer.castShadow = true;
     root.add(beer);
     // napkin jar with paper napkins and black tongs
@@ -1359,16 +1353,16 @@ const scene: SceneModule = {
       new THREE.CylinderGeometry(0.045, 0.042, 0.1, 24, 1, true),
       glassware,
     );
-    jar.position.set(lx(-2.86), TOP + 0.05, hz + 0.4);
+    jar.position.set(lx(-2.9), TOP + 0.05, hz + 0.3);
     root.add(jar);
     for (let i = 0; i < 7; i++)
       B.add(
         unitBox,
         new THREE.MeshStandardMaterial({ color: "#f5f3ee", roughness: 0.9 }),
         M(
-          lx(-2.86) + (i - 3) * 0.008,
+          lx(-2.9) + (i - 3) * 0.008,
           TOP + 0.1,
-          hz + 0.4,
+          hz + 0.3,
           0,
           0,
           (i - 3) * 5 * D,
@@ -1380,8 +1374,15 @@ const scene: SceneModule = {
     B.add(
       unitBox,
       blackMetal,
-      M(lx(-2.83), TOP + 0.12, hz + 0.43, 0, 0, -20 * D, 0.008, 0.2, 0.015),
+      M(lx(-2.98), TOP + 0.1, hz + 0.33, 0, 0, -20 * D, 0.008, 0.2, 0.015),
     );
+    // a pothos cutting in a small glass by the pillar (the leaf at the left of the video)
+    const vase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.035, 0.03, 0.1, 20, 1, true),
+      glassware,
+    );
+    vase.position.set(lx(-3.18), TOP + 0.05, hz + 0.32);
+    root.add(vase);
     // the black phone
     const phone = new THREE.Mesh(
       rbox(0.075, 0.008, 0.155, 0.006),
@@ -1391,8 +1392,8 @@ const scene: SceneModule = {
         clearcoat: 1,
       }),
     );
-    phone.position.set(lx(-2.95), TOP + 0.004, hz + 0.12);
-    phone.rotation.y = 80 * D;
+    phone.position.set(lx(-3.0), TOP + 0.004, hz - 0.02);
+    phone.rotation.y = 4 * D;
     phone.castShadow = true;
     root.add(phone);
 
@@ -1575,19 +1576,15 @@ const scene: SceneModule = {
     // a few logs stacked in the niche under the oven
     const bark = pbr(concrete("#4e3a2b", 67));
     const logs: THREE.Matrix4[] = [];
-    B.add(
-      unitBox,
-      sootMat,
-      M(ox, 0.3, oz + R + 0.005, 0, 0, 0, 1.0, 0.45, 0.01),
-    );
+    B.add(unitBox, sootMat, M(ox, 0.3, oz + 0.55, 0, 0, 0, 1.0, 0.45, 0.12));
     for (let row = 0; row < 3; row++) {
       for (let i = 0; i < 6 - (row % 2); i++)
         logs.push(
           M(
             ox + (i - 2.5 + (row % 2) * 0.5) * 0.15,
             0.14 + row * 0.12,
-            oz + R + 0.03,
-            (rand() - 0.5) * 0.15,
+            oz + 0.55,
+            Math.PI / 2 + (rand() - 0.5) * 0.1,
             Math.PI / 2,
             0,
             0.055,
@@ -1704,7 +1701,7 @@ const scene: SceneModule = {
         unitBox,
         boxMat,
         M(
-          2.3,
+          2.35,
           1.08 + i * 0.042,
           cz1 - 0.2,
           (rand() - 0.5) * 0.08,
@@ -1735,8 +1732,8 @@ const scene: SceneModule = {
       [unitBox, M(0, 0, -0.42, 0, 0, 0, 0.04, 0.02, 0.6)],
     ]);
     const peelMesh = new THREE.Mesh(peel, warmWood);
-    peelMesh.position.set(1.45, 1.07, cz1 - 0.3);
-    peelMesh.rotation.y = 70 * D;
+    peelMesh.position.set(0.45, 1.07, cz0 + 0.08);
+    peelMesh.rotation.y = -70 * D;
     peelMesh.castShadow = true;
     root.add(peelMesh);
     for (let i = 0; i < 3; i++) {
@@ -1754,6 +1751,43 @@ const scene: SceneModule = {
       b.scale.setScalar(1.25);
       root.add(b);
     }
+    pizza(marg, 1.2, cz1 - 0.28, 0.4, 1.06);
+    pizza(pesto, 1.62, cz1 - 0.28, 2.1, 1.06);
+    const paper = new THREE.MeshStandardMaterial({
+      map: paperTexture(),
+      roughness: 0.9,
+    });
+    B.add(
+      new THREE.BoxGeometry(0.36, 0.002, 0.3),
+      paper,
+      M(0.72, 1.062, cz1 - 0.26, 0.2),
+    );
+    const oilCan = mergedLocal([
+      [
+        lathe([
+          [0, 0],
+          [0.05, 0],
+          [0.052, 0.01],
+          [0.05, 0.13],
+          [0.03, 0.16],
+          [0.012, 0.18],
+          [0, 0.18],
+        ]),
+        M(0, 0, 0),
+      ],
+      [
+        new THREE.CylinderGeometry(0.006, 0.008, 0.16, 8),
+        M(0.08, 0.13, 0, 0, 0, -55 * D),
+      ],
+      [
+        new THREE.TorusGeometry(0.045, 0.006, 6, 16, Math.PI),
+        M(-0.05, 0.1, 0, 0, 0, Math.PI / 2),
+      ],
+    ]);
+    const oil = new THREE.Mesh(oilCan, copper);
+    oil.position.set(2.0, 1.06, cz1 - 0.2);
+    oil.castShadow = true;
+    root.add(oil);
     const bx = 0.95;
     const bzc = cz1 - 0.25;
     B.add(
@@ -1775,74 +1809,6 @@ const scene: SceneModule = {
           0,
           0.6 + rand() * 0.5,
         ),
-      );
-    }
-
-    /* ---------- right wall: a shelf and a print ---------- */
-    for (const y of [1.45, 1.85]) {
-      B.add(
-        unitBox,
-        darkWood,
-        M(W1 - 0.13, y, -1.0, 0, 0, 0, 0.26, 0.035, 1.5),
-        1,
-      );
-      for (let i = 0; i < 9; i++) {
-        const z = -1.65 + i * 0.16 + rand() * 0.03;
-        const kind = Math.floor(rand() * 3);
-        if (kind === 0)
-          B.add(
-            beerGeo,
-            new THREE.MeshPhysicalMaterial({
-              color: "#1d2a14",
-              roughness: 0.1,
-              clearcoat: 1,
-            }),
-            M(W1 - 0.12, y + 0.018, z, 0, 0, 0, 1.3),
-          );
-        else if (kind === 1)
-          B.add(
-            unitCyl,
-            new THREE.MeshStandardMaterial({
-              color: "#b8261a",
-              roughness: 0.4,
-              metalness: 0.4,
-            }),
-            M(W1 - 0.12, y + 0.075, z, 0, 0, 0, 0.042, 0.12, 0.042),
-          );
-        else
-          B.add(
-            cruetGeo,
-            new THREE.MeshPhysicalMaterial({
-              color: "#6f7a1e",
-              roughness: 0.05,
-              clearcoat: 1,
-            }),
-            M(W1 - 0.12, y + 0.018, z, 0, 0, 0, 1.2),
-          );
-      }
-    }
-    for (const z of [-1.65, -0.35])
-      B.add(
-        unitBox,
-        blackMetal,
-        M(W1 - 0.08, 1.6, z, 0, 0, 0, 0.16, 0.5, 0.02),
-      );
-    ctx.wall(W1 - 0.27, -1.8, W1, -0.2);
-    {
-      const p = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.5, 0.7),
-        new THREE.MeshStandardMaterial({
-          map: posterTexture(0),
-          roughness: 0.7,
-        }),
-      );
-      p.position.set(W1 - 0.03, 1.75, -2.45);
-      p.rotation.y = -Math.PI / 2;
-      root.add(p);
-      B.add(
-        unitBox,
-        blackMetal,
-        M(W1 - 0.015, 1.75, -2.45, 0, 0, 0, 0.025, 0.76, 0.56),
       );
     }
 
@@ -1942,113 +1908,34 @@ const scene: SceneModule = {
         0.45 + rand() * 0.15,
         l + rand() * 0.08,
       );
-    // trailing pothos from pots on the partitions (the one by the couple's table, as in the video)
-    const potMat = new THREE.MeshStandardMaterial({
-      color: "#d9d4ca",
-      roughness: 0.7,
-    });
-    for (const pz of [Z1 - 0.06, bz0]) {
-      const towardRoom = pz > 0 ? -1 : 1;
-      B.add(
-        new THREE.CylinderGeometry(0.11, 0.08, 0.16, 20),
-        potMat,
-        M(lx(-3.3), 2.48, pz + (pz > 0 ? -0.04 : 0)),
+    for (let i = 0; i < 9; i++) {
+      // pothos cutting in the vase on the couple's table, leaning out toward the pillar side
+      const t = i / 8;
+      const p = new THREE.Vector3(
+        lx(-3.18) + (rand() - 0.5) * 0.04 - t * 0.06,
+        TOP + 0.12 + t * 0.12 + rand() * 0.03,
+        hz + 0.32 + t * 0.06,
       );
-      for (let v = 0; v < 6; v++) {
-        const side = pz > 0 ? towardRoom : v % 2 ? 1 : -1;
-        // over the rim, along the top of the partition, then down its end and sides
-        const pts: THREE.Vector3[] = [
-          new THREE.Vector3(
-            lx(-3.3) + (rand() - 0.5) * 0.1,
-            2.54,
-            pz + side * 0.04,
-          ),
-        ];
-        const out = v < 2 ? 0.28 : 0.1 + rand() * 0.1;
-        pts.push(
-          new THREE.Vector3(
-            lx(-3.3) + out * 0.6,
-            2.47,
-            pz + side * (0.05 + rand() * 0.02),
-          ),
-        );
-        const drop = 0.5 + rand() * (v < 2 ? 0.9 : 0.6);
-        const steps = 10 + Math.floor(drop * 12);
-        for (let i = 1; i <= steps; i++) {
-          const t = i / steps;
-          const x = lx(-3.3) + out + Math.sin(t * 3 + v) * 0.03;
-          const z =
-            pz +
-            side * (0.075 + Math.sin(t * 5 + v) * 0.01 + (v < 2 ? 0 : 0.02));
-          pts.push(new THREE.Vector3(x, 2.42 - t * drop, z));
-        }
-        for (let i = 1; i < pts.length; i++) {
-          const p0 = pts[i - 1];
-          const p1 = pts[i];
-          if (!p0 || !p1) continue;
-          const mid = p0.clone().add(p1).multiplyScalar(0.5);
-          const dir = p1.clone().sub(p0);
-          const len = dir.length();
-          const q = new THREE.Quaternion().setFromUnitVectors(
-            new THREE.Vector3(0, 1, 0),
-            dir.normalize(),
-          );
-          stems.push(
-            new THREE.Matrix4().compose(
-              mid,
-              q,
-              new THREE.Vector3(0.003, len, 0.003),
-            ),
-          );
-          if (i > 1) {
-            const s = 0.05 + rand() * 0.035 * (1 - i / pts.length) + 0.02;
-            const yaw = Math.atan2(side, 0.4) + (rand() - 0.5) * 2;
-            leaves.push(
-              M(
-                p1.x,
-                p1.y,
-                p1.z,
-                yaw,
-                0.9 + rand() * 0.5,
-                (rand() - 0.5) * 0.6,
-                s,
-              ),
-            );
-            leafColors.push(green(0.3));
-          }
-        }
-      }
+      stems.push(
+        new THREE.Matrix4().compose(
+          new THREE.Vector3(lx(-3.18), TOP + 0.08 + t * 0.07, hz + 0.32),
+          new THREE.Quaternion(),
+          new THREE.Vector3(0.003, 0.12 + t * 0.12, 0.003),
+        ),
+      );
+      leaves.push(
+        M(
+          p.x,
+          p.y,
+          p.z,
+          rand() * Math.PI * 2,
+          0.5 + rand() * 0.6,
+          0,
+          0.07 + rand() * 0.03,
+        ),
+      );
+      leafColors.push(green(0.3));
     }
-    // big potted plants: back-left corner under the sign, and by the door
-    const bigPlant = (x: number, z: number, h: number, count: number) => {
-      B.add(
-        new THREE.CylinderGeometry(0.24, 0.19, 0.5, 24),
-        new THREE.MeshStandardMaterial({ color: "#2b2724", roughness: 0.8 }),
-        M(x, 0.25, z),
-      );
-      for (let i = 0; i < count; i++) {
-        const a = i * 2.39996;
-        const t = i / count;
-        const y = 0.55 + t * h;
-        const r = 0.05 + (1 - Math.abs(t - 0.55)) * 0.32;
-        leaves.push(
-          M(
-            x + Math.cos(a) * r,
-            y,
-            z + Math.sin(a) * r,
-            -a + Math.PI / 2,
-            -0.2 - rand() * 0.6,
-            0,
-            0.22 + rand() * 0.12,
-          ),
-        );
-        leafColors.push(green(0.22));
-      }
-      B.add(unitCyl, darkWood, M(x, 0.5 + h / 2, z, 0, 0, 0, 0.02, h, 0.02));
-      ctx.wall(x - 0.26, z - 0.26, x + 0.26, z + 0.26);
-    };
-    bigPlant(W0 + 0.45, Z0 + 0.45, 1.4, high ? 60 : 35);
-    bigPlant(W1 - 0.35, 1.3, 1.1, high ? 50 : 30);
     for (const m of basilLeaves) {
       leaves.push(m.multiply(M(0, 0, 0, 0, 0, 0, 0.05)));
       leafColors.push(green(0.3));
@@ -2093,57 +1980,20 @@ const scene: SceneModule = {
       "stand",
       "Buona sera! Saindo mais uma margherita do forno 🍕",
     );
-    if (high) {
-      ctx.person(
-        {
-          skin: "#c98f6c",
-          hair: "#5a3a22",
-          hairStyle: "long",
-          height: 1.66,
-          female: true,
-        },
-        {
-          top: "#8a2f3a",
-          topStyle: "blouse",
-          bottom: "#1f2430",
-          bottomStyle: "jeans",
-          shoes: "#2a2a2a",
-        },
-        lx(-3.62),
-        oz2,
-        90,
-        "sit",
-      );
-      ctx.person(
-        { skin: "#e0b294", hair: "#2a1d14", hairStyle: "short", height: 1.8 },
-        {
-          top: "#2f4058",
-          topStyle: "tshirt",
-          bottom: "#3a3a3a",
-          bottomStyle: "jeans",
-          shoes: "#d8d8d8",
-        },
-        lx(-2.25),
-        oz2,
-        -90,
-        "sit",
-      );
-    }
-
     /* ---------- photos of the couple, on the partitions of their booth ---------- */
     ctx.photo(
       "panedoca-1.webp",
-      0.36,
-      0.48,
-      new THREE.Vector3(lx(-3.45), 1.7, 0.2 + 0.075),
+      0.3,
+      0.4,
+      new THREE.Vector3(lx(-3.62), 1.72, 0.2 + 0.075),
       0,
     );
     ctx.photo(
       "panedoca-2.webp",
-      0.36,
-      0.48,
-      new THREE.Vector3(lx(-3.45), 1.7, Z1 - 0.06 - 0.075),
-      180,
+      0.3,
+      0.4,
+      new THREE.Vector3(lx(-3.24), 1.72, 0.2 + 0.075),
+      0,
     );
 
     /* ---------- lights ---------- */
@@ -2159,47 +2009,29 @@ const scene: SceneModule = {
     key.shadow.camera.near = 0.1;
     root.add(key, key.target);
     // the other pendants
-    const pendantLights = high ? pendants.slice(1, 3) : pendants.slice(1, 2);
-    for (const [x, z, y] of pendantLights) {
-      const p = new THREE.PointLight("#ffbf80", high ? 1.8 : 3, 5.5, 2);
-      p.position.set(x, y - 0.05, z);
-      root.add(p);
-    }
-    // the counter: a warm spot over it (second shadow caster on desktop)
-    const counterSpot = new THREE.SpotLight("#ffc890", 5, 6, 55 * D, 0.6, 2);
-    counterSpot.position.set(1.5, H - 0.05, cz1 - 0.1);
-    counterSpot.target.position.set(1.5, 0.9, cz0 - 0.2);
-    counterSpot.castShadow = high;
-    counterSpot.shadow.mapSize.set(1024, 1024);
-    counterSpot.shadow.bias = -0.0005;
-    root.add(counterSpot, counterSpot.target);
+    // one fill for the other booth and the middle table
+    const fill = new THREE.PointLight("#ffbf80", 2.6, 6, 2);
+    fill.position.set((TX + mx) / 2, 1.7, (oz2 + mz) / 2);
+    root.add(fill);
     // LED strip grazing the brick wall
-    const graze = new THREE.RectAreaLight("#ffb571", 6, bLen, 0.1);
+    const graze = new THREE.RectAreaLight("#ffb571", 9, bLen, 0.1);
     graze.position.set(lx(-3.95), 1.15, bMid);
     graze.rotation.set(Math.PI / 2, Math.PI / 2, 0, "YXZ");
     root.add(graze);
     // a soft wash from the sign, the entrance and the oven
-    const signGlow = new THREE.PointLight("#ffcf99", 2.0, 3.5, 2);
-    signGlow.position.set(signX, 2.0, Z0 + 0.4);
-    root.add(signGlow);
     const entry = new THREE.PointLight("#ffc488", 2.4, 4.5, 2);
     entry.position.set(1.75, 2.4, Z1 - 0.6);
     root.add(entry);
-    const ovenLight = new THREE.PointLight("#ff7a2e", 2.5, 5, 2);
-    ovenLight.position.set(ox, 1.4, oz + R + 0.25);
+    const ovenLight = new THREE.PointLight("#ffa060", 3.2, 5.5, 2);
+    ovenLight.position.set(1.4, 1.7, cz1 - 0.3);
     root.add(ovenLight);
-    if (high) {
-      const sconce = new THREE.PointLight("#ffbf80", 0.6, 2.5, 2);
-      sconce.position.set(lx(-3.55), 2.2, hz);
-      root.add(sconce);
-    }
     ctx.onUpdate((t) => {
       const f =
         0.85 +
         Math.sin(t * 7.3) * 0.06 +
         Math.sin(t * 13.1) * 0.05 +
         Math.sin(t * 2.1) * 0.04;
-      ovenLight.intensity = 2.5 * f;
+      ovenLight.intensity = 3.2 * (0.9 + f * 0.1);
       fireMat.emissiveIntensity = 3 * f;
     });
 

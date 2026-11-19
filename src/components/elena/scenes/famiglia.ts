@@ -18,15 +18,10 @@ import {
 import type { Outfit, SceneCtx, SceneModule } from "../fp/types";
 
 /*
- * Famiglia Crosara – Cantina Italiana & Bar (Uberlândia Shopping), where Davi
- * and Elena celebrated one month together while a violinist played for them.
- *
- * Floor plan (meters): the dining hall spans x ∈ [-7, 7], z ∈ [-10, 5] under a
- * tall, almost black ceiling. Back wall (z = -10): the white stone wall with a
- * red-brick arch into a small blue-lit room. Left wall: warm beige plaster.
- * Right wall: bamboo screens between wooden pillars, the kitchen doors, the
- * blue drinks fridge and the green-tiled bar. Entrance from the mall at the
- * front (z = 5). Woven wicker lanterns hang at different heights everywhere.
+ * Famiglia Crosara – Cantina Italiana & Bar (Uberlândia Shopping), their night
+ * of 19/09, rebuilt from their photos and videos of that night (see the layout
+ * notes above `build`). Lanterns are emissive only; 8 lights, 1 shadow caster;
+ * static geometry is merged per material.
  */
 
 /* ---------------- geometry batching ---------------- */
@@ -511,12 +506,37 @@ function archPath(
 
 /* ---------------- the scene ---------------- */
 
+/*
+ * Layout, as seen from their table (#108) on the night of 19/09, facing the
+ * stone wall (−Z):
+ * - straight ahead, ~12 m away, the tall white stone wall with its LED-lit
+ *   banquette and ferns; the brick arch (blue-lit room behind it) sits right of
+ *   centre, the round clothed tables with taupe armchairs in between;
+ * - left of the stone wall a white plaster pier, then a recessed warm-beige
+ *   corner with a cluster of small lanterns, a bougainvillea and a bare round
+ *   wooden table;
+ * - right of the arch a tall wooden pillar with a rounded, lit top, the
+ *   "lotação máxima" sign and a speaker, and built-in wooden shelves;
+ * - on their left, the glass wine cellar wall with backlit coloured glass on
+ *   top, and little wooden tables with cross-back chairs;
+ * - behind them, the banquette backs onto a screen of rustic horizontal
+ *   branches with plants on top; the green-tiled bar is on the right, toward
+ *   the entrance from the mall.
+ * They sat side by side on the banquette (Elena on Davi's left), two empty
+ * cross-back chairs across the table; the violinist played in front of the arch.
+ */
+
 const X0 = -7;
 const X1 = 7;
 const Z0 = -10;
-const Z1 = 5;
-const H = 5.0;
-const ARCH_X = 2.5;
+const Z1 = 6;
+const H = 5.4;
+const ARCH_X = 2.3;
+const STONE_X0 = -3.4;
+const STONE_X1 = 4.3;
+/** Their table (#108): a long light-wood table in front of the banquette. */
+const T = { x: -0.4, z: 2.5, w: 1.5, d: 0.8, y: 0.75 };
+const BENCH_Z = 3.55;
 
 async function build(ctx: SceneCtx) {
   const high = ctx.quality === "high";
@@ -526,15 +546,16 @@ async function build(ctx: SceneCtx) {
   RectAreaLightUniformsLib.init();
   const rand = seeded(1909);
 
-  const S: Kit = new Map(); // structure: receives shadows only
-  const F: Kit = new Map(); // furniture: casts shadows
+  // S: everything static, merged per material, no shadow casting.
+  // C: the few things around their table that cast into the one shadow map.
+  const S: Kit = new Map();
+  const C: Kit = new Map();
 
   /* ---------- materials ---------- */
   const stoneTex = ctx.tex("tex-stone.webp");
-  const bambooTex = ctx.tex("tex-bamboo.webp");
-  const [stoneImg] = await Promise.all([loaded(stoneTex), loaded(bambooTex)]);
+  const stoneImg = await loaded(stoneTex);
   const stone = new THREE.MeshStandardMaterial({
-    color: "#f2eee8",
+    color: "#ffffff",
     roughness: 0.95,
   });
   {
@@ -542,62 +563,61 @@ async function build(ctx: SceneCtx) {
     for (const t of [maps.map, maps.normalMap, maps.roughnessMap])
       t.repeat.set(1 / 3.4, 1 / 2.55);
     Object.assign(stone, maps);
-    stone.color.set("#ffffff");
     stone.normalScale.set(1.4, 1.4);
   }
   const brick = pbr(repeat(bricks("#b4643e", "#7e6150", 9, 31), 1.9, 1.9), {
     roughness: 0.9,
   });
-  const beige = pbr(repeat(plaster("#d7bc9a", 41), 0.6, 0.6));
+  const beige = pbr(repeat(plaster("#d2b48e", 41), 0.12, 0.12));
+  const whitePlaster = pbr(repeat(plaster("#e8e2d6", 42), 0.3, 0.3));
   const darkWall = new THREE.MeshStandardMaterial({
-    color: "#1d2322",
+    color: "#1b2120",
     roughness: 0.95,
   });
   const ceilingMat = new THREE.MeshStandardMaterial({
-    color: "#121a19",
+    color: "#1a2422",
     roughness: 0.92,
   });
   const floorMat = pbr(
-    repeat(tiles("#6a655e", "#45413c", 4, 51, 0.28), 14 / 2.4, 18 / 2.4),
-    { normalScale: new THREE.Vector2(0.6, 0.6), envMapIntensity: 1.6 },
+    repeat(tiles("#77726b", "#4d4943", 4, 51, 0.25), 14 / 2.4, 17 / 2.4),
+    { normalScale: new THREE.Vector2(0.5, 0.5), envMapIntensity: 1.8 },
   );
   const woodLight = pbr(repeat(woodPlanks("#c18a52", 2, 61), 0.6, 0.6), {
-    roughness: 0.75,
+    roughness: 0.7,
   });
-  const woodTop = pbr(repeat(woodPlanks("#bf8650", 5, 62), 0.8, 0.8), {
-    roughness: 0.55,
+  const woodTop = pbr(repeat(woodPlanks("#c79457", 4, 62), 0.7, 0.7), {
+    roughness: 0.45,
   });
   const woodDark = pbr(repeat(woodPlanks("#6e4326", 6, 63), 0.5, 2));
-  const woodPillar = pbr(repeat(woodPlanks("#8d5a33", 3, 64), 0.4, 3), {
-    roughness: 0.6,
+  const woodPanel = pbr(repeat(woodPlanks("#9a6438", 8, 64), 0.25, 1.2), {
+    roughness: 0.55,
   });
-  const upholstery = pbr(repeat(fabric("#a08d76", 71), 3, 3), {
+  const branchMat = pbr(repeat(woodPlanks("#8a6040", 1, 65), 0.2, 1), {
+    roughness: 0.8,
+  });
+  const upholstery = pbr(repeat(fabric("#9c8b76", 71), 3, 3), {
     side: THREE.DoubleSide,
   });
-  const bench = pbr(repeat(fabric("#a8957e", 72), 3, 3));
+  const bench = pbr(repeat(fabric("#a39079", 72), 3, 3));
   const cloth = pbr(repeat(fabric("#a3937f", 73), 4, 4), { roughness: 0.95 });
-  const cushion = pbr(repeat(fabric("#c9b8a0", 74), 3, 3));
+  const cushion = pbr(repeat(fabric("#b9a68e", 74), 3, 3));
   const greenTile = pbr(
     repeat(tiles("#2e5a4b", "#1a2c26", 6, 81, 0.15), 10, 0.75),
     { envMapIntensity: 2 },
   );
-  const charger = new THREE.MeshStandardMaterial({
-    color: "#26332d",
-    roughness: 0.55,
-  });
-  const napkin = pbr(repeat(fabric("#b89a8c", 75), 1, 1));
-  const porcelain = new THREE.MeshStandardMaterial({
-    color: "#e4e0d8",
-    roughness: 0.25,
-  });
-  const steel = metal("#d4d4d0", 0.25);
-  const black = new THREE.MeshStandardMaterial({
-    color: "#121212",
+  const placemat = new THREE.MeshStandardMaterial({
+    color: "#1f2422",
     roughness: 0.6,
   });
-  const whitePlastic = new THREE.MeshStandardMaterial({
-    color: "#e9e7e2",
+  const napkin = pbr(repeat(fabric("#8f8273", 75), 1, 1));
+  const steel = metal("#d4d4d0", 0.25);
+  const black = new THREE.MeshStandardMaterial({
+    color: "#111111",
     roughness: 0.5,
+  });
+  const whitePorcelain = new THREE.MeshStandardMaterial({
+    color: "#ece9e2",
+    roughness: 0.2,
   });
   const glassMat = new THREE.MeshStandardMaterial({
     color: "#ffffff",
@@ -609,18 +629,29 @@ async function build(ctx: SceneCtx) {
     side: THREE.DoubleSide,
     envMapIntensity: 3,
   });
-  const wine = new THREE.MeshStandardMaterial({
-    color: "#4a0710",
-    roughness: 0.08,
-    transparent: true,
-    opacity: 0.92,
-  });
-  const water = new THREE.MeshStandardMaterial({
-    color: "#cfe3ea",
+  const ice = new THREE.MeshStandardMaterial({
+    color: "#e8f2f4",
     roughness: 0.05,
     transparent: true,
-    opacity: 0.25,
+    opacity: 0.45,
     depthWrite: false,
+  });
+  const coke = new THREE.MeshStandardMaterial({
+    color: "#3a160a",
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.88,
+  });
+  const lime = new THREE.MeshStandardMaterial({
+    color: "#8fbf3a",
+    roughness: 0.5,
+  });
+  const redBottle = new THREE.MeshStandardMaterial({
+    color: "#d01a1e",
+    roughness: 0.1,
+    transparent: true,
+    opacity: 0.88,
+    envMapIntensity: 2,
   });
   const bottleGreen = new THREE.MeshStandardMaterial({
     color: "#183722",
@@ -631,17 +662,6 @@ async function build(ctx: SceneCtx) {
     color: "#6b3510",
     roughness: 0.12,
     envMapIntensity: 2,
-  });
-  const bottleClear = new THREE.MeshStandardMaterial({
-    color: "#a8b4a8",
-    roughness: 0.08,
-    transparent: true,
-    opacity: 0.55,
-    envMapIntensity: 2,
-  });
-  const label = new THREE.MeshStandardMaterial({
-    color: "#e8dcc4",
-    roughness: 0.7,
   });
   const terracotta = pbr(repeat(fabric("#a4583a", 76), 2, 2), {
     roughness: 0.85,
@@ -655,29 +675,50 @@ async function build(ctx: SceneCtx) {
     roughness: 0.5,
   });
   const brass = metal("#b08a52", 0.35);
-  const pasta = new THREE.MeshStandardMaterial({
-    color: "#e9c770",
-    roughness: 0.45,
+  const castIron = new THREE.MeshStandardMaterial({
+    color: "#1c1c1c",
+    roughness: 0.55,
+    metalness: 0.4,
+  });
+  const cream = new THREE.MeshStandardMaterial({
+    color: "#e6dcc0",
+    roughness: 0.4,
+  });
+  const spaghetti = new THREE.MeshStandardMaterial({
+    color: "#ead9a6",
+    roughness: 0.4,
   });
   const bacon = new THREE.MeshStandardMaterial({
-    color: "#8c4a2a",
+    color: "#8c3f26",
     roughness: 0.6,
   });
-  const gnocchi = new THREE.MeshStandardMaterial({
-    color: "#ecd398",
-    roughness: 0.55,
-  });
   const sauce = new THREE.MeshStandardMaterial({
-    color: "#9b2a17",
+    color: "#962413",
     roughness: 0.3,
   });
-  const basil = new THREE.MeshStandardMaterial({
-    color: "#2f6b22",
-    roughness: 0.5,
-  });
-  const bread = new THREE.MeshStandardMaterial({
-    color: "#c58b4a",
+  const breaded = new THREE.MeshStandardMaterial({
+    color: "#a8692f",
     roughness: 0.8,
+  });
+  const cheese = new THREE.MeshStandardMaterial({
+    color: "#efdca0",
+    roughness: 0.35,
+  });
+  const greyPlate = new THREE.MeshStandardMaterial({
+    color: "#7a7f83",
+    roughness: 0.45,
+    map: canvasTex(256, 256, (g) => {
+      g.fillStyle = "#8a8e91";
+      g.fillRect(0, 0, 256, 256);
+      g.strokeStyle = "rgba(40,44,48,0.35)";
+      g.lineWidth = 1.2;
+      for (let a = 0; a < Math.PI * 2; a += 0.045) {
+        g.beginPath();
+        g.moveTo(128 + Math.cos(a) * 40, 128 + Math.sin(a) * 40);
+        g.lineTo(128 + Math.cos(a) * 128, 128 + Math.sin(a) * 128);
+        g.stroke();
+      }
+    }),
   });
   const wickerMap = wickerTexture();
   wickerMap.repeat.set(3, 1.5);
@@ -689,38 +730,47 @@ async function build(ctx: SceneCtx) {
     color: new THREE.Color("#ff9a48").multiplyScalar(1.35),
   });
   const bulb = emissive("#ffd49a", 6);
-  const warmLed = emissive("#ffc073", 3);
+  const warmLed = emissive("#ffc073", 3.2);
   const downlight = emissive("#fff1d8", 2.2);
-  const flame = emissive("#ffb347", 10);
 
-  /* ---------- shell: floor, ceiling, walls ---------- */
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 18), floorMat);
+  /* ---------- shell ---------- */
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(X1 - X0, Z1 - Z0 + 1),
+    floorMat,
+  );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(0, 0, -3.5);
+  floor.position.set(0, 0, (Z0 - 1 + Z1) / 2);
   floor.receiveShadow = true;
   root.add(floor);
-  put(S, ceilingMat, new THREE.PlaneGeometry(14, 15), 0, H, -2.5, Math.PI / 2);
+  put(
+    S,
+    ceilingMat,
+    new THREE.PlaneGeometry(X1 - X0, Z1 - Z0 + 1),
+    0,
+    H,
+    (Z0 - 1 + Z1) / 2,
+    Math.PI / 2,
+  );
 
-  // back wall: the white stone, with the arch cut out
+  // the white stone wall with the arch cut out
   const wallShape = new THREE.Shape();
-  wallShape.moveTo(X0, 0);
-  wallShape.lineTo(X1, 0);
-  wallShape.lineTo(X1, H);
-  wallShape.lineTo(X0, H);
-  wallShape.lineTo(X0, 0);
+  wallShape.moveTo(STONE_X0, 0);
+  wallShape.lineTo(STONE_X1, 0);
+  wallShape.lineTo(STONE_X1, H);
+  wallShape.lineTo(STONE_X0, H);
+  wallShape.lineTo(STONE_X0, 0);
   const hole = new THREE.Path();
-  archPath(hole, ARCH_X, 1.25, 2.0, true);
+  archPath(hole, ARCH_X, 1.2, 2.0, true);
   wallShape.holes.push(hole);
   put(S, stone, new THREE.ShapeGeometry(wallShape, 24), 0, 0, Z0);
-
   // the brick arch: surround and deep reveal in one extrusion
   const archShape = new THREE.Shape();
-  archPath(archShape, ARCH_X, 1.25, 2.0, false);
+  archPath(archShape, ARCH_X, 1.2, 2.0, false);
   const inner = new THREE.Path();
-  archPath(inner, ARCH_X, 0.8, 1.95, true);
+  archPath(inner, ARCH_X, 0.78, 1.95, true);
   archShape.holes.push(inner);
   put(
-    F,
+    S,
     brick,
     new THREE.ExtrudeGeometry(archShape, {
       depth: 0.62,
@@ -731,186 +781,356 @@ async function build(ctx: SceneCtx) {
     0,
     Z0 - 0.55,
   );
-  // left wall: warm beige plaster, dark band above
+
+  // left of the stone: the white plaster pier, then the recessed beige corner
+  put(
+    S,
+    whitePlaster,
+    new THREE.BoxGeometry(0.55, H, 1.4),
+    STONE_X0 - 0.275,
+    H / 2,
+    Z0 + 0.7,
+  );
   put(
     S,
     beige,
-    new THREE.PlaneGeometry(15, 3.9),
-    X0,
-    1.95,
-    -2.5,
-    0,
-    Math.PI / 2,
-  );
-  put(
-    S,
-    darkWall,
-    new THREE.PlaneGeometry(15, H - 3.9),
-    X0,
-    3.9 + (H - 3.9) / 2,
-    -2.5,
-    0,
-    Math.PI / 2,
-  );
-  put(
-    F,
-    woodDark,
-    new THREE.BoxGeometry(0.03, 0.1, 15),
-    X0 + 0.015,
-    0.05,
-    -2.5,
-  );
-  // right wall (mostly hidden behind bamboo, bar and doors)
-  put(
-    S,
-    darkWall,
-    new THREE.PlaneGeometry(15, H),
-    X1,
+    new THREE.PlaneGeometry(STONE_X0 - 0.55 - X0, H),
+    (X0 + STONE_X0 - 0.55) / 2,
     H / 2,
-    -2.5,
+    Z0 - 0.6,
+  );
+  put(
+    S,
+    beige,
+    new THREE.PlaneGeometry(0.6, H),
+    STONE_X0 - 0.55,
+    H / 2,
+    Z0 - 0.3,
     0,
     -Math.PI / 2,
   );
-  // front wall with the entrance from the mall (x ∈ [-2.1, 0.1])
-  const front = new THREE.Shape();
-  front.moveTo(X0, 0);
-  front.lineTo(X1, 0);
-  front.lineTo(X1, H);
-  front.lineTo(X0, H);
-  front.lineTo(X0, 0);
-  const door = new THREE.Path();
-  // the wall is turned to face the room, so the opening is mirrored in shape space
-  door.moveTo(-0.1, 0);
-  door.lineTo(-0.1, 2.9);
-  door.lineTo(2.1, 2.9);
-  door.lineTo(2.1, 0);
-  door.lineTo(-0.1, 0);
-  front.holes.push(door);
   put(
     S,
-    pbr(repeat(plaster("#d7bc9a", 41), 0.09, 0.09)),
-    new THREE.ShapeGeometry(front),
-    0,
-    0,
-    Z1,
-    0,
-    Math.PI,
+    woodDark,
+    new THREE.BoxGeometry(STONE_X0 - 0.55 - X0, 0.1, 0.03),
+    (X0 + STONE_X0 - 0.55) / 2,
+    0.05,
+    Z0 - 0.585,
   );
-  // the entrance portal (dark wood) and the mall beyond
-  put(F, woodDark, new THREE.BoxGeometry(0.12, 2.95, 0.3), -2.16, 1.475, Z1);
-  put(F, woodDark, new THREE.BoxGeometry(0.12, 2.95, 0.3), 0.16, 1.475, Z1);
-  put(F, woodDark, new THREE.BoxGeometry(2.44, 0.12, 0.3), -1, 2.95, Z1);
-  const mall = new THREE.Group();
-  root.add(mall);
-  const mallFloor = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 5),
-    new THREE.MeshStandardMaterial({ color: "#c9c3b9", roughness: 0.2 }),
+  // a small black plaque on the beige wall
+  put(S, black, new THREE.BoxGeometry(0.32, 0.12, 0.02), -5.0, 1.6, Z0 - 0.59);
+
+  // right of the arch: wooden wall, the tall pillar with its lit rounded top
+  put(
+    S,
+    woodPanel,
+    new THREE.PlaneGeometry(X1 - STONE_X1, H),
+    (STONE_X1 + X1) / 2,
+    H / 2,
+    Z0,
   );
-  mallFloor.rotation.x = -Math.PI / 2;
-  mallFloor.position.set(-1, 0, Z1 + 2.5);
-  mall.add(mallFloor);
-  const mallBack = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 4),
-    new THREE.MeshStandardMaterial({
-      color: "#d9d2c6",
-      emissive: "#d9d2c6",
-      emissiveIntensity: 0.1,
-    }),
-  );
-  mallBack.position.set(-1, 2, Z1 + 5);
-  mallBack.rotation.y = Math.PI;
-  mall.add(mallBack);
-  mallBack.rotation.y = 0;
-  mallBack.position.z = Z1 + 5;
-  mallBack.lookAt(-1, 2, 0);
-  const mallCeil = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 5),
-    new THREE.MeshStandardMaterial({
-      color: "#efe9df",
-      emissive: "#fff6e8",
-      emissiveIntensity: 0.25,
-    }),
-  );
-  mallCeil.rotation.x = Math.PI / 2;
-  mallCeil.position.set(-1, 3.4, Z1 + 2.5);
-  mall.add(mallCeil);
-  // across the mall corridor: a lit shop window and a dark storefront
-  const shop = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.2, 2.2),
-    new THREE.MeshStandardMaterial({
-      color: "#f3dcb8",
-      emissive: "#ffd9a6",
-      emissiveIntensity: 0.9,
-    }),
-  );
-  shop.position.set(-1.3, 1.5, Z1 + 4.98);
-  shop.rotation.y = Math.PI;
-  mall.add(shop);
-  const shopFrame = new THREE.Mesh(
-    new THREE.BoxGeometry(3.5, 0.5, 0.1),
-    new THREE.MeshStandardMaterial({ color: "#2b2b2b", roughness: 0.4 }),
-  );
-  shopFrame.position.set(-1.3, 2.85, Z1 + 4.95);
-  mall.add(shopFrame);
-  for (const x of [-3.2, -1, 1.2]) {
-    const strip = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12, 0.02, 4),
-      emissive("#fff6e8", 2),
+  {
+    const px = STONE_X1 + 0.3;
+    put(S, woodPanel, new THREE.BoxGeometry(0.6, H, 0.7), px, H / 2, Z0 + 0.35);
+    // the warm downlit glow on its face, rounded at the top as in the photos
+    const glowShape = new THREE.Shape();
+    archPath(glowShape, 0, 0.28, 3.6, false);
+    const glowTex = canvasTex(64, 256, (g) => {
+      const grd = g.createLinearGradient(0, 0, 0, 256);
+      grd.addColorStop(0, "rgba(255,214,160,1)");
+      grd.addColorStop(0.35, "rgba(200,140,80,0.55)");
+      grd.addColorStop(1, "rgba(120,70,30,0)");
+      g.fillStyle = grd;
+      g.fillRect(0, 0, 64, 256);
+    });
+    glowTex.wrapS = glowTex.wrapT = THREE.ClampToEdgeWrapping;
+    const glowGeo = new THREE.ShapeGeometry(glowShape, 16);
+    const uv = glowGeo.attributes.uv!;
+    const pos = glowGeo.attributes.position!;
+    for (let i = 0; i < pos.count; i++)
+      uv.setXY(i, pos.getX(i) / 0.56 + 0.5, pos.getY(i) / 3.9);
+    put(
+      S,
+      new THREE.MeshBasicMaterial({
+        map: glowTex,
+        transparent: true,
+        depthWrite: false,
+        color: new THREE.Color("#ffffff").multiplyScalar(0.9),
+      }),
+      glowGeo,
+      px,
+      0,
+      Z0 + 0.705,
     );
-    strip.position.set(x, 3.39, Z1 + 2.5);
-    mall.add(strip);
+    put(
+      S,
+      downlight,
+      new THREE.CircleGeometry(0.04, 12),
+      px,
+      H - 0.02,
+      Z0 + 1.0,
+      Math.PI / 2,
+    );
+    // speaker and the capacity sign
+    put(
+      S,
+      black,
+      new RoundedBoxGeometry(0.18, 0.28, 0.16, 2, 0.02),
+      px - 0.38,
+      3.2,
+      Z0 + 0.9,
+    );
+    const signTex = labelTexture(
+      [
+        {
+          text: "LOTAÇÃO MÁXIMA:",
+          font: "600 30px sans-serif",
+          color: "#e9e9e9",
+          y: 38,
+        },
+        {
+          text: "375 Pessoas",
+          font: "600 38px sans-serif",
+          color: "#e9e9e9",
+          y: 88,
+        },
+      ],
+      320,
+      128,
+      "#163a2a",
+    );
+    const sign = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.42, 0.17),
+      new THREE.MeshStandardMaterial({
+        map: signTex,
+        roughness: 0.5,
+        emissive: "#ffffff",
+        emissiveMap: signTex,
+        emissiveIntensity: 0.25,
+      }),
+    );
+    sign.position.set(px - 0.31, 2.75, Z0 + 0.6);
+    sign.rotation.y = -Math.PI / 2;
+    root.add(sign);
+    // built-in wooden shelves along the right wall, with vases and glasses
+    const sz0 = Z0 + 0.8;
+    const sz1 = Z0 + 3.6;
+    const smid = (sz0 + sz1) / 2;
+    put(
+      S,
+      darkWall,
+      new THREE.BoxGeometry(0.06, 3.4, sz1 - sz0),
+      X1 - 0.03,
+      1.7,
+      smid,
+    );
+    put(
+      S,
+      woodPanel,
+      new THREE.BoxGeometry(0.42, 0.9, sz1 - sz0),
+      X1 - 0.21,
+      0.45,
+      smid,
+    );
+    put(
+      S,
+      woodPanel,
+      new THREE.BoxGeometry(0.42, 0.06, sz1 - sz0),
+      X1 - 0.21,
+      3.4,
+      smid,
+    );
+    for (let k = 0; k <= 3; k++)
+      put(
+        S,
+        woodPanel,
+        new THREE.BoxGeometry(0.42, 2.5, 0.05),
+        X1 - 0.21,
+        2.15,
+        sz0 + 0.02 + k * ((sz1 - sz0 - 0.04) / 3),
+      );
+    for (let row = 0; row < 3; row++) {
+      for (let k = 0; k < 3; k++) {
+        const z = sz0 + 0.5 + k * 0.92;
+        const y = 1.0 + row * 0.82;
+        put(
+          S,
+          woodPanel,
+          new THREE.BoxGeometry(0.4, 0.03, 0.9),
+          X1 - 0.22,
+          y,
+          z,
+        );
+        if ((row + k) % 2)
+          put(
+            S,
+            glassMat,
+            new THREE.CylinderGeometry(0.035, 0.03, 0.2, 12),
+            X1 - 0.3,
+            y + 0.1,
+            z - 0.1,
+          );
+        else
+          put(
+            S,
+            new THREE.MeshStandardMaterial({
+              color: "#3e5f7a",
+              roughness: 0.3,
+            }),
+            new THREE.LatheGeometry(
+              [0, 0.06, 0.08, 0.05, 0.03, 0.035].map(
+                (r, i) => new THREE.Vector2(r, i * 0.05),
+              ),
+              14,
+            ),
+            X1 - 0.3,
+            y + 0.015,
+            z,
+          );
+      }
+    }
+    put(
+      S,
+      emissive("#ffd9a8", 1.2),
+      new THREE.BoxGeometry(0.02, 0.02, sz1 - sz0 - 0.2),
+      X1 - 0.42,
+      3.38,
+      (sz0 + sz1) / 2,
+    );
   }
 
-  // the Famiglia sign on the left wall, near the entrance
-  const signTex = labelTexture(
-    [
-      {
-        text: "Famiglia",
-        font: "italic 700 120px Georgia, 'Times New Roman', serif",
-        color: "#f3e3c4",
-        y: 120,
-      },
-      {
-        text: "CROSARA",
-        font: "600 64px Georgia, serif",
-        color: "#f3e3c4",
-        y: 230,
-      },
-      {
-        text: "Cantina Italiana & Bar",
-        font: "italic 40px Georgia, serif",
-        color: "#d9b98a",
-        y: 310,
-      },
-    ],
-    1024,
-    384,
-    "#2a1c14",
-  );
-  const sign = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.9, 0.71),
-    new THREE.MeshStandardMaterial({
-      map: signTex,
-      roughness: 0.6,
-      emissive: "#ffffff",
-      emissiveMap: signTex,
-      emissiveIntensity: 0.35,
-    }),
-  );
-  sign.position.set(X0 + 0.03, 2.3, 2.6);
-  sign.rotation.y = Math.PI / 2;
-  root.add(sign);
-  put(
-    F,
-    woodDark,
-    new THREE.BoxGeometry(0.04, 0.79, 1.98),
-    X0 + 0.01,
-    2.3,
-    2.6,
-  );
+  // left wall: the glass wine cellar, with backlit coloured glass on top
+  {
+    const za = -7.2;
+    const zb = 1.2;
+    const len = zb - za;
+    const zc = (za + zb) / 2;
+    put(
+      S,
+      beige,
+      new THREE.PlaneGeometry(Z1 - Z0 + 1, H),
+      X0,
+      H / 2,
+      (Z0 - 1 + Z1) / 2,
+      0,
+      Math.PI / 2,
+    );
+    const racks = canvasTex(1024, 256, (g) => {
+      const r = seeded(33);
+      g.fillStyle = "#17110d";
+      g.fillRect(0, 0, 1024, 256);
+      for (let y = 10; y < 256; y += 21) {
+        for (let x = 10; x < 1024; x += 21) {
+          const c = r();
+          g.fillStyle = c < 0.5 ? "#1f3a26" : c < 0.8 ? "#4a1e14" : "#2b2a22";
+          g.beginPath();
+          g.arc(x, y, 8, 0, Math.PI * 2);
+          g.fill();
+          g.fillStyle = "rgba(255,240,210,0.35)";
+          g.beginPath();
+          g.arc(x - 2, y - 2, 2.5, 0, Math.PI * 2);
+          g.fill();
+        }
+      }
+      g.fillStyle = "#5a3c24";
+      for (let x = 0; x < 1024; x += 128) g.fillRect(x, 0, 6, 256);
+    });
+    racks.repeat.set(len / 4, 1);
+    put(
+      S,
+      new THREE.MeshStandardMaterial({
+        map: racks,
+        roughness: 0.4,
+        emissive: "#ffffff",
+        emissiveMap: racks,
+        emissiveIntensity: 0.35,
+      }),
+      new THREE.PlaneGeometry(len, 2.2),
+      X0 + 0.25,
+      1.25,
+      zc,
+      0,
+      Math.PI / 2,
+    );
+    put(
+      S,
+      glassMat,
+      new THREE.PlaneGeometry(len, 2.3),
+      X0 + 0.45,
+      1.25,
+      zc,
+      0,
+      Math.PI / 2,
+    );
+    const stained = canvasTex(1024, 128, (g) => {
+      const r = seeded(77);
+      const cols = [
+        "#2f6bd8",
+        "#d83a2f",
+        "#f2c230",
+        "#3fa85a",
+        "#f4efe4",
+        "#e9852b",
+        "#8a3fc0",
+      ];
+      for (let x = 0; x < 1024; x += 64) {
+        for (let y = 0; y < 128; y += 64) {
+          g.fillStyle = cols[Math.floor(r() * cols.length)]!;
+          g.fillRect(x, y, 64, 64);
+        }
+      }
+      g.strokeStyle = "#1a1612";
+      g.lineWidth = 5;
+      for (let x = 0; x <= 1024; x += 64) g.strokeRect(x, 0, 64, 128);
+      g.beginPath();
+      g.moveTo(0, 64);
+      g.lineTo(1024, 64);
+      g.stroke();
+    });
+    stained.repeat.set(len / 5, 1);
+    put(
+      S,
+      new THREE.MeshBasicMaterial({
+        map: stained,
+        color: new THREE.Color("#ffffff").multiplyScalar(1.15),
+      }),
+      new THREE.PlaneGeometry(len, 0.9),
+      X0 + 0.25,
+      2.95,
+      zc,
+      0,
+      Math.PI / 2,
+    );
+    // wooden frame of the cellar
+    for (let z = za; z <= zb + 0.01; z += len / 6)
+      put(
+        S,
+        woodDark,
+        new THREE.BoxGeometry(0.12, 3.5, 0.08),
+        X0 + 0.48,
+        1.75,
+        z,
+      );
+    for (const y of [0.1, 2.42, 3.45])
+      put(
+        S,
+        woodDark,
+        new THREE.BoxGeometry(0.12, 0.08, len),
+        X0 + 0.48,
+        y,
+        zc,
+      );
+    ctx.wall(X0, za - 0.1, X0 + 0.55, zb + 0.1);
+  }
 
-  /* ---------- the back room through the arch (blue light) ---------- */
-  const BR = { x0: 0.6, x1: 4.4, z0: -13, z1: Z0 - 0.55, h: 3.0 };
+  // the back room through the arch (blue light from the kitchen pass)
+  const BR = {
+    x0: ARCH_X - 1.9,
+    x1: ARCH_X + 1.9,
+    z0: Z0 - 3.0,
+    z1: Z0 - 0.55,
+    h: 3.0,
+  };
   {
     const w = BR.x1 - BR.x0;
     const d = BR.z1 - BR.z0;
@@ -949,25 +1169,14 @@ async function build(ctx: SceneCtx) {
     put(S, darkWall, new THREE.PlaneGeometry(w, BR.h), cx, BR.h / 2, BR.z0);
     put(
       S,
-      darkWall,
-      new THREE.PlaneGeometry(w, BR.h),
-      cx,
-      BR.h / 2,
-      BR.z1 + 0.001,
-      0,
-      Math.PI,
-    );
-    // open kitchen pass glowing blue
-    put(
-      S,
-      emissive("#2766d8", 0.8),
+      emissive("#2766d8", 0.9),
       new THREE.PlaneGeometry(2.4, 0.9),
       cx,
       1.55,
       BR.z0 + 0.01,
     );
     put(
-      F,
+      S,
       black,
       new THREE.BoxGeometry(2.6, 0.08, 0.3),
       cx,
@@ -975,58 +1184,53 @@ async function build(ctx: SceneCtx) {
       BR.z0 + 0.15,
     );
     put(
-      F,
+      S,
       woodDark,
-      new THREE.BoxGeometry(2.6, 0.12, 0.12),
+      new THREE.BoxGeometry(2.6, 0.3, 0.2),
       cx,
-      2.06,
-      BR.z0 + 0.06,
+      2.15,
+      BR.z0 + 0.1,
     );
-    const blue = new THREE.RectAreaLight("#4f9cff", 3, 2.4, 0.9);
-    blue.position.set(cx, 1.55, BR.z0 + 0.05);
-    blue.lookAt(cx, 1.4, BR.z1);
-    root.add(blue);
-    const warm = new THREE.PointLight("#ffb46a", 1.2, 0, 2);
-    warm.position.set(cx, 2.6, cz);
-    root.add(warm);
-    // string of small bulbs under the vault
-    for (let i = 0; i < 9; i++) {
-      const x = BR.x0 + 0.3 + (i / 8) * (w - 0.6);
+    for (let i = 0; i < 7; i++) {
+      const x = BR.x0 + 0.4 + (i / 6) * (w - 0.8);
       put(
-        F,
+        S,
         bulb,
         new THREE.SphereGeometry(0.025, 8, 6),
         x,
-        2.7 - Math.sin((i / 8) * Math.PI) * 0.18,
+        2.75 - Math.sin((i / 6) * Math.PI) * 0.15,
         BR.z1 - 0.4,
       );
     }
-    // little framed pictures on the brick
+    // small framed pictures on the brick, right of the opening (inside)
     for (let i = 0; i < 3; i++) {
       put(
-        F,
+        S,
         black,
         new THREE.BoxGeometry(0.03, 0.3, 0.24),
         BR.x1 - 0.02,
-        1.7 + (i % 2) * 0.35,
-        BR.z1 - 0.5 - i * 0.4,
+        1.6 + (i % 2) * 0.35,
+        BR.z1 - 0.4 - i * 0.4,
       );
       put(
-        F,
-        label,
+        S,
+        cream,
         new THREE.PlaneGeometry(0.19, 0.25),
         BR.x1 - 0.04,
-        1.7 + (i % 2) * 0.35,
-        BR.z1 - 0.5 - i * 0.4,
+        1.6 + (i % 2) * 0.35,
+        BR.z1 - 0.4 - i * 0.4,
         0,
         -Math.PI / 2,
       );
     }
+    const blue = new THREE.PointLight("#4f8dff", 4, 6, 2);
+    blue.position.set(cx, 1.8, BR.z0 + 0.8);
+    root.add(blue);
   }
 
   /* ---------- prototypes ---------- */
 
-  // upholstered beige armchair with a wooden A-frame (faces +Z, seat top 0.43)
+  // taupe upholstered armchair with a wooden A-frame (faces +Z)
   const armchair = (() => {
     const k: Kit = new Map();
     put(
@@ -1037,25 +1241,14 @@ async function build(ctx: SceneCtx) {
       0.39,
       0.02,
     );
-    const back = new THREE.CylinderGeometry(
-      0.29,
-      0.29,
-      0.3,
-      18,
-      1,
-      true,
-      Math.PI - 1.15,
-      2.3,
-    );
-    put(k, upholstery, back, 0, 0.68, 0.04);
     put(
       k,
       upholstery,
       new THREE.CylinderGeometry(
-        0.31,
-        0.31,
+        0.29,
+        0.29,
         0.3,
-        18,
+        14,
         1,
         true,
         Math.PI - 1.15,
@@ -1068,7 +1261,24 @@ async function build(ctx: SceneCtx) {
     put(
       k,
       upholstery,
-      new THREE.TorusGeometry(0.3, 0.012, 4, 18, 2.3),
+      new THREE.CylinderGeometry(
+        0.31,
+        0.31,
+        0.3,
+        14,
+        1,
+        true,
+        Math.PI - 1.15,
+        2.3,
+      ),
+      0,
+      0.68,
+      0.04,
+    );
+    put(
+      k,
+      upholstery,
+      new THREE.TorusGeometry(0.3, 0.012, 4, 14, 2.3),
       0,
       0.83,
       0.04,
@@ -1081,13 +1291,12 @@ async function build(ctx: SceneCtx) {
       beam(k, woodLight, v3(x, 0, 0.25), v3(x, 0.6, 0.13), 0.035, 0.05);
       beam(k, woodLight, v3(x, 0, -0.27), v3(x, 0.6, -0.12), 0.035, 0.05);
       beam(k, woodLight, v3(x, 0.6, -0.24), v3(x, 0.6, 0.2), 0.04, 0.06);
-      beam(k, woodLight, v3(x, 0.33, -0.2), v3(x, 0.33, 0.2), 0.03, 0.04);
     }
     beam(k, woodLight, v3(-0.27, 0.33, 0), v3(0.27, 0.33, 0), 0.03, 0.04);
     return bake(k);
   })();
 
-  // wooden cross-back bistro chair with a beige cushion (faces +Z, seat top 0.42)
+  // light-wood cross-back chair with a beige cushion (faces +Z)
   const crossChair = (() => {
     const k: Kit = new Map();
     put(
@@ -1113,6 +1322,7 @@ async function build(ctx: SceneCtx) {
         v3(s * 0.19, 0, 0.19),
         v3(s * 0.185, 0.36, 0.18),
         0.017,
+        6,
       );
       rod(
         k,
@@ -1120,9 +1330,9 @@ async function build(ctx: SceneCtx) {
         v3(s * 0.19, 0, -0.21),
         v3(s * 0.175, 0.92, -0.245),
         0.018,
+        6,
       );
     }
-    // curved top rail and a thinner lower rail
     for (const [y, r] of [
       [0.88, 0.03],
       [0.82, 0.012],
@@ -1136,14 +1346,13 @@ async function build(ctx: SceneCtx) {
             v3(0, y + 0.01, -0.29),
             v3(0.19, y, -0.24),
           ),
-          12,
+          8,
           r,
-          6,
+          5,
           false,
         ),
       );
     }
-    // the X
     beam(
       k,
       woodLight,
@@ -1160,11 +1369,10 @@ async function build(ctx: SceneCtx) {
       0.03,
       0.018,
     );
-    // stretchers and bentwood ring
     put(
       k,
       woodLight,
-      new THREE.TorusGeometry(0.2, 0.012, 6, 24),
+      new THREE.TorusGeometry(0.2, 0.012, 5, 20),
       0,
       0.16,
       -0.01,
@@ -1172,27 +1380,28 @@ async function build(ctx: SceneCtx) {
     );
     return bake(k);
   })();
+
   // round table with a floor-length linen cloth (Ø 1.4)
   const roundTable = (() => {
     const k: Kit = new Map();
     put(
       k,
       cloth,
-      new THREE.CircleGeometry(0.665, 64),
+      new THREE.CircleGeometry(0.665, 48),
       0,
       0.766,
       0,
       -Math.PI / 2,
     );
     const pts = [
-      v3(0.66, 0.765, 0),
-      v3(0.7, 0.75, 0),
-      v3(0.715, 0.7, 0),
-      v3(0.725, 0.4, 0),
-      v3(0.745, 0.05, 0),
-      v3(0.75, 0.0, 0),
-    ].map((p) => new THREE.Vector2(p.x, p.y));
-    const geo = new THREE.LatheGeometry(pts.reverse(), 72);
+      [0.66, 0.765],
+      [0.7, 0.75],
+      [0.715, 0.7],
+      [0.725, 0.4],
+      [0.745, 0.05],
+      [0.75, 0],
+    ].map(([x, y]) => new THREE.Vector2(x, y));
+    const geo = new THREE.LatheGeometry(pts.reverse(), 56);
     const pos = geo.attributes.position!;
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
@@ -1212,32 +1421,32 @@ async function build(ctx: SceneCtx) {
     return bake(k);
   })();
 
-  // square wooden table (0.8 × 0.8) on four splayed legs
-  const woodTable = (() => {
+  // light-wood table (w × d) on four splayed legs
+  const woodTable = (w: number, d: number) => {
     const k: Kit = new Map();
+    put(k, woodTop, new RoundedBoxGeometry(w, 0.04, d, 2, 0.012), 0, 0.73, 0);
     put(
       k,
-      woodTop,
-      new RoundedBoxGeometry(0.8, 0.04, 0.8, 2, 0.012),
+      woodLight,
+      new THREE.BoxGeometry(w - 0.14, 0.07, d - 0.14),
       0,
-      0.73,
+      0.675,
       0,
     );
-    put(k, woodLight, new THREE.BoxGeometry(0.66, 0.07, 0.66), 0, 0.675, 0);
     for (const sx of [-1, 1])
       for (const sz of [-1, 1])
         beam(
           k,
           woodLight,
-          v3(sx * 0.36, 0, sz * 0.36),
-          v3(sx * 0.29, 0.66, sz * 0.29),
+          v3(sx * (w / 2 - 0.04), 0, sz * (d / 2 - 0.04)),
+          v3(sx * (w / 2 - 0.11), 0.66, sz * (d / 2 - 0.11)),
           0.045,
         );
-    beam(k, woodLight, v3(-0.33, 0.18, 0), v3(0.33, 0.18, 0), 0.03);
     return bake(k);
-  })();
+  };
+  const smallTable = woodTable(0.75, 0.75);
+  const longTable = woodTable(T.w, T.d);
 
-  // rectangular cloth table for the banquettes
   const benchTable = (() => {
     const k: Kit = new Map();
     put(
@@ -1252,73 +1461,39 @@ async function build(ctx: SceneCtx) {
     return bake(k);
   })();
 
-  // wine glass, water tumbler, plates
-  const wineGlassGeo = new THREE.LatheGeometry(
+  const goblet = new THREE.LatheGeometry(
     [
       [0, 0.002],
-      [0.034, 0.002],
-      [0.034, 0.006],
+      [0.035, 0.002],
+      [0.035, 0.006],
       [0.006, 0.012],
-      [0.0045, 0.09],
-      [0.02, 0.102],
-      [0.036, 0.125],
-      [0.042, 0.158],
-      [0.039, 0.205],
-    ].map(([x, y]) => new THREE.Vector2(x, y)),
-    20,
-  );
-  const wineFill = new THREE.LatheGeometry(
-    [
-      [0.0, 0.103],
-      [0.019, 0.105],
-      [0.033, 0.124],
-      [0.037, 0.14],
-      [0.0, 0.14],
-    ].map(([x, y]) => new THREE.Vector2(x, y)),
-    16,
-  );
-  const tumbler = new THREE.LatheGeometry(
-    [
-      [0, 0.001],
-      [0.032, 0.001],
-      [0.037, 0.11],
+      [0.005, 0.07],
+      [0.025, 0.085],
+      [0.04, 0.12],
+      [0.041, 0.175],
     ].map(([x, y]) => new THREE.Vector2(x, y)),
     18,
   );
-  const deepPlate = new THREE.LatheGeometry(
-    [
-      [0, 0.005],
-      [0.075, 0.005],
-      [0.1, 0.03],
-      [0.15, 0.042],
-      [0.152, 0.046],
-      [0.1, 0.034],
-      [0.075, 0.01],
-      [0, 0.01],
-    ].map(([x, y]) => new THREE.Vector2(x, y)),
-    32,
-  );
-  const bottleGeo = new THREE.LatheGeometry(
-    [
-      [0, 0],
-      [0.036, 0],
-      [0.037, 0.2],
-      [0.03, 0.24],
-      [0.013, 0.27],
-      [0.013, 0.32],
-      [0.015, 0.33],
-      [0, 0.33],
-    ].map(([x, y]) => new THREE.Vector2(x, y)),
-    18,
-  );
+  const gobletFill = (h: number) =>
+    new THREE.LatheGeometry(
+      [
+        [0, 0.086],
+        [0.024, 0.088],
+        [0.037, 0.115],
+        [0.039, h],
+        [0, h],
+      ].map(([x, y]) => new THREE.Vector2(x, y)),
+      14,
+    );
 
-  /** A place setting at a seat: charger, folded napkin, cutlery, glasses. `yaw` faces the diner. */
+  /** A place setting: dark round placemat, folded taupe napkin with cutlery, an empty goblet. */
   const setting = (
+    kit: Kit,
     x: number,
     y: number,
     z: number,
     yaw: number,
-    full = true,
+    glass = true,
   ) => {
     const m = new THREE.Matrix4().compose(
       v3(x, y, z),
@@ -1332,408 +1507,795 @@ async function build(ctx: SceneCtx) {
       ly: number,
       lz: number,
       ry = 0,
-      rx = 0,
+      sx = 1,
     ) => {
       const l = new THREE.Matrix4().compose(
         v3(lx, ly, lz),
-        new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, 0)),
-        v3(1, 1, 1),
+        new THREE.Quaternion().setFromAxisAngle(UP, ry),
+        v3(sx, 1, 1),
       );
-      putM(F, mat, geo, m.clone().multiply(l));
+      putM(kit, mat, geo, m.clone().multiply(l));
     };
-    at(new THREE.CylinderGeometry(0.16, 0.16, 0.006, 32), charger, 0, 0.003, 0);
     at(
-      new RoundedBoxGeometry(0.12, 0.02, 0.2, 1, 0.006),
-      napkin,
+      new THREE.CylinderGeometry(0.17, 0.17, 0.005, 28),
+      placemat,
       0,
-      0.016,
+      0.003,
       0,
-      0.5,
+      0,
+      1.2,
     );
-    at(new THREE.BoxGeometry(0.013, 0.003, 0.2), steel, 0.2, 0.002, 0);
-    at(new THREE.BoxGeometry(0.012, 0.003, 0.13), steel, -0.2, 0.002, 0.03);
-    at(new THREE.BoxGeometry(0.024, 0.003, 0.06), steel, -0.2, 0.002, -0.06);
-    if (full) {
-      at(wineGlassGeo, glassMat, 0.17, 0, -0.2);
-      at(tumbler, glassMat, 0.07, 0, -0.24);
-    }
+    at(
+      new RoundedBoxGeometry(0.11, 0.02, 0.2, 1, 0.006),
+      napkin,
+      0.13,
+      0.014,
+      0.02,
+    );
+    at(new THREE.BoxGeometry(0.012, 0.003, 0.19), steel, 0.11, 0.026, 0.02);
+    at(new THREE.BoxGeometry(0.014, 0.003, 0.19), steel, 0.15, 0.026, 0.02);
+    if (glass) at(goblet, glassMat, -0.12, 0, -0.2);
   };
 
-  const placeArmchairsRound = (
-    cx: number,
-    cz: number,
-    n: number,
-    start: number,
-  ) => {
-    for (let i = 0; i < n; i++) {
-      const a = start + (i / n) * Math.PI * 2;
-      const x = cx + Math.sin(a) * 0.95;
-      const z = cz + Math.cos(a) * 0.95;
-      stamp(F, armchair, x, 0, z, a + Math.PI + (rand() - 0.5) * 0.25);
+  /* ---------- the dining room (round tables before the stone wall) ---------- */
+  const rounds: [number, number][] = [
+    [-1.7, -6.5],
+    [1.0, -5.3],
+    [-2.3, -3.2],
+    [4.6, -6.0],
+    [1.6, -1.6],
+  ];
+  rounds.forEach(([x, z], i) => {
+    stamp(S, roundTable, x, 0, z);
+    for (let s = 0; s < 4; s++) {
+      const a = Math.PI / 4 + i * 0.3 + (s * Math.PI) / 2;
+      stamp(
+        S,
+        armchair,
+        x + Math.sin(a) * 0.95,
+        0,
+        z + Math.cos(a) * 0.95,
+        a + Math.PI + (rand() - 0.5) * 0.25,
+      );
       setting(
-        cx + Math.sin(a) * 0.5,
+        S,
+        x + Math.sin(a) * 0.5,
         0.768,
-        cz + Math.cos(a) * 0.5,
+        z + Math.cos(a) * 0.5,
         a + Math.PI,
       );
     }
-  };
-
-  /* ---------- dining room furniture ---------- */
-
-  // round clothed tables with beige armchairs
-  const rounds: [number, number][] = [
-    [-4.6, -6.2],
-    [-1.6, -6.0],
-    [-4.7, -2.8],
-    [-1.5, -2.5],
-    [-4.7, 1.5],
-    [-2.0, 0.2],
-  ];
-  rounds.forEach(([x, z], i) => {
-    stamp(F, roundTable, x, 0, z);
-    placeArmchairsRound(x, z, 4, Math.PI / 4 + i * 0.3);
     ctx.wall(x - 1.15, z - 1.15, x + 1.15, z + 1.15);
   });
 
-  // wooden square tables with cross-back chairs
-  const COUPLE = { x: 2.6, z: -3.4 };
-  const woods: [number, number, number][] = [
-    [COUPLE.x, COUPLE.z, 0],
-    [5.45, -6.7, 0],
-    [0.9, 0.9, 0.2],
-    [2.7, 1.9, -0.15],
-  ];
-  woods.forEach(([x, z, r], i) => {
-    stamp(F, woodTable, x, 0, z, r);
-    if (i === 0) return;
-    for (let s = 0; s < 4; s++) {
-      if (i === 1 && s === 1) continue;
-      const a = r + (s * Math.PI) / 2;
-      stamp(
-        F,
-        crossChair,
-        x + Math.sin(a) * 0.55,
-        0,
-        z + Math.cos(a) * 0.55,
-        a + Math.PI + (rand() - 0.5) * 0.2,
-      );
-      setting(
-        x + Math.sin(a) * 0.24,
-        0.75,
-        z + Math.cos(a) * 0.24,
-        a + Math.PI,
-        s % 2 === 0,
-      );
-    }
-    ctx.wall(x - 0.85, z - 0.85, x + 0.85, z + 0.85);
-  });
-
-  // the couple's table: her chair on the far side, the empty one for the player
-  stamp(F, crossChair, COUPLE.x, 0, COUPLE.z - 0.58, 0);
-  stamp(F, crossChair, COUPLE.x + 0.05, 0, COUPLE.z + 0.66, Math.PI + 0.12);
-  ctx.wall(COUPLE.x - 0.45, COUPLE.z - 0.85, COUPLE.x + 0.45, COUPLE.z + 0.45);
-  ctx.wall(COUPLE.x - 0.25, COUPLE.z + 0.45, COUPLE.x + 0.3, COUPLE.z + 0.9);
-
-  // banquettes along the stone wall, with the warm LED ledge and plants above
-  const banquette = (xa: number, xb: number) => {
+  // banquette along the stone wall, LED strip and ferns on the ledge
+  const benchSeg = (xa: number, xb: number) => {
     const len = xb - xa;
     const cx = (xa + xb) / 2;
-    put(F, woodDark, new THREE.BoxGeometry(len, 0.3, 0.6), cx, 0.15, Z0 + 0.32);
+    put(S, woodDark, new THREE.BoxGeometry(len, 0.3, 0.6), cx, 0.15, Z0 + 0.32);
     put(
-      F,
+      S,
       bench,
       new RoundedBoxGeometry(len, 0.13, 0.56, 2, 0.04),
       cx,
       0.37,
       Z0 + 0.34,
     );
-    const n = Math.round(len / 0.19);
-    for (let i = 0; i < n; i++) {
-      const x = xa + (i + 0.5) * (len / n);
+    const n = Math.round(len / 0.2);
+    put(
+      S,
+      bench,
+      new RoundedBoxGeometry(len, 0.62, 0.12, 2, 0.045),
+      cx,
+      0.76,
+      Z0 + 0.1,
+      -0.09,
+    );
+    for (let i = 1; i < n; i++)
       put(
-        F,
-        bench,
-        new RoundedBoxGeometry(len / n - 0.008, 0.62, 0.12, 2, 0.045),
-        x,
-        0.76,
-        Z0 + 0.12,
+        S,
+        darkWall,
+        new THREE.BoxGeometry(0.012, 0.56, 0.02),
+        xa + (i * len) / n,
+        0.77,
+        Z0 + 0.17,
         -0.09,
       );
-    }
-    put(F, woodDark, new THREE.BoxGeometry(len, 0.06, 0.2), cx, 1.1, Z0 + 0.1);
+    put(S, woodDark, new THREE.BoxGeometry(len, 0.06, 0.2), cx, 1.1, Z0 + 0.1);
     put(
-      F,
+      S,
       warmLed,
       new THREE.BoxGeometry(len, 0.012, 0.02),
       cx,
       1.135,
       Z0 + 0.03,
     );
-    const glow = new THREE.RectAreaLight("#ffb766", 5, len, 0.06);
-    glow.position.set(cx, 1.16, Z0 + 0.05);
-    glow.lookAt(cx, 3.4, Z0 - 0.4);
-    root.add(glow);
     ctx.wall(xa, Z0, xb, Z0 + 0.65);
   };
-  banquette(X0 + 0.05, 1.15);
-  banquette(3.85, X1 - 0.05);
-  const benchTables = [-5.8, -3.9, -2.0, -0.1, 4.6, 6.05];
-  for (const x of benchTables) {
-    stamp(F, benchTable, x, 0, Z0 + 1.05);
-    stamp(F, armchair, x, 0, Z0 + 1.85, Math.PI + (rand() - 0.5) * 0.2);
-    setting(x, 0.765, Z0 + 1.32, Math.PI);
-    setting(x, 0.765, Z0 + 0.82, 0, false);
+  const benchL = [STONE_X0 + 0.05, ARCH_X - 1.25] as const;
+  benchSeg(benchL[0], benchL[1]);
+  benchSeg(ARCH_X + 1.25, STONE_X1 - 0.02);
+  {
+    const len = benchL[1] - benchL[0];
+    const glow = new THREE.RectAreaLight("#ffb766", 7, len + 1.5, 0.06);
+    glow.position.set((benchL[0] + benchL[1]) / 2 + 0.7, 1.16, Z0 + 0.05);
+    glow.lookAt((benchL[0] + benchL[1]) / 2 + 0.7, 3.4, Z0 - 0.4);
+    root.add(glow);
   }
-  ctx.wall(-6.4, Z0 + 0.6, 0.45, Z0 + 2.15);
-  ctx.wall(4.05, Z0 + 0.6, 6.95, Z0 + 2.15);
+  for (const x of [-2.6, -0.8]) {
+    stamp(S, benchTable, x, 0, Z0 + 1.05);
+    stamp(S, armchair, x, 0, Z0 + 1.85, Math.PI + (rand() - 0.5) * 0.2);
+    setting(S, x, 0.765, Z0 + 1.3, Math.PI);
+    setting(S, x, 0.765, Z0 + 0.82, 0);
+  }
+  ctx.wall(STONE_X0, Z0 + 0.6, 0.0, Z0 + 2.15);
 
-  /* ---------- the right side: bamboo screens, doors, fridge, bar ---------- */
-  const bambooBack = new THREE.MeshStandardMaterial({
-    map: bambooTex,
-    roughness: 0.8,
-    color: "#c7a57a",
-    emissive: "#ffffff",
-    emissiveMap: bambooTex,
-    emissiveIntensity: 0.12,
-  });
-  bambooTex.repeat.set(4, 1);
-  put(
-    S,
-    bambooBack,
-    new THREE.PlaneGeometry(4.8, 4.0),
-    X1 - 0.02,
-    2.0,
-    -7.55,
-    0,
-    -Math.PI / 2,
-  );
-  const bambooMat = pbr(repeat(woodPlanks("#c7a265", 1, 91), 1, 1), {
-    roughness: 0.55,
-  });
-  const bambooDark = pbr(repeat(woodPlanks("#8f6a3c", 1, 92), 1, 1), {
-    roughness: 0.6,
-  });
-  for (const z of [-9.85, -7.55, -5.2]) {
-    put(F, woodPillar, new THREE.BoxGeometry(0.3, 4.4, 0.3), X1 - 0.2, 2.2, z);
+  // right of the arch: two small wooden tables with cross-back chairs
+  for (const [x, z] of [
+    [5.7, -8.6],
+    [5.7, -4.1],
+  ] as const) {
+    stamp(S, smallTable, x, 0, z);
+    stamp(S, crossChair, x, 0, z - 0.52, 0);
+    stamp(S, crossChair, x, 0, z + 0.52, Math.PI);
+    setting(S, x, 0.75, z - 0.2, 0);
+    setting(S, x, 0.75, z + 0.2, Math.PI);
+    ctx.wall(x - 0.45, z - 0.85, x + 0.45, z + 0.85);
   }
-  put(
-    F,
-    woodPillar,
-    new THREE.BoxGeometry(0.35, 0.18, 4.9),
-    X1 - 0.2,
-    4.1,
-    -7.55,
-  );
-  put(
-    S,
-    warmLed,
-    new THREE.BoxGeometry(0.03, 0.04, 4.6),
-    X1 - 0.38,
-    4.2,
-    -7.55,
-  );
-  put(
-    F,
-    woodDark,
-    new THREE.BoxGeometry(0.4, 0.35, 4.4),
-    X1 - 0.22,
-    0.175,
-    -7.55,
-  );
-  // the wooden soffit and LED cove continue along the whole right wall
-  put(
-    F,
-    woodPillar,
-    new THREE.BoxGeometry(0.35, 0.18, 8.2),
-    X1 - 0.2,
-    4.1,
-    -1.0,
-  );
-  put(S, warmLed, new THREE.BoxGeometry(0.03, 0.04, 8.0), X1 - 0.38, 4.2, -1.0);
-  put(
-    S,
-    woodPillar,
-    new THREE.PlaneGeometry(8.2, 1.2),
-    X1 - 0.03,
-    3.45,
-    -1.0,
-    0,
-    -Math.PI / 2,
-  );
-  for (const z of [-2.35, 2.75])
+
+  // the beige corner: a bare round wooden table and two armchairs
+  {
+    const x = -5.4;
+    const z = -8.7;
     put(
-      F,
-      woodPillar,
-      new THREE.BoxGeometry(0.3, 4.1, 0.3),
-      X1 - 0.18,
-      2.05,
+      S,
+      woodTop,
+      new THREE.CylinderGeometry(0.4, 0.4, 0.035, 32),
+      x,
+      0.74,
       z,
     );
-  {
-    const poleGeo = new THREE.CylinderGeometry(1, 1, 1, 7, 1);
-    let z = -9.65;
-    while (z < -5.4) {
-      const r = 0.017 + rand() * 0.014;
-      const hgt = 3.1 + rand() * 0.95;
-      const x = X1 - 0.12 - rand() * 0.12;
-      put(
-        F,
-        rand() < 0.3 ? bambooDark : bambooMat,
-        poleGeo,
-        x,
-        0.35 + hgt / 2,
-        z,
-        0,
-        0,
-        (rand() - 0.5) * 0.02,
-        r,
-        hgt,
-        r,
+    for (let i = 0; i < 4; i++)
+      beam(
+        S,
+        woodLight,
+        v3(
+          x + Math.cos(i * 1.571 + 0.78) * 0.32,
+          0,
+          z + Math.sin(i * 1.571 + 0.78) * 0.32,
+        ),
+        v3(x, 0.72, z),
+        0.04,
       );
-      // nodes
-      for (let y = 0.6 + rand() * 0.3; y < hgt; y += 0.35 + rand() * 0.15)
-        put(
-          F,
-          bambooDark,
-          poleGeo,
-          x,
-          0.35 + y,
-          z,
-          0,
-          0,
-          0,
-          r * 1.15,
-          0.012,
-          r * 1.15,
-        );
-      z += r * 2 + 0.012 + rand() * 0.03;
-    }
+    stamp(S, armchair, x - 0.7, 0, z + 0.1, Math.PI / 2);
+    stamp(S, armchair, x + 0.7, 0, z + 0.1, -Math.PI / 2);
+    ctx.wall(x - 1.0, z - 0.5, x + 1.0, z + 0.55);
   }
-  const bambooLight = new THREE.RectAreaLight("#ffb35c", 4, 4.6, 0.08);
-  bambooLight.position.set(X1 - 0.4, 4.15, -7.55);
-  bambooLight.lookAt(X1 - 0.3, 0, -7.55);
-  root.add(bambooLight);
-  ctx.wall(X1 - 0.45, Z0, X1, -5.0);
 
-  // kitchen doors with the split AC above
+  // little wooden tables along the wine cellar
+  for (const z of [-5.6, -2.9, -0.2]) {
+    const x = -5.6;
+    stamp(S, smallTable, x, 0, z);
+    stamp(S, crossChair, x - 0.55, 0, z, Math.PI / 2);
+    stamp(S, crossChair, x + 0.55, 0, z, -Math.PI / 2);
+    setting(S, x - 0.2, 0.75, z, Math.PI / 2);
+    setting(S, x + 0.2, 0.75, z, -Math.PI / 2);
+    ctx.wall(x - 0.85, z - 0.45, x + 0.85, z + 0.45);
+  }
+
+  /* ---------- their banquette and the branch screen behind them ---------- */
+  const PX0 = -2.6;
+  const PX1 = 1.9;
   {
-    const dz = -4.3;
+    const len = PX1 - PX0;
+    const cx = (PX0 + PX1) / 2;
+    // banquette (facing −Z), seat top at 0.43
     put(
-      F,
+      S,
       woodDark,
-      new THREE.BoxGeometry(0.12, 2.5, 1.65),
-      X1 - 0.06,
-      1.25,
-      dz,
+      new THREE.BoxGeometry(len, 0.3, 0.58),
+      cx,
+      0.15,
+      BENCH_Z - 0.29,
+    );
+    put(
+      C,
+      bench,
+      new RoundedBoxGeometry(len, 0.13, 0.56, 2, 0.04),
+      cx,
+      0.37,
+      BENCH_Z - 0.3,
+    );
+    put(
+      C,
+      bench,
+      new RoundedBoxGeometry(len, 0.62, 0.12, 2, 0.045),
+      cx,
+      0.76,
+      BENCH_Z - 0.06,
+      0.09,
+    );
+    const n = Math.round(len / 0.2);
+    for (let i = 1; i < n; i++)
+      put(
+        S,
+        darkWall,
+        new THREE.BoxGeometry(0.012, 0.56, 0.02),
+        PX0 + (i * len) / n,
+        0.77,
+        BENCH_Z - 0.13,
+        0.09,
+      );
+    put(
+      S,
+      woodDark,
+      new THREE.BoxGeometry(len, 1.1, 0.1),
+      cx,
+      0.55,
+      BENCH_Z + 0.03,
+    );
+    // rustic horizontal branches between wooden posts, plants on top
+    for (let x = PX0; x <= PX1 + 0.01; x += len / 3)
+      put(
+        S,
+        woodDark,
+        new THREE.BoxGeometry(0.09, 2.5, 0.09),
+        x,
+        1.25,
+        BENCH_Z + 0.03,
+      );
+    put(
+      S,
+      woodDark,
+      new THREE.BoxGeometry(len, 0.08, 0.32),
+      cx,
+      2.5,
+      BENCH_Z + 0.03,
+    );
+    for (let y = 1.2; y < 2.42; y += 0.095) {
+      for (let s = 0; s < 3; s++) {
+        const xa = PX0 + (s * len) / 3 + 0.05;
+        const xb = xa + len / 3 - 0.1;
+        const r = 0.018 + rand() * 0.016;
+        rod(
+          S,
+          branchMat,
+          v3(
+            xa - rand() * 0.05,
+            y + (rand() - 0.5) * 0.03,
+            BENCH_Z + (rand() - 0.5) * 0.04,
+          ),
+          v3(
+            xb + rand() * 0.05,
+            y + (rand() - 0.5) * 0.03,
+            BENCH_Z + (rand() - 0.5) * 0.04,
+          ),
+          r,
+          5,
+        );
+      }
+    }
+    put(
+      S,
+      woodDark,
+      new THREE.BoxGeometry(len, 0.22, 0.3),
+      cx,
+      2.65,
+      BENCH_Z + 0.03,
+    );
+    ctx.wall(PX0 - 0.05, BENCH_Z - 0.6, PX1 + 0.05, BENCH_Z + 0.2);
+  }
+  // the neighbouring table on the same banquette
+  stamp(S, longTable, 1.2, 0, T.z);
+  for (const x of [0.85, 1.55]) {
+    stamp(S, crossChair, x, 0, T.z - 0.62, 0);
+    setting(S, x, T.y, T.z - 0.2, 0);
+    setting(S, x, T.y, T.z + 0.22, Math.PI);
+  }
+  ctx.wall(0.45, T.z - 0.95, 1.95, T.z + 0.42);
+
+  /* ---------- their table (#108) ---------- */
+  const ELENA_X = T.x - 0.38;
+  const DAVI_X = T.x + 0.36;
+  {
+    const y = T.y;
+    stamp(C, longTable, T.x, 0, T.z);
+    // the two empty cross-back chairs across from them
+    stamp(C, crossChair, T.x - 0.38, 0, T.z - 0.62, 0.05);
+    stamp(C, crossChair, T.x + 0.36, 0, T.z - 0.64, -0.06);
+    setting(C, T.x - 0.38, y, T.z - 0.22, 0);
+    setting(C, T.x + 0.36, y, T.z - 0.22, 0);
+    ctx.wall(T.x - T.w / 2, T.z - 0.95, T.x + T.w / 2, T.z + T.d / 2);
+
+    // their places: placemat, ribbed grey plate with carbonara and parmigiana
+    const r = seeded(19);
+    for (const px of [ELENA_X, DAVI_X]) {
+      const pz = T.z + 0.2;
+      put(
+        C,
+        placemat,
+        new THREE.CylinderGeometry(0.17, 0.17, 0.005, 28),
+        px,
+        y + 0.003,
+        pz,
+        0,
+        0,
+        0,
+        1.2,
+        1,
+        1,
+      );
+      put(
+        C,
+        greyPlate,
+        new THREE.CylinderGeometry(0.135, 0.12, 0.018, 36),
+        px,
+        y + 0.014,
+        pz,
+      );
+      for (let i = 0; i < 11; i++) {
+        const pts: THREE.Vector3[] = [];
+        let a = r() * Math.PI * 2;
+        let rad = 0.01 + r() * 0.04;
+        for (let k = 0; k < 6; k++) {
+          a += 0.8 + r() * 0.6;
+          rad = Math.min(0.06, Math.max(0.005, rad + (r() - 0.5) * 0.035));
+          pts.push(
+            v3(
+              px + 0.03 + Math.cos(a) * rad,
+              y + 0.026 + (0.035 - rad * 0.45) * (0.6 + r() * 0.5),
+              pz + Math.sin(a) * rad,
+            ),
+          );
+        }
+        put(
+          C,
+          spaghetti,
+          new THREE.TubeGeometry(
+            new THREE.CatmullRomCurve3(pts),
+            28,
+            0.0024,
+            4,
+            false,
+          ),
+        );
+      }
+      for (let i = 0; i < 6; i++)
+        put(
+          C,
+          bacon,
+          new THREE.BoxGeometry(0.01, 0.006, 0.008),
+          px + 0.03 + (r() - 0.5) * 0.08,
+          y + 0.05,
+          pz + (r() - 0.5) * 0.08,
+          r(),
+          r(),
+          r(),
+        );
+      // a piece of parmigiana: breaded, tomato sauce and melted cheese
+      put(
+        C,
+        breaded,
+        new RoundedBoxGeometry(0.08, 0.02, 0.1, 2, 0.008),
+        px - 0.05,
+        y + 0.033,
+        pz - 0.01,
+        0,
+        0.4,
+        0,
+      );
+      put(
+        C,
+        sauce,
+        new THREE.SphereGeometry(0.05, 14, 8),
+        px - 0.05,
+        y + 0.04,
+        pz - 0.01,
+        0,
+        0.4,
+        0,
+        0.85,
+        0.16,
+        1.05,
+      );
+      put(
+        C,
+        cheese,
+        new THREE.SphereGeometry(0.03, 12, 6),
+        px - 0.05,
+        y + 0.046,
+        pz - 0.015,
+        0,
+        0,
+        0,
+        1,
+        0.12,
+        0.9,
+      );
+      // fork and knife resting on the plate
+      put(
+        C,
+        steel,
+        new THREE.BoxGeometry(0.012, 0.004, 0.19),
+        px + 0.08,
+        y + 0.03,
+        pz + 0.02,
+        0,
+        0,
+        0.04,
+      );
+      put(
+        C,
+        steel,
+        new THREE.BoxGeometry(0.014, 0.004, 0.2),
+        px - 0.09,
+        y + 0.03,
+        pz + 0.02,
+        0,
+        0.3,
+        0.04,
+      );
+    }
+    // the shared dishes on wooden boards: carbonara in a black cast-iron oval
+    // dish, parmigiana in a terracotta bowl with two serving spoons
+    const cz = T.z - 0.08;
+    put(
+      C,
+      woodDark,
+      new RoundedBoxGeometry(0.62, 0.025, 0.3, 2, 0.01),
+      T.x,
+      y + 0.0125,
+      cz,
+    );
+    put(
+      C,
+      castIron,
+      new THREE.CylinderGeometry(0.1, 0.092, 0.05, 28, 1, true),
+      T.x + 0.12,
+      y + 0.05,
+      cz,
+      0,
+      0,
+      0,
+      1.55,
+      1,
+      1,
+    );
+    put(
+      C,
+      castIron,
+      new THREE.CircleGeometry(0.092, 28),
+      T.x + 0.12,
+      y + 0.027,
+      cz,
+      -Math.PI / 2,
+      0,
+      0,
+      1.55,
+      1,
+      1,
+    );
+    for (const s of [-1, 1])
+      put(
+        C,
+        castIron,
+        new THREE.BoxGeometry(0.05, 0.015, 0.06),
+        T.x + 0.12 + s * 0.17,
+        y + 0.07,
+        cz,
+      );
+    put(
+      C,
+      cream,
+      new THREE.CircleGeometry(0.094, 28),
+      T.x + 0.12,
+      y + 0.064,
+      cz,
+      -Math.PI / 2,
+      0,
+      0,
+      1.52,
+      1,
+      1,
+    );
+    for (let i = 0; i < 9; i++) {
+      const pts: THREE.Vector3[] = [];
+      for (let k = 0; k < 5; k++)
+        pts.push(
+          v3(
+            T.x + 0.12 + (r() - 0.5) * 0.25,
+            y + 0.066 + r() * 0.008,
+            cz + (r() - 0.5) * 0.14,
+          ),
+        );
+      put(
+        C,
+        spaghetti,
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(pts),
+          20,
+          0.0024,
+          4,
+          false,
+        ),
+      );
+    }
+    for (let i = 0; i < 10; i++)
+      put(
+        C,
+        bacon,
+        new THREE.BoxGeometry(0.01, 0.005, 0.008),
+        T.x + 0.12 + (r() - 0.5) * 0.24,
+        y + 0.07,
+        cz + (r() - 0.5) * 0.12,
+        0,
+        r() * 3,
+        0,
+      );
+    put(
+      C,
+      terracotta,
+      new THREE.LatheGeometry(
+        [0, 0.07, 0.085, 0.09, 0.087].map(
+          (rr, i) => new THREE.Vector2(rr, i * 0.013),
+        ),
+        22,
+      ),
+      T.x - 0.17,
+      y + 0.025,
+      cz,
+    );
+    put(
+      C,
+      sauce,
+      new THREE.CircleGeometry(0.082, 22),
+      T.x - 0.17,
+      y + 0.068,
+      cz,
+      -Math.PI / 2,
+    );
+    put(
+      C,
+      cheese,
+      new THREE.SphereGeometry(0.035, 12, 6),
+      T.x - 0.18,
+      y + 0.069,
+      cz + 0.01,
+      0,
+      0,
+      0,
+      1,
+      0.15,
+      0.8,
     );
     for (const s of [-1, 1]) {
       put(
-        F,
-        woodTop,
-        new THREE.BoxGeometry(0.05, 2.36, 0.7),
-        X1 - 0.1,
-        1.18,
-        dz + s * 0.36,
+        C,
+        steel,
+        new THREE.BoxGeometry(0.012, 0.004, 0.17),
+        T.x - 0.17 + s * 0.025,
+        y + 0.11,
+        cz + 0.06,
+        0.55,
+        s * 0.15,
+        0,
       );
       put(
-        F,
+        C,
         steel,
-        new THREE.BoxGeometry(0.03, 0.3, 0.025),
-        X1 - 0.14,
+        new THREE.SphereGeometry(0.02, 10, 6),
+        T.x - 0.17 + s * 0.025,
+        y + 0.075,
+        cz - 0.01,
+        0,
+        0,
+        0,
+        0.8,
+        0.25,
         1.1,
-        dz + s * 0.07,
       );
     }
+    // the starter: bolinhos with aioli on a white rectangular plate
     put(
-      F,
-      whitePlastic,
-      new RoundedBoxGeometry(0.24, 0.3, 0.95, 2, 0.05),
-      X1 - 0.13,
-      3.15,
-      dz,
-    );
-    put(
-      F,
-      black,
-      new THREE.BoxGeometry(0.01, 0.025, 0.8),
-      X1 - 0.255,
-      3.04,
-      dz,
-    );
-    put(
-      S,
-      emissive("#46b3ff", 3),
-      new THREE.BoxGeometry(0.005, 0.01, 0.03),
-      X1 - 0.255,
-      3.22,
-      dz + 0.38,
-    );
-  }
-
-  // the drinks fridge, glowing blue
-  {
-    const fz = -2.85;
-    const fx = X1 - 0.38;
-    put(
-      F,
-      metal("#9da2a6", 0.4),
-      new THREE.BoxGeometry(0.72, 2.05, 0.8),
-      fx,
-      1.025,
-      fz,
-    );
-    put(
-      S,
-      emissive("#3f9cff", 1.1),
-      new THREE.PlaneGeometry(0.66, 1.62),
-      fx - 0.362,
-      1.05,
-      fz,
+      C,
+      whitePorcelain,
+      new RoundedBoxGeometry(0.34, 0.014, 0.12, 2, 0.006),
+      T.x - 0.55,
+      y + 0.007,
+      cz + 0.02,
       0,
+      0.25,
+      0,
+    );
+    for (let i = 0; i < 3; i++) {
+      const bx = T.x - 0.55 + (i - 1) * 0.095 * Math.cos(0.25);
+      const bz = cz + 0.02 - (i - 1) * 0.095 * Math.sin(0.25);
+      put(
+        C,
+        breaded,
+        new THREE.SphereGeometry(0.03, 14, 10),
+        bx,
+        y + 0.04,
+        bz,
+        0,
+        0,
+        0,
+        1,
+        0.85,
+        1,
+      );
+      put(
+        C,
+        cream,
+        new THREE.SphereGeometry(0.015, 10, 6),
+        bx,
+        y + 0.066,
+        bz,
+        0,
+        0,
+        0,
+        1,
+        0.45,
+        1,
+      );
+    }
+    // drinks: Coca-Cola can and a goblet of coke on ice (Davi), water with
+    // ice and lime (Elena), the red glass bottle
+    const canTex = canvasTex(256, 128, (g) => {
+      g.fillStyle = "#c8101a";
+      g.fillRect(0, 0, 256, 128);
+      g.fillStyle = "#ffffff";
+      g.font = "italic 700 34px Georgia, serif";
+      g.fillText("Coca-Cola", 40, 76);
+      g.fillRect(0, 100, 256, 4);
+    });
+    put(
+      C,
+      new THREE.MeshStandardMaterial({
+        map: canTex,
+        roughness: 0.3,
+        metalness: 0.5,
+      }),
+      new THREE.CylinderGeometry(0.033, 0.033, 0.122, 20, 1, true),
+      DAVI_X + 0.3,
+      y + 0.061,
+      T.z - 0.02,
+    );
+    put(
+      C,
+      metal("#cfcfcf", 0.3),
+      new THREE.CircleGeometry(0.031, 18),
+      DAVI_X + 0.3,
+      y + 0.122,
+      T.z - 0.02,
       -Math.PI / 2,
     );
-    for (let i = 0; i < 4; i++) {
-      const y = 0.38 + i * 0.4;
-      put(F, black, new THREE.BoxGeometry(0.04, 0.012, 0.66), fx - 0.35, y, fz);
-      for (let b = 0; b < 7; b++)
+    const drink = (
+      x: number,
+      z: number,
+      fill: THREE.Material,
+      withLime: boolean,
+    ) => {
+      put(C, glassMat, goblet, x, y, z);
+      put(C, fill, gobletFill(0.15), x, y, z);
+      for (let i = 0; i < 3; i++)
         put(
-          F,
-          i % 2 ? bottleAmber : bottleGreen,
-          bottleGeo,
-          fx - 0.2,
-          y + 0.006,
-          fz - 0.27 + b * 0.09,
+          C,
+          ice,
+          new RoundedBoxGeometry(0.03, 0.028, 0.03, 1, 0.006),
+          x + (i - 1) * 0.018,
+          y + 0.14 + (i % 2) * 0.01,
+          z + (i % 2) * 0.012,
+          0.3 * i,
+          0.5 * i,
           0,
-          0,
-          0,
-          0.9,
-          0.95,
-          0.9,
         );
-    }
-    put(
-      F,
-      emissive("#e2251b", 2.5),
-      new THREE.BoxGeometry(0.02, 0.18, 0.62),
-      fx - 0.37,
-      1.95,
-      fz,
+      if (withLime)
+        put(
+          C,
+          lime,
+          new THREE.CylinderGeometry(
+            0.025,
+            0.025,
+            0.006,
+            16,
+            1,
+            false,
+            0,
+            Math.PI,
+          ),
+          x + 0.01,
+          y + 0.155,
+          z,
+          Math.PI / 2,
+          0,
+          0.2,
+        );
+    };
+    drink(DAVI_X + 0.18, T.z - 0.05, coke, false);
+    drink(
+      ELENA_X - 0.2,
+      T.z - 0.03,
+      new THREE.MeshStandardMaterial({
+        color: "#d9ecf0",
+        roughness: 0.05,
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false,
+      }),
+      true,
     );
-    const fl = new THREE.PointLight("#58aaff", 1.5, 5, 2);
-    fl.position.set(fx - 0.8, 1.1, fz);
-    root.add(fl);
-    ctx.wall(X1 - 0.8, -3.3, X1, -2.4);
+    put(
+      C,
+      redBottle,
+      new THREE.LatheGeometry(
+        [
+          [0, 0],
+          [0.032, 0],
+          [0.033, 0.13],
+          [0.028, 0.17],
+          [0.013, 0.2],
+          [0.012, 0.235],
+          [0, 0.235],
+        ].map(([x, yy]) => new THREE.Vector2(x, yy)),
+        18,
+      ),
+      ELENA_X - 0.3,
+      y,
+      T.z - 0.15,
+    );
+    // her phone and the table card "108"
+    put(
+      C,
+      black,
+      new RoundedBoxGeometry(0.075, 0.008, 0.155, 2, 0.006),
+      ELENA_X - 0.05,
+      y + 0.004,
+      T.z - 0.25,
+      0,
+      0.35,
+      0,
+    );
+    const card = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.08, 0.12),
+      new THREE.MeshStandardMaterial({
+        map: tableCardTexture(),
+        roughness: 0.3,
+      }),
+    );
+    card.position.set(T.x + T.w / 2 - 0.1, y + 0.075, T.z - 0.3);
+    card.rotation.y = Math.PI;
+    root.add(card);
+    const card2 = card.clone();
+    card2.rotation.y = 0;
+    card2.position.z -= 0.006;
+    root.add(card2);
+    put(
+      C,
+      glassMat,
+      new THREE.BoxGeometry(0.09, 0.13, 0.008),
+      card.position.x,
+      y + 0.075,
+      T.z - 0.303,
+    );
+    put(
+      C,
+      whitePlaster,
+      new THREE.BoxGeometry(0.1, 0.02, 0.05),
+      card.position.x,
+      y + 0.01,
+      T.z - 0.303,
+    );
   }
 
-  // the bar: green-tiled counter, wooden top, back bar with bottles
-  const BAR = { x: 5.05, z0: -2.15, z1: 2.6 };
+  /* ---------- the bar (right side, toward the entrance) ---------- */
+  const BAR = { x: 5.25, z0: 1.6, z1: 5.0 };
   {
     const len = BAR.z1 - BAR.z0;
     const cz = (BAR.z0 + BAR.z1) / 2;
-    put(F, greenTile, new THREE.BoxGeometry(0.6, 1.0, len), BAR.x, 0.5, cz);
+    put(S, greenTile, new THREE.BoxGeometry(0.6, 1.0, len), BAR.x, 0.5, cz);
     put(
-      F,
+      S,
       woodTop,
       new RoundedBoxGeometry(0.78, 0.05, len + 0.12, 2, 0.015),
       BAR.x - 0.05,
@@ -1742,16 +2304,14 @@ async function build(ctx: SceneCtx) {
     );
     put(
       S,
-      emissive("#5ee0d0", 2.4),
+      emissive("#5ee0d0", 2.2),
       new THREE.BoxGeometry(0.015, 0.015, len),
       BAR.x - 0.3,
       0.98,
       cz,
     );
-    put(F, black, new THREE.BoxGeometry(0.62, 0.08, len), BAR.x, 0.04, cz);
-    // back bar
     put(
-      F,
+      S,
       woodDark,
       new THREE.BoxGeometry(0.5, 0.95, len),
       X1 - 0.25,
@@ -1760,7 +2320,7 @@ async function build(ctx: SceneCtx) {
     );
     put(
       S,
-      emissive("#ffe2b8", 0.9),
+      emissive("#ffe2b8", 0.8),
       new THREE.PlaneGeometry(len, 1.25),
       X1 - 0.02,
       1.95,
@@ -1768,52 +2328,84 @@ async function build(ctx: SceneCtx) {
       0,
       -Math.PI / 2,
     );
-    const bottleMats = [
-      bottleGreen,
-      bottleAmber,
-      bottleClear,
-      bottleGreen,
-      bottleAmber,
-    ];
     for (let s = 0; s < 3; s++) {
       const y = 1.35 + s * 0.42;
-      put(F, woodTop, new THREE.BoxGeometry(0.3, 0.03, len), X1 - 0.16, y, cz);
-      for (let z = BAR.z0 + 0.15; z < BAR.z1 - 0.1; z += 0.1 + rand() * 0.05) {
+      put(S, woodTop, new THREE.BoxGeometry(0.3, 0.03, len), X1 - 0.16, y, cz);
+      for (let z = BAR.z0 + 0.15; z < BAR.z1 - 0.1; z += 0.14 + rand() * 0.06)
         put(
-          F,
-          bottleMats[Math.floor(rand() * bottleMats.length)]!,
-          bottleGeo,
-          X1 - 0.15 + (rand() - 0.5) * 0.08,
-          y + 0.015,
+          S,
+          rand() < 0.5 ? bottleGreen : bottleAmber,
+          new THREE.CylinderGeometry(0.035, 0.037, 0.3, 8),
+          X1 - 0.15,
+          y + 0.165,
           z,
-          0,
-          0,
-          0,
-          0.85 + rand() * 0.3,
-          0.85 + rand() * 0.25,
-          0.85 + rand() * 0.3,
         );
-      }
     }
-    for (let i = 0; i < 6; i++)
+    // the blue drinks fridge and the kitchen doors, with bamboo above
+    put(
+      S,
+      metal("#9da2a6", 0.4),
+      new THREE.BoxGeometry(0.72, 2.05, 0.8),
+      X1 - 0.38,
+      1.025,
+      0.6,
+    );
+    put(
+      S,
+      emissive("#3f9cff", 1.1),
+      new THREE.PlaneGeometry(0.66, 1.62),
+      X1 - 0.745,
+      1.05,
+      0.6,
+      0,
+      -Math.PI / 2,
+    );
+    put(
+      S,
+      woodDark,
+      new THREE.BoxGeometry(0.12, 2.5, 1.65),
+      X1 - 0.06,
+      1.25,
+      -1.0,
+    );
+    for (const s of [-1, 1])
       put(
-        F,
-        glassMat,
-        wineGlassGeo,
-        X1 - 0.35,
-        0.95,
-        BAR.z0 + 0.4 + i * 0.12,
-        Math.PI,
-        0,
-        0,
+        S,
+        woodTop,
+        new THREE.BoxGeometry(0.05, 2.36, 0.7),
+        X1 - 0.1,
+        1.18,
+        -1.0 + s * 0.36,
       );
-    // stools
-    for (let i = 0; i < 4; i++) {
+    put(
+      S,
+      woodPanel,
+      new THREE.BoxGeometry(0.35, 0.18, 8.0),
+      X1 - 0.2,
+      4.1,
+      1.0,
+    );
+    put(
+      S,
+      warmLed,
+      new THREE.BoxGeometry(0.03, 0.04, 7.8),
+      X1 - 0.38,
+      4.2,
+      1.0,
+    );
+    const pole = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
+    for (let z = -2.6; z < 4.9; z += 0.06 + rand() * 0.04) {
+      if (z > -1.9 && z < 1.1) continue;
+      const r = 0.017 + rand() * 0.012;
+      const hgt = 1.2 + rand() * 0.6;
+      put(S, branchMat, pole, X1 - 0.08, 4.0 - hgt / 2, z, 0, 0, 0, r, hgt, r);
+    }
+    for (let i = 0; i < 3; i++) {
       const z = BAR.z0 + 0.6 + i * 1.1;
       put(
-        F,
+        S,
         woodLight,
-        new THREE.CylinderGeometry(0.19, 0.18, 0.05, 20),
+        new THREE.CylinderGeometry(0.19, 0.18, 0.05, 18),
         BAR.x - 0.75,
         0.76,
         z,
@@ -1821,327 +2413,115 @@ async function build(ctx: SceneCtx) {
       for (let l = 0; l < 4; l++) {
         const a = (l / 4) * Math.PI * 2 + 0.4;
         rod(
-          F,
+          S,
           woodLight,
           v3(BAR.x - 0.75 + Math.sin(a) * 0.2, 0, z + Math.cos(a) * 0.2),
           v3(BAR.x - 0.75 + Math.sin(a) * 0.13, 0.74, z + Math.cos(a) * 0.13),
           0.016,
+          6,
         );
       }
-      put(
-        F,
-        steel,
-        new THREE.TorusGeometry(0.17, 0.008, 5, 20),
-        BAR.x - 0.75,
-        0.28,
-        z,
-        Math.PI / 2,
-      );
     }
     ctx.wall(BAR.x - 0.42, BAR.z0, X1, BAR.z1 + 0.1);
+    ctx.wall(X1 - 0.8, 0.15, X1, 1.05);
   }
 
-  // host stand near the entrance
-  put(
-    F,
-    woodDark,
-    new RoundedBoxGeometry(0.6, 1.1, 0.45, 2, 0.02),
-    -3.0,
-    0.55,
-    3.9,
-  );
-  put(
-    F,
-    woodTop,
-    new THREE.BoxGeometry(0.66, 0.03, 0.5),
-    -3.0,
-    1.115,
-    3.9,
-    0.12,
-  );
-  ctx.wall(-3.35, 3.65, -2.65, 4.15);
-
-  // "Lotação máxima" plaque on the front pillar of the bamboo
+  /* ---------- front wall with the entrance from the mall ---------- */
   {
-    const t = labelTexture(
+    const front = new THREE.Shape();
+    front.moveTo(X0, 0);
+    front.lineTo(X1, 0);
+    front.lineTo(X1, H);
+    front.lineTo(X0, H);
+    front.lineTo(X0, 0);
+    const door = new THREE.Path();
+    // the wall is turned to face the room, so the opening is mirrored in shape space
+    door.moveTo(3.4, 0);
+    door.lineTo(3.4, 2.9);
+    door.lineTo(5.6, 2.9);
+    door.lineTo(5.6, 0);
+    door.lineTo(3.4, 0);
+    front.holes.push(door);
+    put(S, beige, new THREE.ShapeGeometry(front), 0, 0, Z1, 0, Math.PI);
+    put(S, woodDark, new THREE.BoxGeometry(0.12, 2.95, 0.3), -5.66, 1.475, Z1);
+    put(S, woodDark, new THREE.BoxGeometry(0.12, 2.95, 0.3), -3.34, 1.475, Z1);
+    put(S, woodDark, new THREE.BoxGeometry(2.44, 0.12, 0.3), -4.5, 2.95, Z1);
+    put(
+      S,
+      new THREE.MeshStandardMaterial({ color: "#c9c3b9", roughness: 0.25 }),
+      new THREE.PlaneGeometry(4, 4),
+      -4.5,
+      0.001,
+      Z1 + 2,
+      -Math.PI / 2,
+    );
+    put(
+      S,
+      emissive("#e9e1d3", 0.35),
+      new THREE.PlaneGeometry(4, 3.4),
+      -4.5,
+      1.7,
+      Z1 + 4,
+      0,
+      Math.PI,
+    );
+    put(
+      S,
+      emissive("#fff3e2", 0.6),
+      new THREE.PlaneGeometry(4, 4),
+      -4.5,
+      3.3,
+      Z1 + 2,
+      Math.PI / 2,
+    );
+    const signTex = labelTexture(
       [
         {
-          text: "LOTAÇÃO MÁXIMA:",
-          font: "600 30px sans-serif",
-          color: "#e9e9e9",
-          y: 38,
+          text: "Famiglia",
+          font: "italic 700 120px Georgia, 'Times New Roman', serif",
+          color: "#f3e3c4",
+          y: 120,
         },
         {
-          text: "375 Pessoas",
-          font: "600 38px sans-serif",
-          color: "#e9e9e9",
-          y: 88,
+          text: "CROSARA",
+          font: "600 64px Georgia, serif",
+          color: "#f3e3c4",
+          y: 230,
+        },
+        {
+          text: "Cantina Italiana & Bar",
+          font: "italic 40px Georgia, serif",
+          color: "#d9b98a",
+          y: 310,
         },
       ],
-      320,
-      128,
-      "#161616",
+      1024,
+      384,
+      "#2a1c14",
     );
-    const m = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.4, 0.16),
-      new THREE.MeshStandardMaterial({ map: t, roughness: 0.5 }),
-    );
-    m.position.set(X1 - 0.2, 2.6, -5.04);
-    root.add(m);
-  }
-
-  /* ---------- the couple's table setting ---------- */
-  {
-    const y = 0.75;
-    const { x, z } = COUPLE;
-    // her place (far side) and the player's place (near side)
-    for (const s of [-1, 1]) {
-      const pz = z + s * 0.2;
-      const yaw = s < 0 ? 0 : Math.PI;
-      put(
-        F,
-        charger,
-        new THREE.CylinderGeometry(0.17, 0.17, 0.006, 32),
-        x,
-        y + 0.003,
-        pz,
-      );
-      put(F, porcelain, deepPlate, x, y + 0.006, pz);
-      put(
-        F,
-        steel,
-        new THREE.BoxGeometry(0.013, 0.003, 0.2),
-        x + 0.21,
-        y + 0.003,
-        pz,
-        0,
-        yaw,
-      );
-      put(
-        F,
-        steel,
-        new THREE.BoxGeometry(0.012, 0.003, 0.18),
-        x - 0.21,
-        y + 0.003,
-        pz,
-        0,
-        yaw,
-      );
-      put(
-        F,
-        napkin,
-        new RoundedBoxGeometry(0.13, 0.02, 0.2, 1, 0.006),
-        x - 0.28,
-        y + 0.01,
-        pz + s * 0.02,
-        0,
-        0.2,
-      );
-      // red wine
-      const gx = x + (s < 0 ? -0.2 : 0.22);
-      const gz = z + s * 0.02;
-      put(F, glassMat, wineGlassGeo, gx, y, gz);
-      put(F, wine, wineFill, gx, y, gz);
-      put(F, glassMat, tumbler, gx + (s < 0 ? -0.09 : 0.09), y, gz - s * 0.05);
-      put(
-        F,
-        water,
-        new THREE.CylinderGeometry(0.032, 0.03, 0.07, 16),
-        gx + (s < 0 ? -0.09 : 0.09),
-        y + 0.037,
-        gz - s * 0.05,
-      );
-    }
-    // carbonara (hers)
-    {
-      const r = seeded(5);
-      const pz = z - 0.2;
-      for (let i = 0; i < 16; i++) {
-        const pts: THREE.Vector3[] = [];
-        let a = r() * Math.PI * 2;
-        let rad = 0.01 + r() * 0.05;
-        for (let k = 0; k < 7; k++) {
-          a += 0.8 + r() * 0.6;
-          rad = Math.min(0.075, Math.max(0.005, rad + (r() - 0.5) * 0.04));
-          pts.push(
-            v3(
-              x + Math.cos(a) * rad,
-              y + 0.012 + (0.05 - rad * 0.55) * (0.6 + r() * 0.5),
-              pz + Math.sin(a) * rad,
-            ),
-          );
-        }
-        put(
-          F,
-          pasta,
-          new THREE.TubeGeometry(
-            new THREE.CatmullRomCurve3(pts),
-            40,
-            0.0024,
-            4,
-            false,
-          ),
-        );
-      }
-      for (let i = 0; i < 12; i++) {
-        const a = r() * Math.PI * 2;
-        const rr = r() * 0.05;
-        put(
-          F,
-          bacon,
-          new THREE.BoxGeometry(0.012, 0.007, 0.01),
-          x + Math.cos(a) * rr,
-          y + 0.04 + r() * 0.02,
-          pz + Math.sin(a) * rr,
-          r(),
-          r(),
-          r(),
-        );
-      }
-    }
-    // gnocchi al pomodoro (the player's)
-    {
-      const r = seeded(9);
-      const pz = z + 0.2;
-      put(
-        F,
-        sauce,
-        new THREE.CylinderGeometry(0.075, 0.08, 0.012, 24),
-        x,
-        y + 0.018,
-        pz,
-      );
-      for (let i = 0; i < 18; i++) {
-        const a = r() * Math.PI * 2;
-        const rr = Math.sqrt(r()) * 0.06;
-        put(
-          F,
-          gnocchi,
-          new THREE.CapsuleGeometry(0.009, 0.014, 3, 8),
-          x + Math.cos(a) * rr,
-          y + 0.03 + r() * 0.01,
-          pz + Math.sin(a) * rr,
-          Math.PI / 2,
-          r() * 3,
-          0,
-        );
-      }
-      put(
-        F,
-        basil,
-        new THREE.SphereGeometry(0.018, 8, 4),
-        x + 0.01,
-        y + 0.045,
-        pz,
-        0,
-        0,
-        0,
-        1,
-        0.2,
-        0.6,
-      );
-    }
-    // wine bottle, candle, bread, the table card
-    put(F, bottleGreen, bottleGeo, x + 0.3, y, z - 0.03);
-    put(
-      F,
-      label,
-      new THREE.CylinderGeometry(0.0375, 0.0375, 0.09, 18, 1, true),
-      x + 0.3,
-      y + 0.11,
-      z - 0.03,
-    );
-    put(
-      F,
-      glassMat,
-      new THREE.CylinderGeometry(0.03, 0.03, 0.06, 16, 1, true),
-      x - 0.05,
-      y + 0.03,
-      z,
-    );
-    put(
-      F,
-      whitePlastic,
-      new THREE.CylinderGeometry(0.019, 0.019, 0.02, 12),
-      x - 0.05,
-      y + 0.01,
-      z,
-    );
-    put(
-      F,
-      flame,
-      new THREE.SphereGeometry(0.006, 8, 6),
-      x - 0.05,
-      y + 0.032,
-      z,
-      0,
-      0,
-      0,
-      1,
-      2.2,
-      1,
-    );
-    put(
-      F,
-      woodTop,
-      new THREE.CylinderGeometry(0.08, 0.07, 0.04, 16),
-      x - 0.3,
-      y + 0.02,
-      z - 0.04,
-    );
-    for (let i = 0; i < 4; i++)
-      put(
-        F,
-        bread,
-        new THREE.CapsuleGeometry(0.018, 0.05, 3, 8),
-        x - 0.3 + (i - 1.5) * 0.025,
-        y + 0.05,
-        z - 0.04,
-        Math.PI / 2,
-        0.3 * i,
-        0,
-      );
-    const card = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.08, 0.12),
+    const sign = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.6, 0.6),
       new THREE.MeshStandardMaterial({
-        map: tableCardTexture(),
-        roughness: 0.3,
+        map: signTex,
+        roughness: 0.6,
+        emissive: "#ffffff",
+        emissiveMap: signTex,
+        emissiveIntensity: 0.3,
       }),
     );
-    card.position.set(x + 0.08, y + 0.065, z + 0.02);
-    card.rotation.y = Math.PI;
-    card.rotation.x = 0;
-    root.add(card);
-    const card2 = card.clone();
-    card2.rotation.y = 0;
-    card2.position.z = z + 0.024;
-    root.add(card2);
-    put(
-      F,
-      glassMat,
-      new THREE.BoxGeometry(0.09, 0.13, 0.008),
-      x + 0.08,
-      y + 0.065,
-      z + 0.022,
-    );
-    put(
-      F,
-      woodTop,
-      new THREE.BoxGeometry(0.1, 0.012, 0.04),
-      x + 0.08,
-      y + 0.006,
-      z + 0.022,
-    );
+    sign.position.set(-1.8, 2.6, Z1 - 0.02);
+    sign.rotation.y = Math.PI;
+    root.add(sign);
   }
 
   /* ---------- plants (one instanced mesh of leaves) ---------- */
   const leafGeo = (() => {
-    const g = new THREE.PlaneGeometry(1, 1, 2, 4);
+    const g = new THREE.PlaneGeometry(1, 1, 1, 3);
     const p = g.attributes.position!;
     for (let i = 0; i < p.count; i++) {
-      const y = p.getY(i) + 0.5;
-      const x = p.getX(i) * Math.sin(Math.PI * Math.min(1, y * 1.05)) * 0.9;
-      p.setXYZ(i, x, y, -y * y * 0.35 + Math.abs(x) * 0.15);
+      const yy = p.getY(i) + 0.5;
+      const x = p.getX(i) * Math.sin(Math.PI * Math.min(1, yy * 1.05)) * 0.9;
+      p.setXYZ(i, x, yy, -yy * yy * 0.35 + Math.abs(x) * 0.15);
     }
     g.computeVertexNormals();
     return g;
@@ -2157,12 +2537,16 @@ async function build(ctx: SceneCtx) {
     wid: number,
     color: THREE.Color,
   ) => {
-    const m = new THREE.Matrix4().compose(
-      v3(x, y, z),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(tilt, yaw, 0, "YXZ")),
-      v3(wid, len, wid),
-    );
-    leaves.push({ m, c: color });
+    leaves.push({
+      m: new THREE.Matrix4().compose(
+        v3(x, y, z),
+        new THREE.Quaternion().setFromEuler(
+          new THREE.Euler(tilt, yaw, 0, "YXZ"),
+        ),
+        v3(wid, len, wid),
+      ),
+      c: color,
+    });
   };
   const green = (l = 0) =>
     new THREE.Color().setHSL(
@@ -2172,34 +2556,34 @@ async function build(ctx: SceneCtx) {
     );
   const pot = (x: number, z: number, r: number, h: number, y = 0) => {
     put(
-      F,
+      S,
       terracotta,
       new THREE.LatheGeometry(
-        [
-          v3(0, 0, 0),
-          v3(r * 0.72, 0, 0),
-          v3(r, h * 0.92, 0),
-          v3(r * 1.06, h, 0),
-          v3(r * 0.97, h, 0),
-        ].map((p) => new THREE.Vector2(p.x, p.y)),
-        20,
+        [0, r * 0.72, r, r * 1.06, r * 0.97].map(
+          (rr, i) =>
+            new THREE.Vector2(
+              rr,
+              i === 0 || i === 1 ? 0 : i === 2 ? h * 0.92 : h,
+            ),
+        ),
+        16,
       ),
       x,
       y,
       z,
     );
     put(
-      F,
+      S,
       soil,
-      new THREE.CircleGeometry(r * 0.96, 16),
+      new THREE.CircleGeometry(r * 0.96, 12),
       x,
       y + h * 0.94,
       z,
       -Math.PI / 2,
     );
   };
-  const fern = (x: number, y: number, z: number, size: number) => {
-    for (let i = 0; i < 26; i++)
+  const fern = (x: number, y: number, z: number, size: number, n = 20) => {
+    for (let i = 0; i < n; i++)
       leaf(
         x,
         y,
@@ -2222,9 +2606,9 @@ async function build(ctx: SceneCtx) {
   ) => {
     for (let i = 0; i < n; i++) {
       const a = rand() * Math.PI * 2;
-      const r = Math.sqrt(rand());
+      const rr0 = Math.sqrt(rand());
       const yy = (rand() * 2 - 1) * ry;
-      const rr = rx * r * Math.sqrt(1 - (yy / ry) ** 2);
+      const rr = rx * rr0 * Math.sqrt(1 - (yy / ry) ** 2);
       const c =
         rand() < flowers
           ? new THREE.Color().setHSL(
@@ -2248,7 +2632,7 @@ async function build(ctx: SceneCtx) {
   const ivy = (x: number, y: number, z: number, len: number) => {
     let px = x;
     let pz = z;
-    for (let d = 0; d < len; d += 0.035) {
+    for (let d = 0; d < len; d += 0.04) {
       px += (rand() - 0.5) * 0.02;
       pz += (rand() - 0.5) * 0.02;
       leaf(
@@ -2265,36 +2649,27 @@ async function build(ctx: SceneCtx) {
   };
   const tree = (x: number, z: number, h: number, flowers = 0) => {
     pot(x, z, 0.24, 0.42);
-    rod(F, woodDark, v3(x, 0.35, z), v3(x + 0.03, h * 0.6, z - 0.02), 0.022);
-    bush(x, h * 0.62, z, 0.45, h * 0.35, high ? 520 : 260, flowers);
-  };
-
-  // ferns on the LED ledges, along the stone wall
-  for (let x = X0 + 0.7; x < X1 - 0.3; x += 1.25 + rand() * 0.5) {
-    if (x > 1.0 && x < 4.0) continue;
-    pot(x, Z0 + 0.12, 0.09, 0.15, 1.13);
-    fern(x, 1.27, Z0 + 0.12, 0.3);
-  }
-  // potted trees: by the arch, by the left wall (bougainvillea), near the entrance
-  tree(0.95, Z0 + 0.95, 2.0);
-  tree(4.1, Z0 + 1.0, 1.8);
-  tree(-6.35, -4.3, 2.4, 0.3);
-  tree(-6.4, 0.2, 2.1);
-  tree(-6.2, 4.2, 2.0);
-  tree(0.9, 4.3, 1.9);
-  // bamboo planter
-  for (let z = -9.4; z < -5.6; z += 0.55) fern(X1 - 0.25, 0.35, z, 0.38);
-  ctx.wall(0.6, Z0 + 0.6, 1.3, Z0 + 1.3);
-  ctx.wall(3.75, Z0 + 0.65, 4.45, Z0 + 1.35);
-  for (const [x, z] of [
-    [-6.35, -4.3],
-    [-6.4, 0.2],
-    [-6.2, 4.2],
-    [0.9, 4.3],
-  ] as const)
+    rod(S, woodDark, v3(x, 0.35, z), v3(x + 0.03, h * 0.6, z - 0.02), 0.022, 6);
+    bush(x, h * 0.62, z, 0.45, h * 0.35, high ? 380 : 200, flowers);
     ctx.wall(x - 0.3, z - 0.3, x + 0.3, z + 0.3);
+  };
+  // ferns on the LED ledge of the stone-wall banquette
+  for (let x = STONE_X0 + 0.5; x < STONE_X1 - 0.2; x += 1.0 + rand() * 0.35) {
+    if (x > ARCH_X - 1.35 && x < ARCH_X + 1.35) continue;
+    pot(x, Z0 + 0.12, 0.08, 0.14, 1.13);
+    fern(x, 1.26, Z0 + 0.12, 0.28);
+  }
+  // trees flanking the arch, the bougainvillea in the beige corner
+  tree(ARCH_X - 1.55, Z0 + 0.95, 2.0);
+  tree(ARCH_X + 1.5, Z0 + 0.95, 1.8);
+  tree(-4.3, Z0 - 0.2, 2.3, 0.35);
+  tree(-6.5, Z0 - 0.15, 1.9);
+  // plants along the top of the branch screen behind their banquette
+  for (let x = PX0 + 0.2; x < PX1; x += 0.5)
+    bush(x, 2.95, BENCH_Z + 0.03, 0.3, 0.25, high ? 70 : 40);
+  for (let x = PX0 + 0.3; x < PX1; x += 0.9) ivy(x, 2.6, BENCH_Z + 0.15, 0.6);
 
-  /* ---------- wicker lanterns ---------- */
+  /* ---------- wicker lanterns: emissive only, no lights ---------- */
   type Lamp = {
     x: number;
     z: number;
@@ -2302,57 +2677,34 @@ async function build(ctx: SceneCtx) {
     kind: "pill" | "dome" | "drop";
     R: number;
     L: number;
-    light?: number;
     ivy?: number;
   };
-  // (the first ones get real lights first: the couple's lamp always does)
   const lamps: Lamp[] = [
-    {
-      x: COUPLE.x,
-      z: COUPLE.z,
-      y: 1.75,
-      kind: "drop",
-      R: 0.2,
-      L: 0.4,
-      light: 9,
-    },
-    { x: -0.9, z: -6.9, y: 3.15, kind: "pill", R: 0.2, L: 0.75, light: 14 },
-    { x: -0.3, z: -7.6, y: 3.55, kind: "pill", R: 0.22, L: 0.8 },
-    { x: -1.6, z: -6.0, y: 2.6, kind: "pill", R: 0.17, L: 0.6 },
-    { x: -4.4, z: -6.6, y: 2.9, kind: "pill", R: 0.2, L: 0.7, light: 12 },
-    { x: -4.0, z: -7.3, y: 3.4, kind: "pill", R: 0.2, L: 0.75 },
-    { x: 1.25, z: -8.7, y: 2.45, kind: "dome", R: 0.2, L: 0.36, ivy: 0.6 },
-    { x: 2.5, z: -8.95, y: 2.3, kind: "drop", R: 0.2, L: 0.42, ivy: 0.8 },
-    { x: 3.8, z: -8.55, y: 2.0, kind: "dome", R: 0.18, L: 0.34, ivy: 0.5 },
-    {
-      x: -6.25,
-      z: -2.6,
-      y: 2.2,
-      kind: "drop",
-      R: 0.19,
-      L: 0.38,
-      ivy: 0.7,
-      light: 8,
-    },
-    { x: -6.0, z: -3.3, y: 1.95, kind: "dome", R: 0.15, L: 0.3, ivy: 0.4 },
-    { x: -6.3, z: -1.9, y: 2.55, kind: "pill", R: 0.15, L: 0.55 },
-    { x: -4.7, z: -2.8, y: 2.6, kind: "pill", R: 0.18, L: 0.7, light: 10 },
-    { x: -1.5, z: -2.5, y: 2.75, kind: "pill", R: 0.2, L: 0.75, light: 10 },
-    { x: 5.45, z: -6.7, y: 2.0, kind: "drop", R: 0.19, L: 0.38, ivy: 0.6 },
-    { x: 5.9, z: -8.6, y: 2.6, kind: "dome", R: 0.2, L: 0.36, ivy: 0.7 },
-    { x: 4.5, z: -0.6, y: 2.2, kind: "dome", R: 0.2, L: 0.36, light: 8 },
-    { x: 4.5, z: 1.3, y: 2.2, kind: "dome", R: 0.2, L: 0.36 },
-    { x: 0.9, z: 0.9, y: 2.3, kind: "drop", R: 0.19, L: 0.38, light: 8 },
-    { x: -4.7, z: 1.5, y: 2.7, kind: "pill", R: 0.2, L: 0.75, light: 9 },
-    { x: -2.0, z: 0.2, y: 3.0, kind: "pill", R: 0.21, L: 0.8 },
-    { x: -2.4, z: -0.4, y: 3.5, kind: "pill", R: 0.2, L: 0.75 },
-    { x: 2.7, z: 1.9, y: 2.3, kind: "dome", R: 0.18, L: 0.34 },
+    // the big cluster of long lanterns hanging high before the stone wall
+    { x: -1.2, z: -6.8, y: 3.6, kind: "pill", R: 0.22, L: 0.85 },
+    { x: -0.7, z: -7.4, y: 4.0, kind: "pill", R: 0.23, L: 0.9 },
+    { x: -0.2, z: -6.6, y: 3.35, kind: "pill", R: 0.24, L: 0.95 },
+    // smaller domes and drops near the wall and the arch, some with ivy
+    { x: 0.6, z: -8.7, y: 3.0, kind: "dome", R: 0.2, L: 0.36, ivy: 0.6 },
+    { x: 1.3, z: -8.8, y: 2.95, kind: "drop", R: 0.18, L: 0.36 },
+    { x: ARCH_X, z: -9.0, y: 2.55, kind: "dome", R: 0.22, L: 0.42, ivy: 0.7 },
+    { x: -2.2, z: -8.9, y: 2.6, kind: "drop", R: 0.16, L: 0.34, ivy: 0.5 },
+    // the cluster in the beige corner
+    { x: -5.6, z: -9.6, y: 2.6, kind: "dome", R: 0.17, L: 0.32, ivy: 0.6 },
+    { x: -5.2, z: -9.8, y: 2.25, kind: "drop", R: 0.14, L: 0.28, ivy: 0.4 },
+    { x: -4.9, z: -9.5, y: 2.85, kind: "pill", R: 0.13, L: 0.42 },
+    { x: -4.6, z: -9.3, y: 1.95, kind: "drop", R: 0.18, L: 0.36 },
+    // over the room and the bar
+    { x: -2.3, z: -3.2, y: 3.2, kind: "pill", R: 0.2, L: 0.75 },
+    { x: 1.6, z: -1.6, y: 3.0, kind: "pill", R: 0.2, L: 0.7 },
+    { x: 4.6, z: -6.0, y: 3.1, kind: "pill", R: 0.2, L: 0.75 },
+    { x: 4.6, z: 2.4, y: 2.3, kind: "dome", R: 0.2, L: 0.36 },
+    { x: 4.6, z: 4.0, y: 2.3, kind: "dome", R: 0.2, L: 0.36 },
+    { x: -5.6, z: -2.9, y: 2.4, kind: "drop", R: 0.18, L: 0.36 },
   ];
-  let lights = 0;
-  const maxLights = high ? 8 : 4;
   for (const l of lamps) {
     put(
-      F,
+      S,
       wicker,
       lanternGeo(l.kind, l.R, l.L),
       l.x,
@@ -2361,14 +2713,6 @@ async function build(ctx: SceneCtx) {
       0,
       rand() * 3,
       0,
-    );
-    put(
-      F,
-      wicker,
-      new THREE.CylinderGeometry(0.05, 0.05, 0.03, 12, 1, true),
-      l.x,
-      l.y + l.L,
-      l.z,
     );
     put(
       S,
@@ -2381,18 +2725,17 @@ async function build(ctx: SceneCtx) {
     put(
       S,
       brass,
-      new THREE.CylinderGeometry(0.06, 0.06, 0.025, 16),
+      new THREE.CylinderGeometry(0.06, 0.06, 0.025, 12),
       l.x,
       H - 0.0125,
       l.z,
     );
-    const by = l.y + (l.kind === "dome" ? l.L * 0.45 : l.L * 0.45);
     put(
-      F,
+      S,
       bulb,
-      new THREE.SphereGeometry(0.03, 10, 8),
+      new THREE.SphereGeometry(0.03, 8, 6),
       l.x,
-      by,
+      l.y + l.L * 0.45,
       l.z,
       0,
       0,
@@ -2402,40 +2745,10 @@ async function build(ctx: SceneCtx) {
       1,
     );
     if (l.ivy && high) ivy(l.x + l.R * 0.6, l.y + l.L * 0.6, l.z, l.ivy);
-    if (l.light && lights < maxLights) {
-      lights++;
-      const p = new THREE.PointLight("#ff9f50", l.light * 0.38, 0, 2);
-      p.position.set(l.x, by - 0.05, l.z);
-      root.add(p);
-    }
   }
 
   /* ---------- ceiling fixtures ---------- */
-  for (let x = -5.2; x <= 5.2; x += 3.4) {
-    for (let z = -7.2; z <= 3.6; z += 3.6) {
-      const cx = x + (rand() - 0.5) * 0.2;
-      put(
-        S,
-        black,
-        new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12),
-        cx,
-        H - 0.01,
-        z,
-      );
-      put(
-        S,
-        downlight,
-        new THREE.CircleGeometry(0.035, 12),
-        cx,
-        H - 0.021,
-        z,
-        Math.PI / 2,
-      );
-    }
-  }
-  // grazing downlights along the top of the stone wall
-  const graze = high ? [-5.6, -3.2, -0.9, 5.4] : [-3.2, 5.4];
-  for (let x = -6.3; x <= 6.4; x += 1.15) {
+  for (let x = STONE_X0 + 0.3; x <= STONE_X1 - 0.2; x += 0.9) {
     put(
       S,
       black,
@@ -2454,13 +2767,6 @@ async function build(ctx: SceneCtx) {
       Math.PI / 2,
     );
   }
-  for (const x of graze) {
-    const sp = new THREE.SpotLight("#ffd8a8", 22, 0, 0.55, 0.85, 2);
-    sp.position.set(x, H - 0.05, Z0 + 0.4);
-    sp.target.position.set(x, 0.8, Z0 - 0.05);
-    root.add(sp, sp.target);
-  }
-  // double square spots and AC grilles
   const grille = canvasTex(256, 256, (g) => {
     g.fillStyle = "#3b3f3e";
     g.fillRect(0, 0, 256, 256);
@@ -2472,11 +2778,11 @@ async function build(ctx: SceneCtx) {
     roughness: 0.7,
   });
   for (const [x, z] of [
-    [-3.5, -5],
+    [-1.5, -6.0],
     [1.8, -4.5],
     [-2.5, 0.5],
     [3.0, 2.8],
-  ] as const) {
+  ] as const)
     put(
       S,
       grilleMat,
@@ -2486,12 +2792,13 @@ async function build(ctx: SceneCtx) {
       z,
       Math.PI / 2,
     );
-  }
   for (const [x, z] of [
-    [-1.0, -3.7],
-    [3.6, -6.3],
-    [-5.2, -0.7],
-    [1.9, -0.2],
+    [-0.3, -7.6],
+    [3.4, -6.6],
+    [-4.0, -4.4],
+    [0.6, -3.0],
+    [-1.4, 0.8],
+    [3.8, 0.4],
   ] as const) {
     put(S, black, new THREE.BoxGeometry(0.42, 0.06, 0.24), x, H - 0.03, z);
     for (const s of [-1, 1])
@@ -2506,144 +2813,124 @@ async function build(ctx: SceneCtx) {
       );
   }
 
-  /* ---------- key lights (shadows) and fill ---------- */
-  const key = new THREE.SpotLight("#ffcf98", 13, 0, 0.4, 0.85, 2);
-  key.position.set(COUPLE.x - 0.4, H - 0.1, COUPLE.z + 0.6);
-  key.target.position.set(COUPLE.x, 0.75, COUPLE.z);
+  /* ---------- lights: 8 in total, one casting shadows ---------- */
+  // 1-2: the stone wall, grazed from the ceiling
+  for (const x of [-1.6, 2.6]) {
+    const sp = new THREE.SpotLight("#ffd8a8", 55, 0, 0.95, 0.9, 2);
+    sp.position.set(x, H - 0.05, Z0 + 0.6);
+    sp.target.position.set(x, 0.6, Z0 - 0.1);
+    root.add(sp, sp.target);
+  }
+  // 3: (the banquette LED RectAreaLight above) · 4: (the blue back room above)
+  // 5: their table, the only shadow caster
+  const key = new THREE.SpotLight("#ffcf98", 12, 0, 0.45, 0.85, 2);
+  key.position.set(T.x + 0.4, H - 0.1, T.z - 0.6);
+  key.target.position.set(T.x, T.y, T.z);
   key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.mapSize.set(high ? 2048 : 1024, high ? 2048 : 1024);
   key.shadow.bias = -0.0004;
   key.shadow.normalBias = 0.02;
-  key.shadow.camera.near = 1;
+  key.shadow.camera.near = 2;
   key.shadow.camera.far = 7;
   root.add(key, key.target);
-  const hall = new THREE.SpotLight("#ffc890", 22, 0, 0.75, 0.9, 2);
-  hall.position.set(-3.0, H - 0.1, -4.4);
-  hall.target.position.set(-3.0, 0.5, -4.6);
-  if (high) {
-    hall.castShadow = true;
-    hall.shadow.mapSize.set(1024, 1024);
-    hall.shadow.bias = -0.0005;
-    hall.shadow.normalBias = 0.03;
-  }
-  root.add(hall, hall.target);
-  const front2 = new THREE.SpotLight("#ffc890", 12, 0, 0.8, 0.9, 2);
-  front2.position.set(-1.5, H - 0.1, 1.6);
-  front2.target.position.set(-1.5, 0, 1.2);
-  root.add(front2, front2.target);
-  root.add(new THREE.HemisphereLight("#ffd2a0", "#2a1f17", 0.08));
+  // 6: warm fill over the round tables · 7: the wine cellar side
+  const fill = new THREE.PointLight("#ffb874", 9, 0, 2);
+  fill.position.set(0.0, 3.2, -5.0);
+  root.add(fill);
+  const side = new THREE.PointLight("#ffc890", 5, 0, 2);
+  side.position.set(-4.5, 3.0, -2.0);
+  root.add(side);
+  // 8: soft ambient
+  root.add(new THREE.HemisphereLight("#ffd2a0", "#2a1f17", 0.12));
 
-  /* ---------- flush the batches ---------- */
+  /* ---------- flush ---------- */
   flush(root, S, false);
-  flush(root, F, true);
+  flush(root, C, true);
   if (leaves.length) {
-    const lm = new THREE.MeshStandardMaterial({
-      color: "#ffffff",
-      roughness: 0.6,
-      side: THREE.DoubleSide,
-    });
-    const inst = new THREE.InstancedMesh(leafGeo, lm, leaves.length);
+    const inst = new THREE.InstancedMesh(
+      leafGeo,
+      new THREE.MeshStandardMaterial({
+        color: "#ffffff",
+        roughness: 0.6,
+        side: THREE.DoubleSide,
+      }),
+      leaves.length,
+    );
     leaves.forEach((l, i) => {
       inst.setMatrixAt(i, l.m);
       inst.setColorAt(i, l.c);
     });
-    inst.receiveShadow = true;
     root.add(inst);
   }
 
   /* ---------- photos of the couple ---------- */
-  ctx.photo("famiglia-1.webp", 0.48, 0.64, v3(X0 + 0.04, 1.65, -1.1), 90);
-  ctx.photo("famiglia-3.webp", 0.42, 0.56, v3(5.1, 2.05, Z0 + 0.03), 0);
+  ctx.photo("famiglia-1.webp", 0.45, 0.6, v3(-5.9, 1.65, Z0 - 0.58), 0);
+  ctx.photo(
+    "famiglia-3.webp",
+    0.42,
+    0.56,
+    v3(STONE_X1 + 0.3, 1.75, Z0 + 0.72),
+    0,
+  );
 
   /* ---------- people ---------- */
+  // what they wore that night: her cream embroidered top, his brown "Nature Escape" tee
   const outfits: { davi: Outfit; elena: Outfit } = {
     elena: {
-      top: "#1d1d1d",
-      topStyle: "blouse",
+      top: "#eee5d3",
+      topStyle: "tank",
       bottom: "#23283a",
       bottomStyle: "jeans",
       shoes: "#1a1a1a",
     },
     davi: {
-      top: "#5a3b2b",
+      top: "#4f3324",
       topStyle: "tshirt",
       bottom: "#262c3a",
       bottomStyle: "jeans",
       shoes: "#efefef",
+      print: "NATURE",
+      printColor: "#e8dccb",
     },
   };
   ctx.playerOutfit(outfits);
-  const line =
-    ctx.player === "elena"
-      ? "Um mês que pareceu uma vida inteira (no bom sentido!) 🎻"
-      : "Um violino tocando pra gente? Você caprichou! 🎻";
-  ctx.partner(COUPLE.x, COUPLE.z - 0.6, 0, "sit", outfits, line);
+  const partnerIsElena = ctx.player === "davi";
+  const line = partnerIsElena
+    ? "Um violino tocando pra gente? Você caprichou! 🎻"
+    : "Um mês que pareceu uma vida inteira (no bom sentido!) 🎻";
+  // side by side on the banquette, facing the stone wall: Elena on Davi's left
+  ctx.partner(
+    partnerIsElena ? ELENA_X : DAVI_X,
+    BENCH_Z - 0.38,
+    180,
+    "sit",
+    outfits,
+    line,
+  );
 
-  // the violinist, in a black suit, playing for them
-  const suit: Outfit = {
-    top: "#141414",
-    topStyle: "tshirt",
-    bottom: "#141414",
-    bottomStyle: "pants",
-    shoes: "#0b0b0b",
-  };
-  const vx = COUPLE.x + 1.05;
-  const vz = COUPLE.z - 0.55;
-  // (the "violin" pose brings its own violin and bow)
+  // the violinist, black suit, playing in front of the arch toward their table
   ctx.person(
     {
-      skin: "#6e452d",
+      skin: "#5e3a26",
       hair: "#121010",
-      hairStyle: "short",
-      height: 1.8,
+      hairStyle: "bald",
+      height: 1.82,
       beard: true,
     },
-    suit,
-    vx,
-    vz,
-    -62,
+    {
+      top: "#121212",
+      topStyle: "tshirt",
+      bottom: "#121212",
+      bottomStyle: "pants",
+      shoes: "#3a2418",
+    },
+    ARCH_X - 0.5,
+    Z0 + 2.6,
+    -8,
     "violin",
     "🎻 ♪ ♫",
   );
-
-  // staff: the bartender and two waiters
-  const waiterBlack: Outfit = {
-    top: "#151515",
-    topStyle: "tshirt",
-    bottom: "#151515",
-    bottomStyle: "pants",
-    shoes: "#0b0b0b",
-  };
-  ctx.person(
-    { skin: "#c98f6a", hair: "#1c130d", hairStyle: "short", height: 1.76 },
-    {
-      top: "#e79c86",
-      topStyle: "tshirt",
-      bottom: "#161616",
-      bottomStyle: "pants",
-      shoes: "#111",
-    },
-    X1 - 0.95,
-    0.3,
-    -90,
-    "stand",
-  );
-  ctx.person(
-    {
-      skin: "#8a5a3c",
-      hair: "#0f0b09",
-      hairStyle: "bun",
-      height: 1.66,
-      female: true,
-    },
-    waiterBlack,
-    -0.2,
-    -4.25,
-    -120,
-    "talk",
-  );
-
-  // a few other diners
+  // two background diners: one in the blue room, one by the wine cellar
   ctx.person(
     {
       skin: "#d8a27c",
@@ -2658,83 +2945,54 @@ async function build(ctx: SceneCtx) {
       bottom: "#c9b79c",
       bottomStyle: "pants",
     },
-    1.75,
-    -11.85,
+    ARCH_X - 0.35,
+    Z0 - 1.9,
     90,
     "sit",
   );
-  stamp(F, crossChair, 1.7, 0, -11.85, Math.PI / 2);
-  stamp(F, woodTable, 2.5, 0, -11.85);
-  stamp(F, crossChair, 3.1, 0, -11.85, -Math.PI / 2);
-  setting(2.28, 0.75, -11.85, Math.PI / 2);
-  if (high) {
-    const [rx, rz] = rounds[0]!;
-    const a1 = Math.PI / 4 + Math.PI / 2;
-    ctx.person(
-      {
-        skin: "#efc6a8",
-        hair: "#5a3a22",
-        hairStyle: "long",
-        height: 1.66,
-        female: true,
-      },
-      {
-        top: "#7a2338",
-        topStyle: "blouse",
-        bottom: "#1f2430",
-        bottomStyle: "jeans",
-      },
-      rx + Math.sin(a1) * 0.92,
-      rz + Math.cos(a1) * 0.92,
-      (a1 + Math.PI) * (180 / Math.PI),
-      "sit",
-    );
-    const a2 = a1 + Math.PI;
-    ctx.person(
-      {
-        skin: "#d39b74",
-        hair: "#1a120c",
-        hairStyle: "short",
-        height: 1.8,
-        glasses: true,
-      },
-      {
-        top: "#d9d4ca",
-        topStyle: "tshirt",
-        bottom: "#2b2f38",
-        bottomStyle: "pants",
-      },
-      rx + Math.sin(a2) * 0.92,
-      rz + Math.cos(a2) * 0.92,
-      (a2 + Math.PI) * (180 / Math.PI),
-      "sit",
-    );
-  }
-  flush(root, F, true);
+  stamp(S, crossChair, ARCH_X - 0.4, 0, Z0 - 1.9, Math.PI / 2);
+  stamp(S, smallTable, ARCH_X + 0.3, 0, Z0 - 1.9);
+  ctx.person(
+    {
+      skin: "#efc6a8",
+      hair: "#5a3a22",
+      hairStyle: "long",
+      height: 1.66,
+      female: true,
+    },
+    {
+      top: "#7a2338",
+      topStyle: "blouse",
+      bottom: "#1f2430",
+      bottomStyle: "jeans",
+    },
+    -6.15,
+    -2.9,
+    90,
+    "sit",
+  );
+  flush(root, S, false);
 
   /* ---------- place registration ---------- */
-  // room bounds, the arch passage and the back room
   ctx.wall(X0 - 1, Z0 - 4, X0 + 0.05, Z1 + 4);
   ctx.wall(X1 - 0.05, Z0 - 4, X1 + 1, Z1 + 4);
-  ctx.wall(X0, Z0 - 0.6, ARCH_X - 0.8, Z0 + 0.02);
-  ctx.wall(ARCH_X + 0.8, Z0 - 0.6, X1, Z0 + 0.02);
+  ctx.wall(X0, Z0 - 0.7, STONE_X0, Z0 + 1.4);
+  ctx.wall(STONE_X0, Z0 - 0.7, ARCH_X - 0.78, Z0 + 0.02);
+  ctx.wall(ARCH_X + 0.78, Z0 - 0.7, X1, Z0 + 0.02);
+  ctx.wall(STONE_X1, Z0, STONE_X1 + 0.6, Z0 + 0.7);
+  ctx.wall(X1 - 0.4, Z0, X1, Z0 + 3.8);
   ctx.wall(X0, Z0 - 4, BR.x0 + 0.05, Z0 - 0.5);
   ctx.wall(BR.x1 - 0.05, Z0 - 4, X1, Z0 - 0.5);
   ctx.wall(X0, BR.z0 - 1, X1, BR.z0 + 0.05);
-  ctx.wall(1.95, -12.2, 2.85, -11.3);
-  ctx.wall(X0, Z1 - 0.05, -2.1, Z1 + 4);
-  ctx.wall(0.1, Z1 - 0.05, X1, Z1 + 4);
-  ctx.wall(-2.1, Z1 + 0.6, 0.1, Z1 + 4);
+  ctx.wall(ARCH_X - 0.7, Z0 - 2.35, ARCH_X + 0.7, Z0 - 1.45);
+  ctx.wall(X0, Z1 - 0.05, -5.6, Z1 + 4);
+  ctx.wall(-3.4, Z1 - 0.05, X1, Z1 + 4);
+  ctx.wall(-5.6, Z1 + 0.6, -3.4, Z1 + 4);
 
-  ctx.spawn(-1.0, 3.7, -8);
-  ctx.exit(-1.0, Z1 + 0.15, 0.6);
-  ctx.pack(BAR.x - 0.12, 1.055, 1.55, 70);
+  ctx.spawn(-4.5, Z1 - 0.8, 0);
+  ctx.exit(-4.5, Z1 + 0.15, 0.6);
+  ctx.pack(BAR.x - 0.1, 1.055, 3.4, 70);
   ctx.ambient("amb-famiglia.m4a", 0.5);
-
-  // the candle flickers
-  ctx.onUpdate((t) => {
-    flame.emissiveIntensity = 9 + Math.sin(t * 13) * 1.5 + Math.sin(t * 29) * 1;
-  });
 }
 
 const scene: SceneModule = {

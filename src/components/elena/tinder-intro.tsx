@@ -44,7 +44,7 @@ export function TinderIntro({
               {
                 image: media(card.image),
                 title: card.title,
-                badge: "Carta 1 de 8",
+                badge: "Carta 1 de 13",
               },
             ]}
             onDone={() => setStage("binder")}

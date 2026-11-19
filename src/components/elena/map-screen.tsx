@@ -28,12 +28,17 @@ type Props = {
 
 /** Where each place sits on the stylised map (0..1), and its line on the timeline. */
 const PINS: Record<string, { x: number; y: number; when: string }> = {
-  panedoca: { x: 0.43, y: 0.36, when: "O primeiro encontro" },
-  "casa-vo": { x: 0.62, y: 0.27, when: "Conhecendo a família" },
-  caldas: { x: 0.9, y: 0.82, when: "A primeira viagem" },
-  famiglia: { x: 0.36, y: 0.7, when: "Um mês de nós" },
-  casa: { x: 0.58, y: 0.55, when: "O pedido e o compromisso" },
-  cinema: { x: 0.24, y: 0.46, when: "Sessão a dois" },
+  panedoca: { x: 0.4, y: 0.34, when: "28 de agosto · o primeiro encontro" },
+  "casa-vo": { x: 0.56, y: 0.22, when: "30 de agosto · conhecendo a família" },
+  caldas: { x: 0.92, y: 0.86, when: "4 a 7 de setembro · a primeira viagem" },
+  sabia: { x: 0.68, y: 0.36, when: "13 de setembro · dia de estádio" },
+  famiglia: { x: 0.34, y: 0.72, when: "19 de setembro · a noite do pedido" },
+  casa: { x: 0.52, y: 0.5, when: "19 de setembro · rosas e alianças" },
+  benedith: { x: 0.2, y: 0.52, when: "2 de outubro · noite de rock" },
+  itumbiara: { x: 0.08, y: 0.9, when: "9 de outubro · boliche em família" },
+  alpendre: { x: 0.72, y: 0.6, when: "16 de outubro · a voz dela" },
+  caramel: { x: 0.62, y: 0.76, when: "19 de outubro · um mês de nós" },
+  cinema: { x: 0.74, y: 0.8, when: "19 de outubro · sessão de Verity" },
 };
 
 type Overlay =
@@ -217,6 +222,7 @@ export function MapGame({
       g.font = `600 ${Math.max(12, w * 0.012)}px sans-serif`;
       g.fillText("UBERLÂNDIA", w * 0.4, h * 0.12);
       g.fillText("CALDAS NOVAS →", w * 0.78, h * 0.62);
+      g.fillText("← ITUMBIARA", w * 0.04, h * 0.66);
       // vignette
       const v = g.createRadialGradient(
         w / 2,

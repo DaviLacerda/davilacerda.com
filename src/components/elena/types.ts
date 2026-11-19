@@ -51,8 +51,13 @@ export const ISLAND_ORDER = [
   "panedoca",
   "casa-vo",
   "caldas",
+  "sabia",
   "famiglia",
   "casa",
+  "benedith",
+  "itumbiara",
+  "alpendre",
+  "caramel",
   "cinema",
 ] as const;
 
@@ -62,9 +67,14 @@ export const CARD_ORDER = [
   "panedoca",
   "casa-vo",
   "caldas",
+  "sabia",
   "famiglia",
   "pedido",
   "compromisso",
+  "benedith",
+  "itumbiara",
+  "alpendre",
+  "caramel",
   "cinema",
 ] as const;
 

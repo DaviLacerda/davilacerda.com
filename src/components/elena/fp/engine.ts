@@ -132,7 +132,7 @@ export class Interior {
       this.gtao = gtao;
       this.composer.addPass(gtao);
     }
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.6, 0.5, 1.0);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.5, 0.45, 1.4);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     if (!coarse) {

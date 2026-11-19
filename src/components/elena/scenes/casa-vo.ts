@@ -17,13 +17,11 @@ import {
 import type { Outfit, SceneCtx, SceneModule } from "../fp/types";
 
 /*
- * Grandma's apartment (302), daytime: the entrance opens on a long living
- * room with polished beige tiles, two reclining sofas, a recliner, the TV
- * on an oak panel, a balcony door full of trees at the far end, and the
- * dining room with the aqua tablecloth to the left. Plan (meters, -Z = the
- * balcony): living x∈[-2, 2.2] z∈[-6.6, 0.5]; dining x∈[-5.6, -2]
- * z∈[-3.2, 0.5]; the entrance door in the back wall at x≈1.2, the hallway
- * at x≈-1.35. Ceiling 2.7 m.
+ * Grandma's apartment (302), daytime, rebuilt from the walk-in video: one
+ * long white room with polished beige tiles and crown molding, the dining
+ * table by the entrance, the TV and the hallway on the left wall, the
+ * recliners and beige sofas on the right wall, and the balcony full of
+ * trees at the far end. The plan is detailed above `build`.
  */
 
 const H = 2.7;
@@ -362,21 +360,74 @@ function kidDrawing(seed: number) {
   });
 }
 
+/** The small "302" in metal digits on the front door. */
 function doorNumber() {
-  return canvasTex(128, 320, (g, w, h) => {
-    const grad = g.createLinearGradient(0, 0, w, 0);
-    grad.addColorStop(0, "#2a2a2a");
-    grad.addColorStop(0.5, "#3c3c3c");
-    grad.addColorStop(1, "#262626");
-    g.fillStyle = grad;
-    g.fillRect(0, 0, w, h);
-    g.fillStyle = "#f2f2f2";
-    g.font = "bold 84px sans-serif";
+  return canvasTex(256, 96, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = "#3a3a3a";
+    g.font = "bold 72px sans-serif";
     g.textAlign = "center";
-    g.fillText("3", w / 2, 100);
-    g.fillText("0", w / 2, 190);
-    g.fillText("2", w / 2, 280);
+    g.textBaseline = "middle";
+    g.fillText("302", w / 2, h / 2 + 4);
   });
+}
+
+/* ---------------- static batching ---------------- */
+
+/**
+ * Bakes every static mesh under `root` into one merged mesh per material
+ * (split by shadow casting), so the whole apartment costs a few dozen draw
+ * calls. Meshes under any object in `keep` (moving parts) stay as they are.
+ */
+function bakeStatic(root: THREE.Object3D, keep: Set<THREE.Object3D>) {
+  root.updateMatrixWorld(true);
+  const buckets = new Map<
+    THREE.Material,
+    { cast: THREE.BufferGeometry[]; still: THREE.BufferGeometry[] }
+  >();
+  const done: THREE.Mesh[] = [];
+  root.traverse((o) => {
+    if (
+      !(o instanceof THREE.Mesh) ||
+      o instanceof THREE.InstancedMesh ||
+      Array.isArray(o.material)
+    )
+      return;
+    for (let p: THREE.Object3D | null = o; p; p = p.parent)
+      if (keep.has(p)) return;
+    const src = o.geometry as THREE.BufferGeometry;
+    const g = src.index ? src.toNonIndexed() : src.clone();
+    for (const k of Object.keys(g.attributes))
+      if (k !== "position" && k !== "normal" && k !== "uv")
+        g.deleteAttribute(k);
+    if (!g.attributes.normal || !g.attributes.uv) return;
+    g.clearGroups();
+    g.applyMatrix4(o.matrixWorld);
+    const m = o.material as THREE.Material;
+    let b = buckets.get(m);
+    if (!b) {
+      b = { cast: [], still: [] };
+      buckets.set(m, b);
+    }
+    (o.castShadow ? b.cast : b.still).push(g);
+    done.push(o);
+  });
+  for (const o of done) o.removeFromParent();
+  for (const [m, b] of buckets) {
+    for (const [list, cast] of [
+      [b.cast, true],
+      [b.still, false],
+    ] as const) {
+      if (!list.length) continue;
+      const g = list.length === 1 ? list[0] : mergeGeometries(list, false);
+      if (!g) continue;
+      const mesh = new THREE.Mesh(g, m);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      mesh.matrixAutoUpdate = false;
+      root.add(mesh);
+    }
+  }
 }
 
 /* ---------------- the scene ---------------- */
@@ -400,12 +451,33 @@ const OUTFITS: { davi: Outfit; elena: Outfit } = {
   },
 };
 
+/*
+ * Plan (from the walk-in video, one frame per second). One long room, the
+ * balcony at -Z. Inner faces: left wall x = -2.3, right wall x = 2.3,
+ * entrance wall z = 0.5, balcony wall z = -8.
+ *  - entrance wall: the front door in the right corner, the landscape
+ *    painting over the dining table, a door to the study in the left corner;
+ *  - left wall (entrance → balcony): dark sideboard (portraits above),
+ *    hallway doorway, oak TV panel with the white rack, an empty recliner
+ *    in the corner by the glass;
+ *  - right wall: turquoise bench with backpacks and kids' drawings, grandma's
+ *    recliner, a side table, two beige reclining sofas in a row under the
+ *    abstract canvas, the split AC by the balcony;
+ *  - middle: the dining table (aqua cloth) along the left side by the
+ *    entrance, two ceiling fans.
+ */
+const L = -2.3;
+const R = 2.3;
+const E = 0.5;
+const W = -8;
+
 function build(ctx: SceneCtx) {
   RectAreaLightUniformsLib.init();
   const hi = ctx.quality === "high";
   const root = new THREE.Group();
   ctx.scene.add(root);
   ctx.scene.background = new THREE.Color("#dfe9ef");
+  const keep = new Set<THREE.Object3D>();
 
   const add = (
     g: THREE.BufferGeometry,
@@ -434,6 +506,14 @@ function build(ctx: SceneCtx) {
     parent: THREE.Object3D = root,
     shadow = true,
   ) => add(new THREE.BoxGeometry(w, h, d), m, x, y, z, parent, shadow);
+  const group = (x: number, z: number, ryDeg: number) => {
+    const g = new THREE.Group();
+    g.position.set(x, 0, z);
+    g.rotation.y = THREE.MathUtils.degToRad(ryDeg);
+    root.add(g);
+    g.updateMatrixWorld(true);
+    return g;
+  };
 
   /* ---------- materials ---------- */
   const wallMat = pbr(repeat(plaster("#e9e6df", 31), 3, 2), {
@@ -464,7 +544,10 @@ function build(ctx: SceneCtx) {
   const sofaDark = pbr(repeat(fabric("#8f806c", 52), 3, 3), { roughness: 1 });
   const reclFab = pbr(repeat(fabric("#d2c5b0", 53), 3, 3), { roughness: 1 });
   const turquoise = std("#3fb3a2", 0.5);
-  const clothMat = pbr(repeat(fabric("#62cfc4", 54), 6, 6), { roughness: 1 });
+  const clothMat = pbr(repeat(fabric("#7fd6cc", 54), 6, 6), { roughness: 1 });
+  const clothSkirt = pbr(repeat(fabric("#7fd6cc", 54), 6, 2), {
+    side: THREE.DoubleSide,
+  });
   const seatRed = pbr(repeat(fabric("#7e1d24", 55), 2, 2), { roughness: 0.9 });
   const runnerRed = pbr(repeat(fabric("#8e1f2a", 56), 4, 1), {
     roughness: 0.9,
@@ -472,6 +555,7 @@ function build(ctx: SceneCtx) {
   const porcelain = std("#fbfaf6", 0.2);
   const blackGloss = std("#121212", 0.25);
   const railMat = std("#7b3024", 0.45, { metalness: 0.5 });
+  const lever = metal("#c9c9c6", 0.25);
   const glassMat = new THREE.MeshStandardMaterial({
     color: "#dfeef0",
     roughness: 0.04,
@@ -482,36 +566,33 @@ function build(ctx: SceneCtx) {
   });
 
   /* ---------- floor and ceiling ---------- */
-  const fw = 8.2;
-  const fd = 7.6;
+  const fw = R - L;
+  const fd = E - W;
   const floorMat = pbr(
     repeat(tiles("#e3dccf", "#cfc6b6", 4, 5, 0.22), fw / 2.4, fd / 2.4),
     { roughness: 1 },
   );
-  const floor = add(
+  add(
     new THREE.PlaneGeometry(fw, fd),
     floorMat,
-    -1.7,
     0,
-    -3.05,
+    0,
+    (E + W) / 2,
     root,
     false,
-  );
-  floor.rotation.x = -Math.PI / 2;
-  const ceil = add(
+  ).rotation.x = -Math.PI / 2;
+  add(
     new THREE.PlaneGeometry(fw, fd),
     ceilMat,
-    -1.7,
+    0,
     H,
-    -3.05,
+    (E + W) / 2,
     root,
     false,
-  );
-  ceil.rotation.x = Math.PI / 2;
+  ).rotation.x = Math.PI / 2;
 
   /* ---------- walls (inner faces at the given coordinate) ---------- */
   type Hole = [a: number, b: number, bottom: number, top: number];
-  /** A wall along X at z (inner face), thickness going toward +side*z. */
   const wallX = (
     z: number,
     x0: number,
@@ -520,26 +601,25 @@ function build(ctx: SceneCtx) {
     holes: Hole[] = [],
   ) => {
     const zc = z + (side * T) / 2;
+    const lo = Math.min(z, z + side * T);
+    const hiZ = Math.max(z, z + side * T);
     let cur = x0;
-    const sorted = [...holes].sort((p, q) => p[0] - q[0]);
-    for (const [a, b, bottom, top] of sorted) {
-      if (a > cur) box(a - cur, H, T, wallMat, (cur + a) / 2, H / 2, zc);
+    for (const [a, b, bottom, top] of [...holes].sort((p, q) => p[0] - q[0])) {
+      if (a > cur) {
+        box(a - cur, H, T, wallMat, (cur + a) / 2, H / 2, zc);
+        ctx.wall(cur, lo, a, hiZ);
+      }
       if (bottom > 0)
         box(b - a, bottom, T, wallMat, (a + b) / 2, bottom / 2, zc);
       if (top < H)
         box(b - a, H - top, T, wallMat, (a + b) / 2, (top + H) / 2, zc);
+      if (bottom > 0.5) ctx.wall(a, lo, b, hiZ);
       cur = b;
     }
-    if (x1 > cur) box(x1 - cur, H, T, wallMat, (cur + x1) / 2, H / 2, zc);
-    const lo = Math.min(z, z + side * T);
-    const hiZ = Math.max(z, z + side * T);
-    let c2 = x0;
-    for (const [a, b, bottom] of sorted) {
-      if (a > c2) ctx.wall(c2, lo, a, hiZ);
-      if (bottom > 0.5) ctx.wall(a, lo, b, hiZ);
-      c2 = b;
+    if (x1 > cur) {
+      box(x1 - cur, H, T, wallMat, (cur + x1) / 2, H / 2, zc);
+      ctx.wall(cur, lo, x1, hiZ);
     }
-    if (x1 > c2) ctx.wall(c2, lo, x1, hiZ);
   };
   const wallZ = (
     x: number,
@@ -549,52 +629,47 @@ function build(ctx: SceneCtx) {
     holes: Hole[] = [],
   ) => {
     const xc = x + (side * T) / 2;
+    const lo = Math.min(x, x + side * T);
+    const hiX = Math.max(x, x + side * T);
     let cur = z0;
-    const sorted = [...holes].sort((p, q) => p[0] - q[0]);
-    for (const [a, b, bottom, top] of sorted) {
-      if (a > cur) box(T, H, a - cur, wallMat, xc, H / 2, (cur + a) / 2);
+    for (const [a, b, bottom, top] of [...holes].sort((p, q) => p[0] - q[0])) {
+      if (a > cur) {
+        box(T, H, a - cur, wallMat, xc, H / 2, (cur + a) / 2);
+        ctx.wall(lo, cur, hiX, a);
+      }
       if (bottom > 0)
         box(T, bottom, b - a, wallMat, xc, bottom / 2, (a + b) / 2);
       if (top < H)
         box(T, H - top, b - a, wallMat, xc, (top + H) / 2, (a + b) / 2);
+      if (bottom > 0.5) ctx.wall(lo, a, hiX, b);
       cur = b;
     }
-    if (z1 > cur) box(T, H, z1 - cur, wallMat, xc, H / 2, (cur + z1) / 2);
-    const lo = Math.min(x, x + side * T);
-    const hiX = Math.max(x, x + side * T);
-    let c2 = z0;
-    for (const [a, b, bottom] of sorted) {
-      if (a > c2) ctx.wall(lo, c2, hiX, a);
-      if (bottom > 0.5) ctx.wall(lo, a, hiX, b);
-      c2 = b;
+    if (z1 > cur) {
+      box(T, H, z1 - cur, wallMat, xc, H / 2, (cur + z1) / 2);
+      ctx.wall(lo, cur, hiX, z1);
     }
-    if (z1 > c2) ctx.wall(lo, c2, hiX, z1);
   };
 
-  const HALL: [number, number] = [-1.75, -0.95];
-  const ENTRY: [number, number] = [0.75, 1.65];
-  const BALCONY: [number, number] = [-1.6, 0.55];
-  wallX(0.5, -5.72, 2.32, 1, [
-    [HALL[0], HALL[1], 0, 2.1],
+  const ENTRY: [number, number] = [1.22, 2.12];
+  const STUDY: [number, number] = [-2.18, -1.4];
+  const HALL: [number, number] = [-3.85, -3.0];
+  const BALC: [number, number] = [-1.95, 1.6];
+  wallX(E, L - T, R + T, 1, [
+    [STUDY[0], STUDY[1], 0, 2.1],
     [ENTRY[0], ENTRY[1], 0, 2.1],
   ]);
-  wallZ(2.2, -6.72, 0.5, 1);
-  wallX(-6.6, -2.12, 2.32, -1, [
-    [BALCONY[0], BALCONY[1], 0, 2.25],
-    [0.68, 1.95, 1.02, 2.25],
-  ]);
-  wallZ(-2.0, -6.6, -3.2, -1);
-  wallX(-3.2, -5.72, -2.0, -1, [[-4.55, -3.05, 1.0, 2.2]]);
-  wallZ(-5.6, -3.32, 0.5, -1);
+  wallX(W, L - T, R + T, -1, [[BALC[0], BALC[1], 0, 2.3]]);
+  wallZ(L, W, E, -1, [[HALL[0], HALL[1], 0, 2.1]]);
+  wallZ(R, W, E, 1);
 
-  // crown molding (two stepped profiles) and tile baseboards along every inner face
+  // crown molding (two stepped profiles) and tile baseboards
   const moldA = new THREE.BoxGeometry(1, 0.11, 0.035);
   const moldB = new THREE.BoxGeometry(1, 0.045, 0.085);
   const base = new THREE.BoxGeometry(1, 0.075, 0.012);
   const baseMat = std("#ddd5c7", 0.35);
   const moldParts: THREE.BufferGeometry[] = [];
   const baseParts: THREE.BufferGeometry[] = [];
-  /** A run of trim along the wall from (x0,z0) to (x1,z1), inward normal angle `ny` (radians, 0 = +z). */
+  /** Trim along a wall from (x0,z0) to (x1,z1); `ny` = inward normal angle (0 = +z). */
   const trimRun = (
     x0: number,
     z0: number,
@@ -602,6 +677,7 @@ function build(ctx: SceneCtx) {
     z1: number,
     ny: number,
     withBase = true,
+    withMold = true,
   ) => {
     const len = Math.hypot(x1 - x0, z1 - z0);
     const cx = (x0 + x1) / 2;
@@ -611,113 +687,54 @@ function build(ctx: SceneCtx) {
     const s = (g: THREE.BufferGeometry, off: number, y: number) => {
       const k = g.clone();
       k.scale(len, 1, 1);
-      const p = geo(k, cx + nx * off, y, cz + nz * off, 0, ny, 0);
-      return p;
+      return geo(k, cx + nx * off, y, cz + nz * off, 0, ny, 0);
     };
-    moldParts.push(s(moldA, 0.0175, H - 0.055), s(moldB, 0.0425, H - 0.0225));
+    if (withMold)
+      moldParts.push(s(moldA, 0.0175, H - 0.055), s(moldB, 0.0425, H - 0.0225));
     if (withBase) baseParts.push(s(base, 0.006, 0.0375));
   };
-  // living + dining perimeter (baseboards broken at the doors)
-  trimRun(-5.6, 0.5, HALL[0], 0.5, Math.PI);
-  trimRun(HALL[1], 0.5, ENTRY[0], 0.5, Math.PI);
-  trimRun(ENTRY[1], 0.5, 2.2, 0.5, Math.PI);
-  trimRun(HALL[0], 0.5, HALL[1], 0.5, Math.PI, false);
-  trimRun(ENTRY[0], 0.5, ENTRY[1], 0.5, Math.PI, false);
-  trimRun(2.2, 0.5, 2.2, -6.6, -Math.PI / 2);
-  trimRun(2.2, -6.6, BALCONY[1], -6.6, 0);
-  trimRun(BALCONY[0], -6.6, -2.0, -6.6, 0);
-  trimRun(BALCONY[0], -6.6, BALCONY[1], -6.6, 0, false);
-  trimRun(-2.0, -6.6, -2.0, -3.2, Math.PI / 2);
-  trimRun(-2.0, -3.2, -5.6, -3.2, 0);
-  trimRun(-5.6, -3.2, -5.6, 0.5, Math.PI / 2);
+  trimRun(L, E, R, E, Math.PI, false);
+  trimRun(L, E, STUDY[0], E, Math.PI, true, false);
+  trimRun(STUDY[1], E, ENTRY[0], E, Math.PI, true, false);
+  trimRun(ENTRY[1], E, R, E, Math.PI, true, false);
+  trimRun(R, E, R, W, -Math.PI / 2);
+  trimRun(R, W, L, W, 0, false);
+  trimRun(R, W, BALC[1], W, 0, true, false);
+  trimRun(BALC[0], W, L, W, 0, true, false);
+  trimRun(L, W, L, E, Math.PI / 2, false);
+  trimRun(L, W, L, HALL[0], Math.PI / 2, true, false);
+  trimRun(L, HALL[1], L, E, Math.PI / 2, true, false);
   add(merged(moldParts), trimMat, 0, 0, 0, root, false);
   add(merged(baseParts), baseMat, 0, 0, 0, root, false);
 
-  // door casings (room side) for an opening in the back wall
+  /** White casing + jamb lining around a door opening, in a wall-aligned frame (opening along local x, room at local -z). */
   const casing = (
-    a: number,
-    b: number,
-    z: number,
-    top: number,
-    dir: 1 | -1,
+    cx: number,
+    cz: number,
+    ryDeg: number,
+    width: number,
+    top = 2.1,
   ) => {
+    const g = group(cx, cz, ryDeg);
     const w = 0.07;
-    box(
-      w,
-      top + w,
-      0.02,
-      trimMat,
-      a - w / 2,
-      (top + w) / 2,
-      z + dir * 0.01,
-      root,
-      false,
-    );
-    box(
-      w,
-      top + w,
-      0.02,
-      trimMat,
-      b + w / 2,
-      (top + w) / 2,
-      z + dir * 0.01,
-      root,
-      false,
-    );
-    box(
-      b - a + w * 2,
-      w,
-      0.02,
-      trimMat,
-      (a + b) / 2,
-      top + w / 2,
-      z + dir * 0.01,
-      root,
-      false,
-    );
-    // jamb lining inside the wall thickness
-    box(
-      0.02,
-      top,
-      T,
-      trimMat,
-      a + 0.01,
-      top / 2,
-      z - dir * (T / 2),
-      root,
-      false,
-    );
-    box(
-      0.02,
-      top,
-      T,
-      trimMat,
-      b - 0.01,
-      top / 2,
-      z - dir * (T / 2),
-      root,
-      false,
-    );
-    box(
-      b - a,
-      0.02,
-      T,
-      trimMat,
-      (a + b) / 2,
-      top - 0.01,
-      z - dir * (T / 2),
-      root,
-      false,
-    );
+    const a = -width / 2;
+    const b = width / 2;
+    box(w, top + w, 0.02, trimMat, a - w / 2, (top + w) / 2, -0.01, g, false);
+    box(w, top + w, 0.02, trimMat, b + w / 2, (top + w) / 2, -0.01, g, false);
+    box(width + w * 2, w, 0.02, trimMat, 0, top + w / 2, -0.01, g, false);
+    box(0.02, top, T, trimMat, a + 0.01, top / 2, T / 2, g, false);
+    box(0.02, top, T, trimMat, b - 0.01, top / 2, T / 2, g, false);
+    box(width, 0.02, T, trimMat, 0, top - 0.01, T / 2, g, false);
   };
-  casing(HALL[0], HALL[1], 0.5, 2.1, -1);
-  casing(ENTRY[0], ENTRY[1], 0.5, 2.1, -1);
+  casing((ENTRY[0] + ENTRY[1]) / 2, E, 0, ENTRY[1] - ENTRY[0]);
+  casing((STUDY[0] + STUDY[1]) / 2, E, 0, STUDY[1] - STUDY[0]);
+  casing(L, (HALL[0] + HALL[1]) / 2, -90, HALL[1] - HALL[0]);
 
-  /* ---------- the entrance door (white, lever handle, 302 outside) ---------- */
+  /* ---------- the front door: white, lever handle, small "302" up top ---------- */
   {
     const pivot = new THREE.Group();
-    pivot.position.set(ENTRY[1] - 0.02, 0, 0.47);
-    pivot.rotation.y = THREE.MathUtils.degToRad(-82);
+    pivot.position.set(ENTRY[1] - 0.02, 0, E - 0.03);
+    pivot.rotation.y = THREE.MathUtils.degToRad(-84);
     root.add(pivot);
     const dw = ENTRY[1] - ENTRY[0] - 0.04;
     const slab = add(
@@ -728,110 +745,141 @@ function build(ctx: SceneCtx) {
       0,
       pivot,
     );
-    slab.name = "entry-door";
-    // panel grooves
-    for (const y of [0.55, 1.5])
-      box(
-        dw - 0.2,
-        0.006,
-        0.044,
-        std("#e2dfd8", 0.5),
-        -dw / 2,
-        y,
-        0,
-        pivot,
-        false,
-      );
-    const lever = metal("#c9c9c6", 0.25);
     for (const s of [1, -1]) {
-      box(0.05, 0.2, 0.012, lever, -dw + 0.08, 1.02, s * 0.026, pivot, false);
-      const handle = box(
-        0.13,
-        0.02,
-        0.02,
+      box(0.05, 0.22, 0.012, lever, -dw + 0.08, 1.02, s * 0.026, pivot, false);
+      box(0.13, 0.02, 0.02, lever, -dw + 0.14, 1.07, s * 0.045, pivot);
+      box(0.02, 0.02, 0.03, lever, -dw + 0.08, 1.07, s * 0.035, pivot, false);
+      add(
+        new THREE.CylinderGeometry(0.012, 0.012, 0.01, 12),
         lever,
-        -dw + 0.13,
-        1.06,
-        s * 0.045,
+        -dw + 0.08,
+        0.92,
+        s * 0.025,
         pivot,
         false,
-      );
-      handle.castShadow = true;
-      box(0.02, 0.02, 0.03, lever, -dw + 0.08, 1.06, s * 0.035, pivot, false);
+      ).rotation.x = Math.PI / 2;
     }
-    // the number plate on the outer face (+z of the door)
     const plate = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.1, 0.25),
+      new THREE.PlaneGeometry(0.11, 0.04),
       new THREE.MeshStandardMaterial({
         map: doorNumber(),
-        roughness: 0.35,
-        metalness: 0.3,
+        roughness: 0.4,
+        metalness: 0.4,
+        transparent: true,
       }),
     );
-    plate.position.set(-dw / 2, 1.45, 0.0215);
+    plate.position.set(-dw / 2 - 0.18, 1.62, 0.021);
     pivot.add(plate);
-    pivot.updateMatrixWorld(true);
+    root.updateMatrixWorld(true);
     ctx.solid(slab);
   }
 
-  /* ---------- the landing outside (building corridor) ---------- */
+  /* ---------- the landing: beige tiles with a granite border, the lift's wooden door ---------- */
   {
-    const lmat = pbr(repeat(concrete("#d6cfc3", 61), 2, 2), { roughness: 0.5 });
-    const lf = add(
-      new THREE.PlaneGeometry(1.8, 2.2),
+    const x0 = 0.75;
+    const x1 = 2.75;
+    const z0 = E + T;
+    const z1 = 2.7;
+    const lmat = pbr(repeat(tiles("#e6dfd2", "#cbc2b2", 3, 9, 0.3), 2, 2), {
+      roughness: 1,
+    });
+    add(
+      new THREE.PlaneGeometry(x1 - x0, z1 - z0),
       lmat,
-      1.2,
+      (x0 + x1) / 2,
       0.001,
-      1.72,
+      (z0 + z1) / 2,
       root,
       false,
-    );
-    lf.rotation.x = -Math.PI / 2;
-    const lc = add(
-      new THREE.PlaneGeometry(1.8, 2.2),
+    ).rotation.x = -Math.PI / 2;
+    const granite = pbr(repeat(concrete("#b9b2a6", 61), 2, 2), {
+      roughness: 0.4,
+    });
+    add(
+      new THREE.PlaneGeometry(x1 - x0, 0.25),
+      granite,
+      (x0 + x1) / 2,
+      0.002,
+      z0 + 0.125,
+      root,
+      false,
+    ).rotation.x = -Math.PI / 2;
+    add(
+      new THREE.PlaneGeometry(x1 - x0, z1 - z0),
       ceilMat,
-      1.2,
+      (x0 + x1) / 2,
       2.5,
-      1.72,
+      (z0 + z1) / 2,
+      root,
+      false,
+    ).rotation.x = Math.PI / 2;
+    const lwall = std("#e8e4da", 0.9);
+    box(0.1, 2.5, z1 - z0, lwall, x0 - 0.05, 1.25, (z0 + z1) / 2);
+    box(0.1, 2.5, z1 - z0, lwall, x1 + 0.05, 1.25, (z0 + z1) / 2);
+    box(x1 - x0, 2.5, 0.1, lwall, (x0 + x1) / 2, 1.25, z1 + 0.05);
+    ctx.wall(x0 - 0.1, z0, x0, z1);
+    ctx.wall(x1, z0, x1 + 0.1, z1);
+    ctx.wall(x0, z1, x1, z1 + 0.1);
+    // the lift: wooden door with a narrow glass strip, steel frame
+    box(1.0, 2.1, 0.05, mahogany, 1.75, 1.05, z1 - 0.03);
+    box(
+      0.08,
+      0.9,
+      0.06,
+      std("#1c1c1c", 0.1),
+      1.95,
+      1.25,
+      z1 - 0.04,
       root,
       false,
     );
-    lc.rotation.x = Math.PI / 2;
-    const lwall = std("#e6e2d8", 0.9);
-    box(0.1, 2.5, 2.2, lwall, 0.25, 1.25, 1.72);
-    box(0.1, 2.5, 2.2, lwall, 2.15, 1.25, 1.72);
-    box(1.8, 2.5, 0.1, lwall, 1.2, 1.25, 2.87);
-    ctx.wall(0.2, 0.6, 0.3, 2.9);
-    ctx.wall(2.1, 0.6, 2.2, 2.9);
-    ctx.wall(0.2, 2.82, 2.2, 2.92);
-    // neighbour's wooden door across the landing
-    box(0.9, 2.1, 0.04, mahogany, 1.2, 1.05, 2.8);
+    box(
+      1.1,
+      0.05,
+      0.06,
+      metal("#9a9a96", 0.3),
+      1.75,
+      2.12,
+      z1 - 0.03,
+      root,
+      false,
+    );
     // louvred fluorescent fixture
     box(
       0.9,
       0.04,
       0.3,
       std("#ffffff", 0.3, { emissive: "#fff6e8", emissiveIntensity: 1.6 }),
-      1.2,
+      1.75,
       2.48,
       1.6,
       root,
       false,
     );
     for (let i = 0; i < 9; i++)
-      box(0.012, 0.05, 0.32, aluminium, 0.8 + i * 0.1, 2.455, 1.6, root, false);
+      box(
+        0.012,
+        0.05,
+        0.32,
+        aluminium,
+        1.35 + i * 0.1,
+        2.455,
+        1.6,
+        root,
+        false,
+      );
     const ll = new THREE.PointLight("#fff1dc", 1.2, 4, 2);
-    ll.position.set(1.2, 2.3, 1.6);
+    ll.position.set(1.75, 2.3, 1.6);
     root.add(ll);
   }
 
-  /* ---------- the hallway to the bedrooms ---------- */
+  /* ---------- the study behind the left door of the entrance wall ---------- */
   {
-    const x0 = -1.95;
-    const x1 = -0.75;
-    const z0 = 0.62;
-    const z1 = 3.4;
-    const hf = add(
+    const x0 = -2.6;
+    const x1 = -0.7;
+    const z0 = E + T;
+    const z1 = 2.6;
+    add(
       new THREE.PlaneGeometry(x1 - x0, z1 - z0),
       floorMat,
       (x0 + x1) / 2,
@@ -839,9 +887,8 @@ function build(ctx: SceneCtx) {
       (z0 + z1) / 2,
       root,
       false,
-    );
-    hf.rotation.x = -Math.PI / 2;
-    const hc = add(
+    ).rotation.x = -Math.PI / 2;
+    add(
       new THREE.PlaneGeometry(x1 - x0, z1 - z0),
       ceilMat,
       (x0 + x1) / 2,
@@ -849,130 +896,185 @@ function build(ctx: SceneCtx) {
       (z0 + z1) / 2,
       root,
       false,
-    );
-    hc.rotation.x = Math.PI / 2;
-    box(T, H, z1 - z0, wallMat, x0 - T / 2 + 0.2, H / 2, (z0 + z1) / 2);
-    box(T, H, z1 - z0, wallMat, x1 + T / 2 - 0.2, H / 2, (z0 + z1) / 2);
-    box(x1 - x0, H, T, wallMat, (x0 + x1) / 2, H / 2, z1 + T / 2);
-    ctx.wall(x0, z0, x0 + 0.2 + T / 2, z1);
-    ctx.wall(x1 - 0.2 - T / 2, z0, x1, z1);
-    ctx.wall(x0, z1, x1, z1 + T);
-    // closed bedroom doors
-    const hd = (x: number, z: number, ry: number) => {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      g.rotation.y = ry;
-      root.add(g);
-      box(0.8, 2.08, 0.04, doorWhite, 0, 1.04, 0, g, false);
-      box(0.94, 0.07, 0.02, trimMat, 0, 2.12, 0.01, g, false);
-      box(0.07, 2.12, 0.02, trimMat, -0.435, 1.06, 0.01, g, false);
-      box(0.07, 2.12, 0.02, trimMat, 0.435, 1.06, 0.01, g, false);
-      box(0.12, 0.02, 0.05, metal("#c9c9c6", 0.25), -0.28, 1.0, 0.04, g, false);
-    };
-    hd(-1.69, 1.6, Math.PI / 2);
-    hd(-1.01, 2.5, -Math.PI / 2);
-    hd(-1.35, 3.38, Math.PI);
-    const hl = new THREE.PointLight("#fff0d8", 1.0, 4, 2);
-    hl.position.set(-1.35, 2.4, 2.0);
-    root.add(hl);
-    const dome = add(
-      new THREE.SphereGeometry(0.16, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-      std("#ffffff", 0.3, { emissive: "#fff3e0", emissiveIntensity: 1.2 }),
-      -1.35,
-      H,
-      2.0,
+    ).rotation.x = Math.PI / 2;
+    box(0.1, H, z1 - z0, wallMat, x0 - 0.05, H / 2, (z0 + z1) / 2);
+    box(0.1, H, z1 - z0, wallMat, x1 + 0.05, H / 2, (z0 + z1) / 2);
+    box(x1 - x0, H, 0.1, wallMat, (x0 + x1) / 2, H / 2, z1 + 0.05);
+    ctx.wall(x0 - 0.1, z0, x0, z1);
+    ctx.wall(x1, z0, x1 + 0.1, z1);
+    ctx.wall(x0, z1, x1, z1 + 0.1);
+    // white desk with papers, a wooden chair and a shelf
+    box(1.2, 0.03, 0.55, std("#f2f0ea", 0.4), -1.75, 0.74, z1 - 0.3);
+    for (const sx of [-0.57, 0.57])
+      box(0.03, 0.73, 0.5, std("#f2f0ea", 0.4), -1.75 + sx, 0.365, z1 - 0.3);
+    box(
+      0.3,
+      0.02,
+      0.22,
+      std("#fdfdfb", 0.9),
+      -1.9,
+      0.765,
+      z1 - 0.32,
       root,
       false,
     );
-    dome.rotation.x = Math.PI;
+    box(0.42, 0.04, 0.4, darkWood, -1.75, 0.46, z1 - 0.85);
+    box(0.4, 0.5, 0.03, darkWood, -1.75, 0.72, z1 - 1.05);
+    box(0.6, 0.02, 0.25, std("#f2f0ea", 0.4), -1.0, 1.5, z1 - 0.13);
+    box(0.08, 0.22, 0.18, std("#4a6a9a", 0.6), -1.15, 1.62, z1 - 0.13);
+    box(0.08, 0.2, 0.18, std("#9a4a4a", 0.6), -1.05, 1.61, z1 - 0.13);
   }
 
-  /* ---------- balcony door, railing, awning and the trees outside ---------- */
+  /* ---------- the hallway to the bedrooms (off the left wall) ---------- */
   {
-    const [a, b] = BALCONY;
-    const z = -6.66;
-    // outer frame
-    box(b - a, 0.05, 0.1, aluminium, (a + b) / 2, 2.225, z, root, false);
-    box(0.05, 2.25, 0.1, aluminium, a + 0.025, 1.125, z, root, false);
-    box(0.05, 2.25, 0.1, aluminium, b - 0.025, 1.125, z, root, false);
+    const x0 = -5.6;
+    const x1 = L - T;
+    const [z0, z1] = HALL;
+    add(
+      new THREE.PlaneGeometry(x1 - x0, z1 - z0),
+      floorMat,
+      (x0 + x1) / 2,
+      0.001,
+      (z0 + z1) / 2,
+      root,
+      false,
+    ).rotation.x = -Math.PI / 2;
+    add(
+      new THREE.PlaneGeometry(x1 - x0, z1 - z0),
+      ceilMat,
+      (x0 + x1) / 2,
+      H,
+      (z0 + z1) / 2,
+      root,
+      false,
+    ).rotation.x = Math.PI / 2;
+    box(x1 - x0, H, 0.1, wallMat, (x0 + x1) / 2, H / 2, z0 - 0.05);
+    box(x1 - x0, H, 0.1, wallMat, (x0 + x1) / 2, H / 2, z1 + 0.05);
+    box(0.1, H, z1 - z0, wallMat, x0 - 0.05, H / 2, (z0 + z1) / 2);
+    ctx.wall(x0, z0 - 0.1, x1, z0);
+    ctx.wall(x0, z1, x1, z1 + 0.1);
+    ctx.wall(x0 - 0.1, z0, x0, z1);
+    const hd = (x: number, z: number, ry: number) => {
+      const g = group(x, z, ry);
+      box(0.78, 2.08, 0.04, doorWhite, 0, 1.04, 0, g, false);
+      box(0.92, 0.07, 0.02, trimMat, 0, 2.12, 0.02, g, false);
+      box(0.07, 2.12, 0.02, trimMat, -0.425, 1.06, 0.02, g, false);
+      box(0.07, 2.12, 0.02, trimMat, 0.425, 1.06, 0.02, g, false);
+      box(0.12, 0.02, 0.05, lever, 0.28, 1.0, 0.04, g, false);
+    };
+    hd(-3.6, z1 - 0.02, 180);
+    hd(-4.8, z0 + 0.02, 0);
+    hd(x0 + 0.02, (z0 + z1) / 2 - 0.02, 90);
+    add(
+      new THREE.SphereGeometry(0.14, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+      std("#ffffff", 0.3, { emissive: "#fff3e0", emissiveIntensity: 1.2 }),
+      -4.0,
+      H,
+      (z0 + z1) / 2,
+      root,
+      false,
+    ).rotation.x = Math.PI;
+  }
+
+  /* ---------- balcony: sliding glass doors, red-brown railing, awning, trees ---------- */
+  {
+    const [a, b] = BALC;
+    const z = W - 0.06;
+    box(b - a, 0.05, 0.1, aluminium, (a + b) / 2, 2.275, z, root, false);
+    box(0.05, 2.3, 0.1, aluminium, a + 0.025, 1.15, z, root, false);
+    box(0.05, 2.3, 0.1, aluminium, b - 0.025, 1.15, z, root, false);
     box(b - a, 0.03, 0.1, aluminium, (a + b) / 2, 0.015, z, root, false);
-    // four sliding leaves, two open behind the others
     const leaf = (cx: number, w: number, dz: number) => {
-      box(w, 0.05, 0.04, aluminium, cx, 2.17, z + dz, root, false);
+      box(w, 0.05, 0.04, aluminium, cx, 2.22, z + dz, root, false);
       box(w, 0.08, 0.04, aluminium, cx, 0.07, z + dz, root, false);
       box(
         0.045,
-        2.15,
+        2.2,
         0.04,
         aluminium,
         cx - w / 2 + 0.022,
-        1.12,
+        1.15,
         z + dz,
         root,
         false,
       );
       box(
         0.045,
-        2.15,
+        2.2,
         0.04,
         aluminium,
         cx + w / 2 - 0.022,
-        1.12,
+        1.15,
         z + dz,
         root,
         false,
       );
-      box(w - 0.06, 0.03, 0.03, aluminium, cx, 1.05, z + dz, root, false);
+      box(w - 0.06, 0.03, 0.03, aluminium, cx, 1.85, z + dz, root, false);
       add(
-        new THREE.PlaneGeometry(w - 0.08, 2.05),
+        new THREE.PlaneGeometry(w - 0.08, 2.1),
         glassMat,
         cx,
-        1.12,
+        1.15,
         z + dz,
         root,
         false,
       );
     };
-    const lw = (b - a) / 4 + 0.04;
+    const lw = (b - a) / 4 + 0.03;
     leaf(a + lw / 2, lw, 0.025);
     leaf(a + lw * 1.5 - 0.03, lw, -0.025);
+    leaf(b - lw * 1.5 + 0.03, lw, -0.025);
     leaf(b - lw / 2, lw, 0.025);
-    // side window above the sofa
-    box(1.27, 0.04, 0.1, aluminium, 1.315, 1.04, z, root, false);
-    box(1.27, 0.04, 0.1, aluminium, 1.315, 2.23, z, root, false);
-    for (const x of [0.7, 1.315, 1.93])
-      box(0.04, 1.23, 0.08, aluminium, x, 1.635, z, root, false);
-    add(
-      new THREE.PlaneGeometry(1.2, 1.15),
-      glassMat,
-      1.315,
-      1.635,
-      z,
-      root,
-      false,
-    );
-    ctx.wall(a, -6.72, b, -6.6);
 
-    // balcony slab, side walls, ceiling
-    const bfl = add(
-      new THREE.PlaneGeometry(4.6, 1.3),
+    const bz0 = W - T;
+    const bz1 = W - 1.4;
+    add(
+      new THREE.PlaneGeometry(R - L, bz0 - bz1),
       floorMat,
-      0.1,
       0,
-      -7.37,
+      0,
+      (bz0 + bz1) / 2,
+      root,
+      false,
+    ).rotation.x = -Math.PI / 2;
+    box(
+      R - L + 0.2,
+      0.12,
+      bz0 - bz1,
+      wallMat,
+      0,
+      H + 0.06,
+      (bz0 + bz1) / 2,
       root,
       false,
     );
-    bfl.rotation.x = -Math.PI / 2;
-    box(4.6, 0.12, 1.3, wallMat, 0.1, H + 0.06, -7.37, root, false);
-    box(0.12, H, 1.3, wallMat, -2.06, H / 2, -7.37, root, false);
-    box(0.12, H, 1.3, wallMat, 2.26, H / 2, -7.37, root, false);
-    // red-brown railing: top rail, bottom rail and many bars (instanced)
-    const rz = -7.95;
-    box(4.3, 0.05, 0.06, railMat, 0.1, 1.05, rz);
-    box(4.3, 0.04, 0.04, railMat, 0.1, 0.12, rz, root, false);
-    box(4.3, 0.04, 0.04, railMat, 0.1, 0.62, rz, root, false);
-    const nb = 36;
+    box(
+      0.12,
+      H,
+      bz0 - bz1,
+      wallMat,
+      L - 0.06,
+      H / 2,
+      (bz0 + bz1) / 2,
+      root,
+      false,
+    );
+    box(
+      0.12,
+      H,
+      bz0 - bz1,
+      wallMat,
+      R + 0.06,
+      H / 2,
+      (bz0 + bz1) / 2,
+      root,
+      false,
+    );
+    const rz = bz1 + 0.05;
+    box(R - L, 0.05, 0.06, railMat, 0, 1.05, rz);
+    box(R - L, 0.04, 0.04, railMat, 0, 0.62, rz, root, false);
+    box(R - L, 0.12, 0.12, wallMat, 0, 0.06, rz, root, false);
+    const nb = 38;
     const bars = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.018, 0.92, 0.018),
       railMat,
@@ -982,118 +1084,58 @@ function build(ctx: SceneCtx) {
     for (let i = 0; i < nb; i++)
       bars.setMatrixAt(
         i,
-        m4.makeTranslation(-2.0 + (i + 0.5) * (4.2 / nb), 0.58, rz),
+        m4.makeTranslation(L + (i + 0.5) * ((R - L) / nb), 0.58, rz),
       );
     bars.castShadow = true;
     root.add(bars);
-    // parapet under the railing
-    box(4.3, 0.1, 0.12, wallMat, 0.1, 0.05, rz, root, false);
-    // maroon awning, rolled down a little at the top
-    const awn = box(
-      4.3,
-      0.02,
-      0.9,
-      pbr(repeat(fabric("#6e2a2a", 62), 6, 2), { roughness: 0.9 }),
-      0.1,
-      2.48,
-      -7.5,
-    );
-    awn.rotation.x = -0.22;
-    for (let i = 0; i < 9; i++) {
+    // maroon striped awning
+    const awnA = std("#7a3030", 0.9, { side: THREE.DoubleSide });
+    const awnB = std("#5f2424", 0.9, { side: THREE.DoubleSide });
+    for (let i = 0; i < 10; i++) {
+      const s = box(
+        (R - L) / 10,
+        0.015,
+        1.0,
+        i % 2 ? awnA : awnB,
+        L + ((i + 0.5) * (R - L)) / 10,
+        2.45,
+        bz1 + 0.55,
+      );
+      s.rotation.x = -0.25;
       const v = box(
-        0.46,
-        0.18,
+        (R - L) / 10,
+        0.2,
         0.01,
-        std(i % 2 ? "#7a3030" : "#5f2424", 0.9),
-        -2.0 + i * 0.47 + 0.23,
-        2.3,
-        -7.95,
+        i % 2 ? awnA : awnB,
+        L + ((i + 0.5) * (R - L)) / 10,
+        2.22,
+        bz1 + 0.06,
         root,
         false,
       );
       v.rotation.x = 0.05;
     }
-    // bright, blurred outside world
+    // bright, out-of-focus outside world
     const outMat = new THREE.MeshBasicMaterial({
       map: outsideView(3),
       color: new THREE.Color(1.05, 1.05, 1.02),
     });
-    const back = add(
-      new THREE.PlaneGeometry(34, 17),
-      outMat,
-      0,
-      2.2,
-      -16,
-      root,
-      false,
-    );
-    back.receiveShadow = false;
-    const side = add(
-      new THREE.PlaneGeometry(14, 17),
-      outMat,
-      -9,
-      2.2,
-      -10,
-      root,
-      false,
-    );
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(34, 17), outMat);
+    back.position.set(0, 2.2, W - 10);
+    const side = new THREE.Mesh(new THREE.PlaneGeometry(14, 17), outMat);
+    side.position.set(-9, 2.2, W - 4);
     side.rotation.y = Math.PI / 2;
-    side.receiveShadow = false;
+    const side2 = new THREE.Mesh(new THREE.PlaneGeometry(14, 17), outMat);
+    side2.position.set(9, 2.2, W - 4);
+    side2.rotation.y = -Math.PI / 2;
+    root.add(back, side, side2);
   }
 
-  /* ---------- dining-room window with a sheer curtain ---------- */
-  {
-    const z = -3.26;
-    box(1.5, 0.04, 0.1, aluminium, -3.8, 1.02, z, root, false);
-    box(1.5, 0.04, 0.1, aluminium, -3.8, 2.18, z, root, false);
-    for (const x of [-4.53, -3.8, -3.07])
-      box(0.04, 1.2, 0.08, aluminium, x, 1.6, z, root, false);
-    const outMat = new THREE.MeshBasicMaterial({
-      map: outsideView(9, false),
-      color: new THREE.Color(1.0, 1.0, 0.98),
-    });
-    add(
-      new THREE.PlaneGeometry(3.3, 3),
-      outMat,
-      -3.8,
-      1.8,
-      -4.6,
-      root,
-      false,
-    ).receiveShadow = false;
-    // sheer: a wavy plane hanging from a rod
-    const sheerGeo = new THREE.PlaneGeometry(1.9, 1.75, 60, 1);
-    const pos = sheerGeo.attributes.position as THREE.BufferAttribute;
-    for (let i = 0; i < pos.count; i++)
-      pos.setZ(i, Math.sin(pos.getX(i) * 22) * 0.025);
-    sheerGeo.computeVertexNormals();
-    const sheer = new THREE.MeshStandardMaterial({
-      color: "#ffffff",
-      roughness: 0.9,
-      transparent: true,
-      opacity: 0.55,
-      side: THREE.DoubleSide,
-      emissive: "#fffdf6",
-      emissiveIntensity: 0.12,
-      depthWrite: false,
-    });
-    add(sheerGeo, sheer, -3.8, 1.42, -3.1, root, false);
-    add(
-      new THREE.CylinderGeometry(0.012, 0.012, 2.2, 8),
-      metal("#b9a27a", 0.3),
-      -3.8,
-      2.32,
-      -3.1,
-      root,
-      false,
-    ).rotation.z = Math.PI / 2;
-  }
-
-  /* ---------- light ---------- */
-  ctx.scene.add(new THREE.HemisphereLight("#fbfaf6", "#d8cdb9", 0.42));
+  /* ---------- light (6 lights, 1 shadow) ---------- */
+  ctx.scene.add(new THREE.HemisphereLight("#fbfaf6", "#d8cdb9", 0.45));
   const sun = new THREE.DirectionalLight("#fff3df", 2.6);
-  sun.position.set(-2.2, 7.5, -15);
-  sun.target.position.set(0.2, 0, -4.2);
+  sun.position.set(-2.2, 7.5, W - 9);
+  sun.target.position.set(0.2, 0, W + 2.6);
   sun.castShadow = true;
   sun.shadow.mapSize.set(hi ? 2048 : 1024, hi ? 2048 : 1024);
   sun.shadow.camera.left = -5;
@@ -1105,30 +1147,41 @@ function build(ctx: SceneCtx) {
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
   ctx.scene.add(sun, sun.target);
-  const sky = new THREE.RectAreaLight("#f2f7ff", 1.6, 3.4, 2.2);
-  sky.position.set(-0.4, 1.15, -6.55);
-  sky.lookAt(-0.4, 1.15, 0);
+  const sky = new THREE.RectAreaLight("#f2f7ff", 1.7, BALC[1] - BALC[0], 2.3);
+  sky.position.set((BALC[0] + BALC[1]) / 2, 1.15, W + 0.05);
+  sky.lookAt((BALC[0] + BALC[1]) / 2, 1.15, 0);
   ctx.scene.add(sky);
-  const sky2 = new THREE.RectAreaLight("#f6f8ff", 1.4, 1.5, 1.15);
-  sky2.position.set(-3.8, 1.6, -3.15);
-  sky2.lookAt(-3.8, 1.6, 2);
-  ctx.scene.add(sky2);
-  // daylight bounced off the floor onto the ceiling
-  const bounce = new THREE.RectAreaLight("#fff6ea", 0.35, 4, 5);
-  bounce.position.set(0.1, 0.05, -3.6);
-  bounce.lookAt(0.1, 3, -3.6);
+  const bounce = new THREE.RectAreaLight("#fff6ea", 0.35, 4, 7.5);
+  bounce.position.set(0, 0.05, (E + W) / 2);
+  bounce.lookAt(0, 3, (E + W) / 2);
   ctx.scene.add(bounce);
-  const fill = new THREE.PointLight("#fff4e6", 1.5, 7, 2);
-  fill.position.set(-3.6, 2.2, -1.2);
+  const fill = new THREE.PointLight("#fff4e6", 1.6, 7, 2);
+  fill.position.set(-0.6, 2.2, -1.6);
   ctx.scene.add(fill);
 
   /* ---------- ceiling fans with tulip light kits ---------- */
-  const fans: THREE.Group[] = [];
+  const rotors: THREE.Group[] = [];
+  const brass = metal("#8a6a3e", 0.35);
+  const bladeMat = pbr(repeat(woodPlanks("#5b3a22", 2, 21), 1, 1), {
+    roughness: 0.6,
+  });
+  const bladeGeo = rbox(0.52, 0.01, 0.13, 0.004, 1);
+  const shade = std("#fbf6ec", 0.25, {
+    transparent: true,
+    opacity: 0.92,
+    emissive: "#fff2dc",
+    emissiveIntensity: 0.15,
+  });
+  const tulip = new THREE.LatheGeometry(
+    [0.0, 0.03, 0.055, 0.07, 0.072, 0.065].map(
+      (r, i) => new THREE.Vector2(r, -i * 0.025),
+    ),
+    16,
+  );
   const fan = (x: number, z: number) => {
     const g = new THREE.Group();
     g.position.set(x, H, z);
     root.add(g);
-    const brass = metal("#8a6a3e", 0.35);
     add(
       new THREE.CylinderGeometry(0.06, 0.08, 0.06, 20),
       brass,
@@ -1148,29 +1201,40 @@ function build(ctx: SceneCtx) {
       false,
     );
     add(new THREE.CylinderGeometry(0.11, 0.12, 0.12, 24), brass, 0, -0.3, 0, g);
+    const blades: THREE.BufferGeometry[] = [];
+    const arms: THREE.BufferGeometry[] = [];
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      arms.push(
+        geo(
+          new THREE.BoxGeometry(0.16, 0.012, 0.03),
+          Math.cos(a) * 0.17,
+          0,
+          -Math.sin(a) * 0.17,
+          0,
+          a,
+          0,
+        ),
+      );
+      blades.push(
+        geo(
+          bladeGeo,
+          Math.cos(a) * 0.48,
+          0.005,
+          -Math.sin(a) * 0.48,
+          0.12,
+          a,
+          0,
+        ),
+      );
+    }
     const rotor = new THREE.Group();
     rotor.position.y = -0.33;
     g.add(rotor);
-    const bladeMat = pbr(repeat(woodPlanks("#5b3a22", 2, 21), 1, 1), {
-      roughness: 0.6,
-    });
-    const bladeGeo = rbox(0.52, 0.01, 0.13, 0.004, 1);
-    for (let i = 0; i < 5; i++) {
-      const arm = new THREE.Group();
-      arm.rotation.y = (i / 5) * Math.PI * 2;
-      rotor.add(arm);
-      add(
-        new THREE.BoxGeometry(0.16, 0.012, 0.03),
-        brass,
-        0.17,
-        0,
-        0,
-        arm,
-        false,
-      );
-      const bl = add(bladeGeo, bladeMat, 0.48, 0.005, 0, arm);
-      bl.rotation.x = 0.12;
-    }
+    add(merged(blades), bladeMat, 0, 0, 0, rotor);
+    add(merged(arms), brass, 0, 0, 0, rotor, false);
+    keep.add(rotor);
+    rotors.push(rotor);
     add(
       new THREE.CylinderGeometry(0.05, 0.04, 0.08, 16),
       brass,
@@ -1180,31 +1244,8 @@ function build(ctx: SceneCtx) {
       g,
       false,
     );
-    const shade = std("#fbf6ec", 0.25, {
-      transparent: true,
-      opacity: 0.92,
-      emissive: "#fff2dc",
-      emissiveIntensity: 0.15,
-    });
-    const tulip = new THREE.LatheGeometry(
-      [0.0, 0.03, 0.055, 0.07, 0.072, 0.065].map(
-        (r, i) => new THREE.Vector2(r, -i * 0.025),
-      ),
-      16,
-    );
     for (let i = 0; i < 4; i++) {
       const ang = (i / 4) * Math.PI * 2 + Math.PI / 4;
-      const arm = add(
-        new THREE.CylinderGeometry(0.008, 0.008, 0.14, 6),
-        brass,
-        Math.cos(ang) * 0.07,
-        -0.45,
-        Math.sin(ang) * 0.07,
-        g,
-        false,
-      );
-      arm.rotation.z = Math.PI / 2;
-      arm.rotation.y = -ang;
       const s = add(
         tulip,
         shade,
@@ -1215,60 +1256,52 @@ function build(ctx: SceneCtx) {
         false,
       );
       s.rotation.x = Math.PI;
+      const arm = add(
+        new THREE.CylinderGeometry(0.008, 0.008, 0.14, 6),
+        brass,
+        Math.cos(ang) * 0.07,
+        -0.45,
+        Math.sin(ang) * 0.07,
+        g,
+        false,
+      );
+      arm.rotation.set(0, -ang, Math.PI / 2);
     }
-    fans.push(rotor);
   };
-  fan(0.1, -3.9);
-  fan(-3.8, -1.75);
+  fan(0.0, -5.2);
+  fan(-0.6, -1.8);
   ctx.onUpdate((_t, dt) => {
-    for (const f of fans) f.rotation.y += dt * 2.6;
+    for (const f of rotors) f.rotation.y += dt * 2.6;
   });
 
-  /* ---------- AC split unit ---------- */
+  /* ---------- AC split unit by the balcony ---------- */
   {
-    const g = new THREE.Group();
-    g.position.set(2.2 - 0.12, 2.28, -5.75);
-    g.rotation.y = -Math.PI / 2;
-    root.add(g);
+    const g = group(R - 0.12, W + 0.75, -90);
+    g.position.y = 2.3;
     add(rbox(0.92, 0.3, 0.22, 0.04), std("#f6f6f3", 0.35), 0, 0, 0, g);
     box(0.84, 0.012, 0.02, std("#d8d8d4", 0.4), 0, -0.11, 0.105, g, false);
     box(0.84, 0.05, 0.01, std("#bdbdb8", 0.6), 0, -0.135, 0.07, g, false);
-    box(
-      0.05,
-      0.012,
-      0.005,
-      std("#3d8bff", 0.3, { emissive: "#3d8bff", emissiveIntensity: 2 }),
-      0.33,
-      0.05,
-      0.112,
-      g,
-      false,
-    );
-    // pipe going down behind the curtain
   }
 
   /* ---------- sofas and recliners ---------- */
-  /** A reclining sofa facing +z locally; back at -z. n seats, length L. */
+  /** A reclining sofa facing +z locally; back at -z. n seats, length len. */
   const sofa = (
     n: number,
-    L: number,
+    len: number,
     fab: Mat,
     x: number,
     z: number,
-    ry: number,
+    ryDeg: number,
   ) => {
-    const g = new THREE.Group();
-    g.position.set(x, 0, z);
-    g.rotation.y = ry;
-    root.add(g);
+    const g = group(x, z, ryDeg);
     const D = 0.98;
-    add(rbox(L - 0.02, 0.2, D - 0.08, 0.04), sofaDark, 0, 0.12, 0.02, g);
-    add(rbox(L - 0.3, 0.6, 0.22, 0.06), fab, 0, 0.5, -D / 2 + 0.11, g);
+    add(rbox(len - 0.02, 0.2, D - 0.08, 0.04), sofaDark, 0, 0.12, 0.02, g);
+    add(rbox(len - 0.3, 0.6, 0.22, 0.06), fab, 0, 0.5, -D / 2 + 0.11, g);
     for (const s of [-1, 1])
-      add(rbox(0.2, 0.62, D, 0.08), fab, s * (L / 2 - 0.1), 0.33, 0, g);
-    const w = (L - 0.4) / n;
+      add(rbox(0.2, 0.62, D, 0.08), fab, s * (len / 2 - 0.1), 0.33, 0, g);
+    const w = (len - 0.4) / n;
     for (let i = 0; i < n; i++) {
-      const cx = -L / 2 + 0.2 + w * (i + 0.5);
+      const cx = -len / 2 + 0.2 + w * (i + 0.5);
       add(rbox(w - 0.02, 0.2, D - 0.3, 0.07, 4), fab, cx, 0.36, 0.1, g);
       const back = add(
         rbox(w - 0.03, 0.56, 0.26, 0.1, 4),
@@ -1279,78 +1312,83 @@ function build(ctx: SceneCtx) {
         g,
       );
       back.rotation.x = -0.18;
-      // the footrest seam of a recliner
       box(w - 0.08, 0.008, 0.01, sofaDark, cx, 0.24, D / 2 - 0.02, g, false);
     }
+    g.updateMatrixWorld(true);
     return g;
   };
-  // big L of beige reclining sofas: along the right wall, and under the side window
-  const sofaA = sofa(3, 2.6, sofaFab, 2.2 - 0.49, -4.33, -Math.PI / 2);
-  const sofaB = sofa(2, 1.5, sofaFab, 1.43, -6.6 + 0.49, 0);
-  ctx.solid(sofaA, 0.02);
-  ctx.solid(sofaB, 0.02);
-  // throw pillows and blankets
-  {
-    const pil = (
-      x: number,
-      y: number,
-      z: number,
-      ry: number,
-      rz: number,
-      color: string,
-    ) => {
-      const p = add(
-        rbox(0.42, 0.42, 0.13, 0.08, 4),
-        pbr(repeat(fabric(color, 70), 1, 1)),
-        x,
-        y,
-        z,
-      );
-      p.rotation.set(-0.2, ry, rz);
-    };
-    pil(1.95, 0.72, -5.4, -Math.PI / 2, 0.15, "#e9e1d3");
-    pil(1.93, 0.72, -4.9, -Math.PI / 2, -0.1, "#b7a58c");
-    pil(1.9, 0.7, -6.25, 0, 0.12, "#e9e1d3");
-    pil(1.15, 0.7, -6.25, 0, -0.2, "#c9b49a");
-    // a white fluffy blanket folded over the arm of the sofa (the end near the recliner)
-    const blanket = pbr(repeat(fabric("#f4f0e8", 71), 2, 2));
-    const bk = add(rbox(0.75, 0.12, 0.62, 0.05, 3), blanket, 1.72, 0.66, -3.25);
-    bk.rotation.set(0, 0.2, 0.05);
-    const bk2 = add(
-      rbox(0.5, 0.08, 0.55, 0.04, 3),
-      std("#6f8f6a", 1),
-      1.0,
-      0.58,
-      -6.05,
-    );
-    bk2.rotation.set(0, 0.4, 0);
-  }
-  /** A single recliner armchair. */
-  const recliner = (x: number, z: number, ry: number) => {
-    const g = sofa(1, 0.95, reclFab, x, z, ry);
-    // the extended footrest, slightly open
+  // two beige reclining sofas in a row along the right wall, under the canvas
+  ctx.solid(sofa(2, 1.9, sofaFab, R - 0.49, -4.85, -90), 0.02);
+  ctx.solid(sofa(3, 2.15, sofaFab, R - 0.49, -6.88, -90), 0.02);
+  const fabricCache = new Map<string, Mat>();
+  const fab = (c: string) => {
+    let m = fabricCache.get(c);
+    if (!m) {
+      m = pbr(repeat(fabric(c, 70), 1, 1));
+      fabricCache.set(c, m);
+    }
+    return m;
+  };
+  const pil = (
+    x: number,
+    y: number,
+    z: number,
+    ry: number,
+    rz: number,
+    color: string,
+  ) => {
+    const p = add(rbox(0.42, 0.42, 0.13, 0.08, 4), fab(color), x, y, z);
+    p.rotation.set(-0.2, ry, rz);
+  };
+  pil(R - 0.3, 0.72, -7.55, -Math.PI / 2, 0.15, "#e9e1d3");
+  pil(R - 0.32, 0.72, -7.1, -Math.PI / 2, -0.1, "#b7a58c");
+  pil(R - 0.3, 0.72, -4.2, -Math.PI / 2, 0.12, "#e9e1d3");
+  // white fluffy blanket over the near sofa's arm (by grandma's chair)
+  const bk = add(
+    rbox(0.7, 0.12, 0.6, 0.05, 3),
+    fab("#f4f0e8"),
+    R - 0.55,
+    0.66,
+    -3.95,
+  );
+  bk.rotation.set(0, 0.2, 0.05);
+  const bk2 = add(
+    rbox(0.6, 0.08, 0.55, 0.04, 3),
+    fab("#d9cbb6"),
+    R - 0.6,
+    0.58,
+    -6.3,
+  );
+  bk2.rotation.set(0, 0.4, 0);
+  const recliner = (x: number, z: number, ryDeg: number) => {
+    const g = sofa(1, 0.95, reclFab, x, z, ryDeg);
     add(rbox(0.5, 0.08, 0.32, 0.03), reclFab, 0, 0.34, 0.6, g);
+    g.updateMatrixWorld(true);
     return g;
   };
-  const grandmaChair = recliner(1.62, -2.3, THREE.MathUtils.degToRad(-75));
-  ctx.solid(grandmaChair, 0.02);
-  const emptyChair = recliner(-1.05, -5.6, THREE.MathUtils.degToRad(25));
-  ctx.solid(emptyChair, 0.02);
-
-  /* ---------- TV wall: oak panel, TV, rack with toys ---------- */
+  ctx.solid(recliner(R - 0.5, -2.95, -90), 0.02);
+  ctx.solid(recliner(-1.5, -7.15, 35), 0.02);
+  // dark side table between grandma's recliner and the sofa, with a pink fluffy bundle
   {
-    const x = -2.0;
-    box(0.04, 1.5, 2.0, oak, x + 0.02, 1.45, -4.45);
-    const tv = add(
-      rbox(0.05, 0.78, 1.36, 0.01, 2),
-      blackGloss,
-      x + 0.075,
-      1.32,
-      -4.45,
-    );
-    tv.castShadow = true;
+    const t = box(0.38, 0.55, 0.45, darkWood, R - 0.22, 0.275, -3.62);
+    ctx.solid(t);
+    add(
+      new THREE.SphereGeometry(0.16, 16, 10),
+      std("#f2a8c8", 1),
+      R - 0.22,
+      0.62,
+      -3.62,
+    ).scale.set(1, 0.45, 1.1);
+    box(0.12, 0.02, 0.06, std("#222", 0.4), R - 0.3, 0.56, -3.5, root, false);
+  }
+
+  /* ---------- TV wall: oak panel, TV, white rack with oak drawers, toys ---------- */
+  {
+    const tz = -5.0;
+    box(0.04, 1.5, 1.9, oak, L + 0.02, 1.5, tz);
+    add(rbox(0.05, 0.78, 1.36, 0.01, 2), blackGloss, L + 0.075, 1.35, tz);
     const pitch = tvPitch();
-    const screen = new THREE.Mesh(
+    const screen = add(
       new THREE.PlaneGeometry(1.31, 0.735),
       new THREE.MeshStandardMaterial({
         map: pitch,
@@ -1359,54 +1397,57 @@ function build(ctx: SceneCtx) {
         emissiveIntensity: 0.9,
         roughness: 0.15,
       }),
+      L + 0.101,
+      1.35,
+      tz,
+      root,
+      false,
     );
-    screen.position.set(x + 0.101, 1.32, -4.45);
     screen.rotation.y = Math.PI / 2;
-    root.add(screen);
-    // rack: white lacquer top, oak drawers
-    const rack = new THREE.Group();
-    rack.position.set(x + 0.23, 0, -4.45);
-    root.add(rack);
-    add(rbox(0.44, 0.04, 1.9, 0.01, 2), std("#f3f1ec", 0.3), 0, 0.46, 0, rack);
-    add(rbox(0.42, 0.34, 1.86, 0.01, 2), oak, 0, 0.27, 0, rack);
-    for (const z of [-0.62, 0, 0.62])
-      box(0.006, 0.005, 0.5, std("#2b2116", 0.6), 0.212, 0.3, z, rack, false);
-    box(0.4, 0.08, 1.8, std("#2b2b2b", 0.8), 0, 0.04, 0, rack, false);
+    const rack = group(L + 0.23, tz, 90);
+    add(rbox(1.9, 0.04, 0.44, 0.01, 2), std("#f3f1ec", 0.3), 0, 0.46, 0, rack);
+    add(rbox(1.86, 0.34, 0.42, 0.01, 2), oak, 0, 0.27, 0, rack);
+    for (const x of [-0.62, 0, 0.62])
+      box(0.5, 0.005, 0.006, std("#2b2116", 0.6), x, 0.3, 0.212, rack, false);
+    box(1.8, 0.08, 0.4, std("#2b2b2b", 0.8), 0, 0.04, 0, rack, false);
+    rack.updateMatrixWorld(true);
     ctx.solid(rack);
-    // toys: balls, a pink plush, a box
     const toy = (r: number, c: string, px: number, py: number, pz: number) =>
-      add(new THREE.SphereGeometry(r, 20, 14), std(c, 0.45), px, py, pz);
-    toy(0.09, "#3fb34f", x + 0.25, 0.57, -3.8);
-    toy(0.07, "#ff4fa0", x + 0.3, 0.55, -3.65);
-    toy(0.08, "#4f8dff", x + 0.18, 0.56, -5.05);
-    toy(0.12, "#f2a8c8", x + 0.22, 0.6, -5.25);
-    toy(0.07, "#f2a8c8", x + 0.22, 0.75, -5.25);
-    box(0.25, 0.18, 0.3, std("#c58cf0", 0.6), x + 0.22, 0.57, -4.95);
-    box(0.12, 0.07, 0.08, std("#1a1a1a", 0.5), x + 0.24, 0.515, -4.45);
-    // a couple of balls on the floor
-    toy(0.11, "#ff8a1f", -1.55, 0.11, -5.9);
-    toy(0.1, "#2fc8d8", -1.25, 0.1, -3.4);
+      add(new THREE.SphereGeometry(r, 18, 12), std(c, 0.45), px, py, pz);
+    toy(0.09, "#3fb34f", L + 0.25, 0.57, tz + 0.55);
+    toy(0.07, "#ff4fa0", L + 0.3, 0.55, tz + 0.7);
+    toy(0.12, "#f2a8c8", L + 0.22, 0.6, tz - 0.75);
+    toy(0.07, "#f2a8c8", L + 0.22, 0.75, tz - 0.75);
+    box(0.25, 0.18, 0.3, std("#c58cf0", 0.6), L + 0.22, 0.57, tz - 0.45);
+    // toys on the floor around the empty recliner
+    toy(0.11, "#ff8a1f", -0.95, 0.11, -7.6);
+    toy(0.1, "#2fc8d8", -2.0, 0.1, -6.4);
+    toy(0.08, "#ff4fa0", -0.8, 0.08, -6.9);
+    box(0.3, 0.2, 0.22, std("#4f8dff", 0.6), -1.95, 0.1, -7.75);
   }
 
   /* ---------- turquoise bench with the kids' backpacks ---------- */
   {
-    const g = new THREE.Group();
-    g.position.set(2.2 - 0.19, 0, -0.65);
-    root.add(g);
-    box(0.36, 0.035, 1.75, turquoise, 0, 0.44, 0, g);
-    for (const z of [-0.85, 0, 0.85])
+    const g = group(R - 0.19, -1.5, 0);
+    box(0.36, 0.035, 1.7, turquoise, 0, 0.44, 0, g);
+    for (const z of [-0.82, 0, 0.82])
       box(0.34, 0.42, 0.03, turquoise, 0, 0.21, z, g);
-    box(0.34, 0.025, 1.7, turquoise, 0, 0.12, 0, g);
+    box(0.34, 0.025, 1.66, turquoise, 0, 0.12, 0, g);
     box(0.3, 0.22, 0.32, std("#c79a62", 0.9), 0, 0.57, -0.45, g);
     box(0.16, 0.42, 0.1, std("#2a62b8", 0.5), 0.02, 0.67, 0.1, g);
     box(0.25, 0.012, 0.32, std("#fbfbfb", 0.8), 0.01, 0.465, 0.45, g, false);
+    add(
+      new THREE.CylinderGeometry(0.2, 0.17, 0.12, 20),
+      std("#6b4a2e", 0.9),
+      0,
+      0.2,
+      0.42,
+      g,
+    );
+    g.updateMatrixWorld(true);
     ctx.solid(g);
-    // pink backpacks (one on wheels) leaning on the bench
     const pack = (px: number, pz: number, ry: number, c: string) => {
-      const b = new THREE.Group();
-      b.position.set(px, 0, pz);
-      b.rotation.y = ry;
-      root.add(b);
+      const b = group(px, pz, ry);
       add(rbox(0.32, 0.42, 0.18, 0.07, 3), std(c, 0.7), 0, 0.3, 0, b);
       add(
         rbox(0.26, 0.18, 0.08, 0.05, 3),
@@ -1435,89 +1476,101 @@ function build(ctx: SceneCtx) {
           b,
           false,
         ).rotation.z = Math.PI / 2;
-      return b;
     };
-    pack(1.6, -1.25, -Math.PI / 2, "#f05aa0");
-    pack(1.62, -0.9, -Math.PI / 2 + 0.3, "#e84d8f");
+    pack(R - 0.48, -1.75, -90, "#f05aa0");
+    pack(R - 0.46, -2.15, -75, "#e84d8f");
   }
 
-  /* ---------- paintings, kids' drawings, small wall details ---------- */
+  /* ---------- pictures on the walls ---------- */
   {
     // abstract canvas above the sofa
-    const ap = add(
-      new THREE.BoxGeometry(0.03, 0.82, 0.62),
+    box(
+      0.03,
+      0.82,
+      0.62,
       std("#f0e6c8", 0.8),
-      2.2 - 0.016,
+      R - 0.016,
       1.72,
-      -4.4,
+      -4.85,
+      root,
+      false,
     );
-    ap.castShadow = false;
-    const apf = new THREE.Mesh(
+    const apf = add(
       new THREE.PlaneGeometry(0.62, 0.82),
       new THREE.MeshStandardMaterial({
         map: abstractPainting(),
         roughness: 0.7,
       }),
+      R - 0.032,
+      1.72,
+      -4.85,
+      root,
+      false,
     );
-    apf.position.set(2.2 - 0.032, 1.72, -4.4);
     apf.rotation.y = -Math.PI / 2;
-    root.add(apf);
-    // landscape in a gold frame (dining room)
-    const gold = metal("#b08d4a", 0.4);
-    const lx = -5.6 + 0.03;
-    box(0.04, 0.6, 0.78, gold, lx, 1.62, -1.75);
-    const lp = new THREE.Mesh(
+    // landscape in a gold frame over the dining table (entrance wall)
+    box(0.78, 0.6, 0.04, metal("#b08d4a", 0.4), -0.75, 1.68, E - 0.02);
+    const lp = add(
       new THREE.PlaneGeometry(0.66, 0.48),
       new THREE.MeshStandardMaterial({
         map: landscapePainting(),
         roughness: 0.75,
       }),
+      -0.75,
+      1.68,
+      E - 0.042,
+      root,
+      false,
     );
-    lp.position.set(lx + 0.021, 1.62, -1.75);
-    lp.rotation.y = Math.PI / 2;
-    root.add(lp);
-    // kids' drawings taped on the walls
-    const sheet = (
-      seed: number,
-      x: number,
-      y: number,
-      z: number,
-      ry: number,
-      rz: number,
-    ) => {
-      const s = new THREE.Mesh(
+    lp.rotation.y = Math.PI;
+    // kids' drawings and a paper doll over the bench and the recliner
+    const sheet = (seed: number, z: number, y: number, rz: number) => {
+      const s = add(
         new THREE.PlaneGeometry(0.21, 0.28),
         new THREE.MeshStandardMaterial({
           map: kidDrawing(seed),
           roughness: 0.9,
         }),
+        R - 0.005,
+        y,
+        z,
+        root,
+        false,
       );
-      s.position.set(x, y, z);
-      s.rotation.set(0, ry, rz);
-      root.add(s);
+      s.rotation.set(0, -Math.PI / 2, rz);
     };
-    sheet(1, -2.35, 1.45, 0.495, Math.PI, 0.04);
-    sheet(2, -2.65, 1.62, 0.495, Math.PI, -0.06);
-    sheet(3, -2.4, 1.1, 0.495, Math.PI, 0.02);
-    sheet(4, 2.195, 1.55, -2.1, -Math.PI / 2, 0.05);
-    sheet(5, 2.195, 1.25, -1.75, -Math.PI / 2, -0.04);
-    // outlets and switches
+    sheet(1, -1.1, 1.5, 0.04);
+    sheet(2, -1.45, 1.7, -0.06);
+    sheet(3, -2.75, 1.85, 0.03);
+    const doll = add(
+      new THREE.PlaneGeometry(0.2, 0.38),
+      new THREE.MeshStandardMaterial({
+        map: kidDrawing(9),
+        roughness: 0.9,
+        color: "#f3d6df",
+      }),
+      R - 0.005,
+      1.55,
+      -3.2,
+      root,
+      false,
+    );
+    doll.rotation.y = -Math.PI / 2;
+    // switches and outlets
     const wp = std("#f7f7f4", 0.4);
-    box(0.08, 0.12, 0.012, wp, 0.55, 1.15, 0.494, root, false);
-    box(0.08, 0.12, 0.012, wp, -0.75, 1.15, 0.494, root, false);
-    box(0.012, 0.08, 0.12, wp, -1.994, 0.3, -3.6, root, false);
-    box(0.012, 0.08, 0.12, wp, 2.194, 0.3, -2.9, root, false);
-    // intercom by the entrance
-    box(0.1, 0.2, 0.04, std("#e9e9e4", 0.4), 0.45, 1.4, 0.48);
+    box(0.08, 0.12, 0.012, wp, ENTRY[0] - 0.2, 1.15, E - 0.006, root, false);
+    box(0.08, 0.12, 0.012, wp, STUDY[1] + 0.2, 1.15, E - 0.006, root, false);
+    box(0.012, 0.12, 0.08, wp, L + 0.006, 1.15, HALL[1] + 0.2, root, false);
+    box(0.012, 0.08, 0.12, wp, L + 0.006, 0.3, -6.2, root, false);
+    box(0.012, 0.08, 0.12, wp, R - 0.006, 0.3, -3.3, root, false);
+    box(0.1, 0.2, 0.04, std("#e9e9e4", 0.4), ENTRY[0] - 0.45, 1.4, E - 0.02);
   }
 
-  /* ---------- dining room: table with the aqua cloth, carved chairs, sideboard ---------- */
-  const tx = -3.8;
+  /* ---------- dining table (aqua cloth) along the left side, carved chairs ---------- */
+  const tx = -0.75;
   const tz = -1.75;
   {
-    const g = new THREE.Group();
-    g.position.set(tx, 0, tz);
-    root.add(g);
+    const g = group(tx, tz, 90);
     const tw = 2.0;
     const td = 1.0;
     add(new THREE.BoxGeometry(tw, 0.04, td), darkWood, 0, 0.73, 0, g);
@@ -1533,7 +1586,6 @@ function build(ctx: SceneCtx) {
           sz * (td / 2 - 0.08),
           g,
         );
-    // tablecloth: a top and a hanging skirt with soft folds
     add(
       new THREE.BoxGeometry(tw + 0.12, 0.006, td + 0.12),
       clothMat,
@@ -1548,14 +1600,7 @@ function build(ctx: SceneCtx) {
       for (let i = 0; i < p.count; i++)
         p.setZ(i, Math.sin(p.getX(i) * 18) * 0.012 * (0.5 - p.getY(i) / 0.3));
       pg.computeVertexNormals();
-      const m = add(
-        pg,
-        pbr(repeat(fabric("#62cfc4", 54), 6, 2), { side: THREE.DoubleSide }),
-        0,
-        0.605,
-        0,
-        g,
-      );
+      const m = add(pg, clothSkirt, 0, 0.605, 0, g);
       if (along === "x") m.position.z = off;
       else {
         m.rotation.y = Math.PI / 2;
@@ -1566,8 +1611,8 @@ function build(ctx: SceneCtx) {
     skirt(tw + 0.12, "x", -td / 2 - 0.06);
     skirt(td + 0.12, "z", tw / 2 + 0.06);
     skirt(td + 0.12, "z", -tw / 2 - 0.06);
+    g.updateMatrixWorld(true);
     ctx.solid(g, 0.05);
-    // place settings
     const plate = new THREE.LatheGeometry(
       [0, 0.07, 0.1, 0.12, 0.125].map(
         (r, i) => new THREE.Vector2(r, [0, 0.002, 0.008, 0.018, 0.02][i] ?? 0),
@@ -1601,14 +1646,14 @@ function build(ctx: SceneCtx) {
     ];
     for (const [px, pz] of seats) {
       add(plate, porcelain, px, 0.757, pz, g, false);
-      const side = px === -0.85 || px === 0.85 ? 0 : Math.sign(pz);
-      const fx = side === 0 ? px : px - 0.16;
+      const end = px === -0.85 || px === 0.85;
+      const side = end ? 0 : Math.sign(pz);
       add(
         cup,
         gl,
-        side === 0 ? px - Math.sign(px) * 0.05 : px + 0.15,
+        end ? px - Math.sign(px) * 0.05 : px + 0.15,
         0.757,
-        side === 0 ? pz - 0.18 : pz - side * 0.13,
+        end ? pz - 0.18 : pz - side * 0.13,
         g,
         false,
       );
@@ -1617,9 +1662,9 @@ function build(ctx: SceneCtx) {
         0.004,
         0.18,
         cutlery,
-        fx,
+        end ? px : px - 0.16,
         0.76,
-        pz + (side === 0 ? 0.16 : 0),
+        pz + (end ? 0.16 : 0),
         g,
         false,
       );
@@ -1628,40 +1673,18 @@ function build(ctx: SceneCtx) {
         0.004,
         0.19,
         cutlery,
-        side === 0 ? px : px + 0.16,
+        end ? px : px + 0.16,
         0.76,
-        pz - (side === 0 ? 0.16 : 0),
+        pz - (end ? 0.16 : 0),
         g,
         false,
       );
     }
-    // a centrepiece: a fruit bowl and a napkin holder
-    add(
-      new THREE.LatheGeometry(
-        [0.02, 0.1, 0.14, 0.15].map((r, i) => new THREE.Vector2(r, i * 0.03)),
-        24,
-      ),
-      std("#d9c9a8", 0.4),
-      0.0,
-      0.757,
-      0,
-      g,
-    );
-    const fruit = ["#f2a03a", "#d93a2a", "#f5d33a", "#e66b2a"];
-    fruit.forEach((c, i) =>
-      add(
-        new THREE.SphereGeometry(0.045, 14, 10),
-        std(c, 0.5),
-        Math.cos(i * 1.6) * 0.06,
-        0.82,
-        Math.sin(i * 1.6) * 0.06,
-        g,
-        false,
-      ),
-    );
-    box(0.12, 0.08, 0.05, std("#f3f3ef", 0.8), 0.32, 0.8, 0, g, false);
+    // a pink placemat and a napkin holder, as on the table in the video
+    box(0.3, 0.004, 0.22, std("#e86a9a", 0.8), 0.1, 0.759, 0.05, g, false);
+    box(0.12, 0.08, 0.05, std("#f3f3ef", 0.8), -0.25, 0.8, 0, g, false);
   }
-  // carved dining chairs (merged per material, reused)
+  // carved dining chairs (one merged geometry per material)
   {
     const wood: THREE.BufferGeometry[] = [];
     const legG = new THREE.BoxGeometry(0.04, 0.45, 0.04);
@@ -1678,7 +1701,6 @@ function build(ctx: SceneCtx) {
       );
     }
     wood.push(geo(new THREE.BoxGeometry(0.44, 0.06, 0.44), 0, 0.42, 0));
-    // crest rail and carved vase-shaped splat
     const crest = new THREE.Shape();
     crest.moveTo(-0.22, 0);
     crest.quadraticCurveTo(0, 0.12, 0.22, 0);
@@ -1723,44 +1745,39 @@ function build(ctx: SceneCtx) {
     const woodGeo = merged(wood);
     const seatGeo = rbox(0.42, 0.06, 0.42, 0.025, 2);
     seatGeo.translate(0, 0.475, 0.01);
-    const chair = (x: number, z: number, ry: number) => {
-      const c = new THREE.Group();
-      c.position.set(x, 0, z);
-      c.rotation.y = ry;
-      root.add(c);
+    const chair = (x: number, z: number, ryDeg: number) => {
+      const c = group(x, z, ryDeg);
       add(woodGeo, mahogany, 0, 0, 0, c);
       add(seatGeo, seatRed, 0, 0, 0, c);
+      c.updateMatrixWorld(true);
       ctx.solid(c, -0.03);
     };
-    chair(tx - 0.5, tz + 0.82, Math.PI);
-    chair(tx + 0.5, tz + 0.8, Math.PI + 0.06);
-    chair(tx - 0.5, tz - 0.82, 0);
-    chair(tx + 0.45, tz - 0.8, 0.05);
-    chair(tx - 1.25, tz, Math.PI / 2);
-    chair(tx + 1.27, tz + 0.05, -Math.PI / 2 - 0.1);
+    chair(tx - 0.72, tz - 0.5, 90);
+    chair(tx - 0.72, tz + 0.5, 90);
+    chair(tx + 0.72, tz - 0.5, -90);
+    chair(tx + 0.74, tz + 0.48, -95);
+    chair(tx, tz + 1.27, 180);
+    chair(tx + 0.05, tz - 1.27, 3);
   }
-  // the dark wood sideboard with glass doors, a red runner and the family's things
-  const sbx = -4.3;
+  // the dark sideboard against the left wall: glass doors, red runner, the family's things
+  const sbz = -1.85;
   {
-    const g = new THREE.Group();
-    g.position.set(sbx, 0, 0.5 - 0.24);
-    root.add(g);
-    const L = 1.8;
-    add(rbox(L, 0.78, 0.46, 0.01, 2), mahogany, 0, 0.47, 0, g);
+    const g = group(L + 0.24, sbz, 90);
+    const len = 1.8;
+    add(rbox(len, 0.78, 0.46, 0.01, 2), mahogany, 0, 0.47, 0, g);
     add(
-      rbox(L + 0.04, 0.03, 0.5, 0.008, 2),
+      rbox(len + 0.04, 0.03, 0.5, 0.008, 2),
       std("#1d1714", 0.25),
       0,
       0.875,
       0,
       g,
     );
-    box(L - 0.04, 0.08, 0.44, std("#2a1610", 0.7), 0, 0.04, 0, g);
-    // three glass doors with frames, two drawers on top
+    box(len - 0.04, 0.08, 0.44, std("#2a1610", 0.7), 0, 0.04, 0, g);
     for (let i = 0; i < 3; i++) {
-      const cx = -L / 2 + L / 6 + (i * L) / 3;
+      const cx = -len / 2 + len / 6 + (i * len) / 3;
       box(
-        L / 3 - 0.04,
+        len / 3 - 0.04,
         0.48,
         0.01,
         std("#2a1810", 0.3, { metalness: 0.1 }),
@@ -1771,7 +1788,7 @@ function build(ctx: SceneCtx) {
         false,
       );
       box(
-        L / 3 - 0.14,
+        len / 3 - 0.14,
         0.38,
         0.006,
         std("#141010", 0.08, { metalness: 0.3 }),
@@ -1781,12 +1798,10 @@ function build(ctx: SceneCtx) {
         g,
         false,
       );
-      box(L / 3 - 0.04, 0.14, 0.012, mahogany, cx, 0.74, 0.232, g, false);
+      box(len / 3 - 0.04, 0.14, 0.012, mahogany, cx, 0.74, 0.232, g, false);
       box(0.08, 0.015, 0.02, metal("#b49660", 0.3), cx, 0.74, 0.245, g, false);
     }
-    // red runner
     box(1.3, 0.004, 0.3, runnerRed, 0, 0.893, 0, g, false);
-    // decorations: vases, bottles, a paper towel, a little tray
     const vase = (px: number, h: number, c: string, r: number) =>
       add(
         new THREE.LatheGeometry(
@@ -1838,47 +1853,31 @@ function build(ctx: SceneCtx) {
       0.02,
       g,
     );
-    add(
-      new THREE.SphereGeometry(0.035, 12, 10),
-      std("#d23a3a", 0.4),
-      -0.2,
-      0.95,
-      0.02,
-      g,
-      false,
-    );
-    add(
-      new THREE.SphereGeometry(0.03, 12, 10),
-      std("#f2c84a", 0.4),
-      -0.1,
-      0.945,
-      0.03,
-      g,
-      false,
-    );
+    g.updateMatrixWorld(true);
     ctx.solid(g);
   }
 
-  /* ---------- the framed portraits (uncovered by the pack) and the pack ---------- */
+  /* ---------- portraits above the sideboard (uncovered by the pack) and the pack ---------- */
   ctx.photo(
     "elena-p3.webp",
     0.34,
     0.45,
-    new THREE.Vector3(sbx - 0.48, 1.55, 0.485),
-    180,
+    new THREE.Vector3(L + 0.015, 1.58, sbz + 0.45),
+    90,
   );
   ctx.photo(
     "davi-p1.webp",
     0.34,
     0.45,
-    new THREE.Vector3(sbx + 0.42, 1.55, 0.485),
-    180,
+    new THREE.Vector3(L + 0.015, 1.58, sbz - 0.45),
+    90,
   );
-  ctx.pack(sbx + 0.05, 0.897, 0.3, 200);
+  ctx.pack(L + 0.26, 0.897, sbz + 0.2, 110);
 
-  /* ---------- the family ---------- */
-  const elenaWaiting = ctx.player === "davi";
-  // grandma, relaxed on her recliner
+  bakeStatic(root, keep);
+
+  /* ---------- the family (4) and the partner ---------- */
+  // grandma, relaxed on her recliner by the bench
   const grandma = ctx.person(
     {
       skin: "#e6b591",
@@ -1894,13 +1893,14 @@ function build(ctx: SceneCtx) {
       bottomStyle: "pants",
       shoes: "#d9c3a8",
     },
-    1.55,
-    -2.28,
-    -75,
+    R - 0.52,
+    -2.95,
+    -90,
     "sit",
     "Seja bem-vinda, Elena! 💚",
   );
-  // aunt: blonde bob, glasses, black dress
+  grandma.position.y = 0.07;
+  // aunt: blonde bob, glasses, black dress, coming from the hallway
   ctx.person(
     {
       skin: "#f0c6a6",
@@ -1917,9 +1917,9 @@ function build(ctx: SceneCtx) {
       bottomStyle: "skirt",
       shoes: "#2a2a2a",
     },
-    -0.95,
-    -2.35,
-    55,
+    -1.3,
+    -3.55,
+    43,
     "wave",
     "Que alegria te conhecer! 😊",
   );
@@ -1933,13 +1933,13 @@ function build(ctx: SceneCtx) {
       bottomStyle: "shorts",
       shoes: "#1e1e1e",
     },
-    -1.3,
-    -0.85,
-    80,
+    0.55,
+    -3.45,
+    20,
     "wave",
     "Fica à vontade, a casa é sua!",
   );
-  // cousin in the light-green t-shirt, chatting by the table
+  // cousin in the light-green t-shirt, by the TV
   ctx.person(
     { skin: "#d9a37f", hair: "#18110c", hairStyle: "short", height: 1.76 },
     {
@@ -1949,39 +1949,16 @@ function build(ctx: SceneCtx) {
       bottomStyle: "shorts",
       shoes: "#1e1e1e",
     },
-    -2.35,
-    -0.35,
-    110,
+    -1.25,
+    -5.1,
+    46,
     "talk",
   );
-  // girl in the maroon top on the sofa
-  const girl = ctx.person(
-    {
-      skin: "#c98f6c",
-      hair: "#140d0a",
-      hairStyle: "long",
-      height: 1.55,
-      female: true,
-    },
-    {
-      top: "#7a2238",
-      topStyle: "tshirt",
-      bottom: "#8fb0d6",
-      bottomStyle: "jeans",
-      shoes: "#f0f0f0",
-    },
-    1.75,
-    -3.75,
-    -90,
-    "sit",
-  );
-  grandma.position.y = 0.07;
-  girl.position.y = 0.09;
-  // the partner, greeting in the middle of the living room
+  const elenaWaiting = ctx.player === "davi";
   ctx.partner(
-    -0.05,
-    -3.1,
-    28,
+    0.95,
+    -1.95,
+    27,
     "stand",
     OUTFITS,
     elenaWaiting
@@ -1991,8 +1968,8 @@ function build(ctx: SceneCtx) {
   ctx.playerOutfit(OUTFITS);
 
   /* ---------- spawn and exit ---------- */
-  ctx.spawn(1.2, -0.55, 0);
-  ctx.exit(1.2, 1.25, 0.6);
+  ctx.spawn((ENTRY[0] + ENTRY[1]) / 2, -0.45, 0);
+  ctx.exit((ENTRY[0] + ENTRY[1]) / 2, E + 0.75, 0.6);
 }
 
 const scene: SceneModule = {
