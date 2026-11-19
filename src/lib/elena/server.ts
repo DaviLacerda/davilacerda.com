@@ -75,7 +75,7 @@ export async function isUnlocked(): Promise<boolean> {
   return safeEqual(Buffer.from(value), Buffer.from(token));
 }
 
-const NAME = /^[a-z0-9-]+\.(webp|jpg|png|mp4|json)$/;
+const NAME = /^[a-z0-9-]+\.(webp|jpg|png|mp4|m4a|json)$/;
 const cache = new Map<string, Buffer>();
 
 /** Decrypted bytes of private/elena/<name>.enc, or null if missing. */

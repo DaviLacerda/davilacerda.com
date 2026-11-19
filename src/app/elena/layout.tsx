@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Anton } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { fontVariables } from "../fonts";
 import "./elena.css";
+
+const display = Anton({
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
+  variable: "--font-display",
+  display: "swap",
+});
 
 /*
  * A root layout of its own: no header, footer, analytics or agent discovery.
@@ -32,7 +40,7 @@ export const viewport: Viewport = {
 
 export default function ElenaLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" className={fontVariables}>
+    <html lang="pt-BR" className={`${fontVariables} ${display.variable}`}>
       <body className="elena-body">{children}</body>
     </html>
   );

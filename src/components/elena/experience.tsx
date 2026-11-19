@@ -6,9 +6,9 @@ import { useCallback, useEffect, useState } from "react";
 import { TinderIntro } from "./tinder-intro";
 import { media, type Content, type Who } from "./types";
 
-const Game = dynamic(() => import("./game-screen").then((m) => m.Game), {
+const Game = dynamic(() => import("./map-screen").then((m) => m.MapGame), {
   ssr: false,
-  loading: () => <Loading text="Montando as nossas ilhas…" />,
+  loading: () => <Loading text="Abrindo o mapa…" />,
 });
 
 const CharacterSelect = dynamic(

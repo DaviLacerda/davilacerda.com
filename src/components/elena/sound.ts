@@ -60,3 +60,32 @@ export function chime(
       break;
   }
 }
+
+/** A short burst of filtered noise: foil being torn. */
+export function crinkle() {
+  if (typeof window === "undefined") return;
+  try {
+    ctx ??= new AudioContext();
+    const ac = ctx;
+    const len = Math.floor(ac.sampleRate * 0.06);
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++)
+      data[i] =
+        (Math.random() * 2 - 1) *
+        (1 - i / len) *
+        (Math.random() < 0.3 ? 1 : 0.3);
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    const band = ac.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.value = 2500 + Math.random() * 3000;
+    band.Q.value = 0.8;
+    const gain = ac.createGain();
+    gain.gain.value = 0.12;
+    src.connect(band).connect(gain).connect(ac.destination);
+    src.start();
+  } catch {
+    // no audio
+  }
+}

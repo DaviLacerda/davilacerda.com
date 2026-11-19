@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Binder } from "./binder";
-import { PackOpening } from "./pack-opening";
+import { PackRip as PackOpening } from "./pack-rip";
 import { chime } from "./sound";
 import {
   media,

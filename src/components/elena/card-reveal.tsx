@@ -10,6 +10,8 @@ type Props = {
   /** Number of the card in the album, e.g. "3/7". */
   badge?: string;
   action?: string;
+  /** Shiny or legendary cards: rainbow foil, sparkles and a glow. */
+  special?: boolean;
   onDone: () => void;
 };
 
@@ -19,6 +21,7 @@ export function CardReveal({
   title,
   badge,
   action = "Guardar no álbum",
+  special = false,
   onDone,
 }: Props) {
   const [flipped, setFlipped] = useState(false);
@@ -67,7 +70,7 @@ export function CardReveal({
       >
         <div
           ref={cardRef}
-          className={`reveal-card ${flipped ? "is-flipped" : ""}`}
+          className={`reveal-card ${flipped ? "is-flipped" : ""} ${special ? "is-special" : ""}`}
         >
           <div className="reveal-face reveal-back" aria-hidden>
             <span>♥</span>
@@ -77,6 +80,14 @@ export function CardReveal({
             {/* eslint-disable-next-line @next/next/no-img-element -- authenticated media, no optimizer */}
             <img src={image} alt={title} draggable={false} />
             <div className="reveal-holo" aria-hidden />
+            {special && <div className="reveal-rainbow" aria-hidden />}
+            {special && (
+              <div className="reveal-sparkles" aria-hidden>
+                {Array.from({ length: 14 }, (_, i) => (
+                  <i key={i} style={{ ["--i" as string]: i }} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {flipped && (

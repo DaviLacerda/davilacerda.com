@@ -8,6 +8,7 @@ const TYPES: Record<string, string> = {
   jpg: "image/jpeg",
   png: "image/png",
   mp4: "video/mp4",
+  m4a: "audio/mp4",
   json: "application/json; charset=utf-8",
 };
 

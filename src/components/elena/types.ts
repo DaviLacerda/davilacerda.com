@@ -69,3 +69,6 @@ export const CARD_ORDER = [
 ] as const;
 
 export const other = (who: Who): Who => (who === "davi" ? "elena" : "davi");
+
+/** Cards printed as special editions (shiny / legendary): they shine more. */
+export const SPECIAL_CARDS: string[] = ["compromisso", "famiglia"];
