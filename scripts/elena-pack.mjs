@@ -18,7 +18,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-const NAME = /^[a-z0-9-]+\.(webp|jpg|png|mp4|m4a|json)$/;
+const NAME = /^[a-z0-9-]+\.(webp|jpg|png|mp4|m4a|json|glb|fbx)$/;
 
 function loadKey() {
   let raw = process.env.ELENA_MEDIA_KEY;

@@ -10,6 +10,8 @@ const TYPES: Record<string, string> = {
   mp4: "video/mp4",
   m4a: "audio/mp4",
   json: "application/json; charset=utf-8",
+  glb: "model/gltf-binary",
+  fbx: "application/octet-stream",
 };
 
 const BASE_HEADERS = {
