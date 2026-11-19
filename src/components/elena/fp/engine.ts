@@ -74,6 +74,14 @@ export class Interior {
   private raycaster = new THREE.Raycaster();
   private playerOutfit: Outfit = { top: "#5b3b2b", bottom: "#2e3440" };
   private bob = 0;
+  private gtao: GTAOPass | null = null;
+  private smaa: SMAAPass | null = null;
+  private ratio = 1;
+  private maxRatio = 1.5;
+  private frames = 0;
+  private frameTime = 1 / 60;
+  private adaptAt = 0;
+  private goodSince = 0;
   readonly quality: "high" | "low";
   paused = false;
 
@@ -90,11 +98,13 @@ export class Interior {
       antialias: false,
       powerPreference: "high-performance",
     });
-    this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio, coarse ? 1.5 : 2),
-    );
+    this.maxRatio = Math.min(window.devicePixelRatio, coarse ? 1.25 : 1.5);
+    this.ratio = coarse ? Math.min(1, this.maxRatio) : this.maxRatio;
+    this.renderer.setPixelRatio(this.ratio);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // shadows are refreshed every other frame (the rooms are static)
+    this.renderer.shadowMap.autoUpdate = false;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
 
@@ -117,12 +127,18 @@ export class Interior {
         scale: 1.2,
       });
       gtao.blendIntensity = 0.9;
+      // ambient occlusion only while the frame rate has headroom (see adapt())
+      gtao.enabled = false;
+      this.gtao = gtao;
       this.composer.addPass(gtao);
     }
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.6, 0.5, 1.0);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
-    if (!coarse) this.composer.addPass(new SMAAPass());
+    if (!coarse) {
+      this.smaa = new SMAAPass();
+      this.composer.addPass(this.smaa);
+    }
 
     this.eye = (LOOKS[player].height ?? 1.75) * 0.925;
 
@@ -631,8 +647,41 @@ export class Interior {
         this.audio.volume + dt * 0.25,
       );
 
+    this.frames++;
+    this.renderer.shadowMap.needsUpdate = this.frames % 2 === 0;
+    this.adapt(dt, t);
     this.composer.render(dt);
   };
+
+  /**
+   * Keeps the frame rate smooth: lowers the render resolution when frames get
+   * slow, raises it back (and turns on ambient occlusion) when there is room.
+   */
+  private adapt(dt: number, t: number) {
+    this.frameTime += (dt - this.frameTime) * 0.05;
+    if (t < this.adaptAt) return;
+    this.adaptAt = t + 1;
+    const ms = this.frameTime * 1000;
+    if (ms > 24) {
+      this.goodSince = t;
+      if (this.gtao?.enabled) this.gtao.enabled = false;
+      else if (this.ratio > 0.6) this.setRatio(this.ratio - 0.15);
+    } else if (ms < 15) {
+      if (t - this.goodSince > 3) {
+        if (this.ratio < this.maxRatio) this.setRatio(this.ratio + 0.1);
+        else if (this.gtao && !this.gtao.enabled) this.gtao.enabled = true;
+        this.goodSince = t;
+      }
+    } else {
+      this.goodSince = t;
+    }
+  }
+
+  private setRatio(r: number) {
+    this.ratio = Math.max(0.6, Math.min(this.maxRatio, r));
+    this.renderer.setPixelRatio(this.ratio);
+    this.resize();
+  }
 
   dispose() {
     this.disposed = true;
