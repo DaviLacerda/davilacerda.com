@@ -2570,6 +2570,9 @@ button {
 }
 .warp-card h2 {
   margin: 6px 0;
+  /* room for Anton's tall caps so background-clip text isn't cut */
+  line-height: 1.15;
+  padding: 0.08em 0.1em;
   font-family: var(--font-display), Impact, sans-serif;
   font-weight: 400;
   font-size: clamp(48px, 9vw, 110px);
@@ -3249,4 +3252,20 @@ button {
     #9fd8ff
   );
   color: #2a1020;
+}
+
+/* the chapter card of the teleport covers the screen: the loading note sits
+   low and small so the two never overlap */
+.place-loading {
+  place-content: end center;
+  padding-bottom: 12vh;
+}
+.place-loading .loading-heart {
+  font-size: 28px;
+}
+.place-loading p {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
 }
