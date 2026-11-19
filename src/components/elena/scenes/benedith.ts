@@ -2235,7 +2235,7 @@ const scene: SceneModule = {
     /* ---------- lights (8, one shadow caster) ---------- */
     ctx.scene.add(new THREE.HemisphereLight("#55597a", "#5c4c42", 0.32));
 
-    const stageA = new THREE.SpotLight("#b04cff", 46, 0, 0.62, 0.65, 2);
+    const stageA = new THREE.SpotLight("#b04cff", 18, 0, 0.62, 0.65, 2);
     stageA.position.set(0.2, H - 0.5, -5.2);
     stageA.target.position.set(0, 1.3, -8.9);
     stageA.castShadow = true;
@@ -2246,7 +2246,7 @@ const scene: SceneModule = {
     stageA.shadow.camera.far = 9;
     ctx.scene.add(stageA, stageA.target);
 
-    const stageB = new THREE.SpotLight("#3a6cff", 26, 0, 0.55, 0.7, 2);
+    const stageB = new THREE.SpotLight("#3a6cff", 11, 0, 0.55, 0.7, 2);
     stageB.position.set(-2.6, H - 0.3, -4.6);
     stageB.target.position.set(1.2, 1.4, -8.9);
     ctx.scene.add(stageB, stageB.target);
