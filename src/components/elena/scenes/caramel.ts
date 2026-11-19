@@ -10,6 +10,7 @@ import {
   concrete,
   emissive,
   fabric,
+  marble,
   metal,
   pbr,
   repeat,
@@ -23,26 +24,31 @@ import type { Outfit, SceneCtx, SceneModule } from "../fp/types";
  * Davi and Elena's one-month dinner, right before the cinema.
  *
  * What the references show, and where it went:
- * - Elena's selfie (IMG_6193): she sits on an upholstered bench with a light
- *   wood frame, a grey concrete ledge and a big dark window behind her (night,
- *   trees and lights outside). Behind, the room: a wall clad in warm wood with
- *   lights, dark upholstered booths, tables set with stemmed glasses, a big
- *   white dome pendant, a small green exit sign.
- *   -> the window wall (z = -8) with the long banquette, the wooden left wall
- *      with its booths, white dome pendants over the middle tables.
- * - Davi's selfies (IMG_6200-6210): the round "Caramel" logo on a concrete
- *   wall with wood above it -> the right wall (x = +6).
+ * - Elena's selfie (IMG_6193): she sits on a dark upholstered sofa, the big
+ *   night window right at her left with a light wood sill, a concrete pillar
+ *   beside it. Past her backrest: another table and a grey sofa facing it, then
+ *   tables with beige chairs, a wall clad in warm wood, a white dome pendant,
+ *   a small green exit sign.
+ *   -> booths perpendicular to the window (z = -8): sofas facing each other in
+ *      pairs across a table, repeated (Davi: "vários sofás um de frente pro
+ *      outro e várias mesas"); round tables with beige chairs in the middle.
+ * - Their selfies (IMG_6194, 6200-6230): the two of them side by side on the
+ *   sofa, Elena at the window end, Davi on her right; behind them the concrete
+ *   pillar with the round "Caramel" logo, the dark window strip beside it.
+ *   -> their sofa backs onto the pillar (x = 0); two chairs across the table
+ *      (IMG_6217/6218: a beige chair across, the wood-clad wainscot and the
+ *      window beyond; Davi: "sofá de parede, mesa dupla, duas cadeiras").
  * - The food (IMG_6196-6199, 6214-6219): a dark stone plate with two fried
  *   balls on white cream with a herb leaf; a cast-iron skillet with meatballs
  *   in tomato sauce, white mozzarella, an arugula sprig and potato wedges with
  *   rosemary, on a white paper placemat with a grey print; stemmed water glasses
- *   (one with a gin and lime), a small table card, a light wood table top.
+ *   (one with a gin and lime), a small table card, a beige stone table top.
  * - Public photo of the venue: wood floor, upholstered chairs on wooden legs,
  *   round tables, concrete columns.
  *
  * Floor plan (meters): x in [-6, 6], z in [-8, 6], ceiling at 3.3 m. Entrance
- * from the mall corridor through the glass front (z = 6). Their table is the
- * last one of the window row, at the right end (x = 3.9).
+ * from the mall corridor through the glass front (z = 6). Their booth is the
+ * one against the pillar in the middle of the window row (table at x = 1.2).
  */
 
 /* ---------------- room ---------------- */
@@ -55,9 +61,18 @@ const H = 3.3;
 const SILL = 1.05; // top of the concrete ledge under the window
 const TOP = 0.76; // table top height
 
-/** Their table (window row, right end). */
-const HX = 3.9;
-const HZ = -6.95;
+/** The window booths: sofas run along z from the window ledge into the room. */
+const BZ0 = Z0 + 0.24; // window end of the sofas
+const BZ1 = BZ0 + 1.3; // aisle end
+const SOFA = 0.575; // sofa depth, back included
+/** The concrete pillar at the window, behind their sofa (x range). */
+const PIL0 = -0.3;
+const PIL1 = 0.3;
+/** Their table: in front of the sofa against the pillar. */
+const HX = PIL1 + SOFA + 0.35;
+const HZ = (BZ0 + BZ1) / 2;
+/** Centers of the other booth pairs (sofa, table, sofa). */
+const PAIRS = [-4.925, -3.075, PIL0 - SOFA - 0.35, 3.2, 5.05];
 
 /* ---------------- geometry batching ---------------- */
 
@@ -761,9 +776,6 @@ function build(ctx: SceneCtx) {
   const concreteMat = pbr(repeat(concrete("#9b968e", 31), 3, 1.2), {
     roughness: 0.95,
   });
-  const ledgeMat = pbr(repeat(concrete("#a29d95", 37), 4, 0.4), {
-    roughness: 0.9,
-  });
   const ceilMat = pbr(repeat(concrete("#bdb6ab", 43), 4, 5), {
     roughness: 1,
   });
@@ -777,9 +789,11 @@ function build(ctx: SceneCtx) {
     roughness: 0.55,
     vertexColors: true,
   });
-  const tableWood = pbr(repeat(woodPlanks("#b98c5e", 3, 51), 1, 1), {
-    roughness: 0.45,
-  });
+  // table tops: light beige stone with soft veins (IMG_6214, 6217)
+  const tableStone = pbr(
+    repeat(marble("#e4d8c4", "rgba(150,120,90,0.28)", 51), 1, 1),
+    { roughness: 0.32 },
+  );
   const benchFab = pbr(repeat(fabric("#3c3835", 61), 3, 3), {
     roughness: 0.95,
   });
@@ -900,24 +914,33 @@ function build(ctx: SceneCtx) {
       H / 2,
       -2.2,
     ]);
-    const logoMat = new THREE.MeshStandardMaterial({
-      map: logoTex(),
-      transparent: true,
-      roughness: 0.85,
-    });
-    const logo = new THREE.Mesh(new THREE.CircleGeometry(0.55, 64), logoMat);
-    logo.position.set(X1 - 0.004, 1.85, -4.6);
-    logo.rotation.y = -Math.PI / 2;
-    root.add(logo);
   }
 
   /* ---------- window wall: ledge, glass, night view (IMG_6193, 6218) ---------- */
   {
-    put(kit, ledgeMat, new THREE.BoxGeometry(X1 - X0, SILL, 0.24), [
-      0,
-      SILL / 2,
-      Z0 + 0.1,
-    ]);
+    // light wood wainscot under the glass, horizontal planks (IMG_6193 at
+    // Elena's side, IMG_6217/6218 across their table), and a wooden sill
+    const board = new THREE.BoxGeometry(1.5, SILL / 4 - 0.004, 0.24);
+    for (let x = X0 + 0.75; x < X1; x += 1.5)
+      for (let k = 0; k < 4; k++)
+        put(
+          kit,
+          lightWood,
+          board,
+          [x, (k + 0.5) * (SILL / 4), Z0 + 0.1],
+          [0, 0, 0],
+          [1, 1, 1],
+          new THREE.Color().setScalar(0.82 + rand() * 0.24),
+        );
+    put(
+      kit,
+      lightWood,
+      new THREE.BoxGeometry(X1 - X0, 0.035, 0.3),
+      [0, SILL + 0.0175, Z0 + 0.12],
+      [0, 0, 0],
+      [1, 1, 1],
+      new THREE.Color(0.95, 0.9, 0.85),
+    );
     put(kit, concreteMat, new THREE.BoxGeometry(X1 - X0, H - 3.0, 0.24), [
       0,
       (H + 3.0) / 2,
@@ -1071,96 +1094,77 @@ function build(ctx: SceneCtx) {
   ctx.wall(X1 - 0.03, Z0, X1 + 0.4, Z1 + 0.4);
   ctx.wall(X1 - 0.3, -2.45, X1, -1.95);
 
-  /* ---------- the window banquette (IMG_6193: dark upholstery, light wood frame) ---------- */
-  const BQ0 = -5.6;
-  const BQ1 = 5.5;
-  const BQ_FRONT = Z0 + 0.72; // -7.28
+  /* ---------- the booths along the window (IMG_6193, 6217, 6218) ---------- */
+  // The sofas run from the window into the room and face each other in pairs
+  // across a table (IMG_6193: past Elena's backrest, another table and a grey
+  // sofa facing it). Their backs are clad in light wood planks (seen across
+  // their table, under the window, in IMG_6217/6218). Theirs is the sofa
+  // against the concrete pillar with the logo (their selfies), with two beige
+  // chairs across the table (IMG_6217).
+  const sofaGeo = {
+    plinth: new THREE.BoxGeometry(SOFA - 0.06, 0.32, BZ1 - BZ0),
+    seat: new RoundedBoxGeometry(0.45, 0.13, BZ1 - BZ0 - 0.03, 3, 0.03),
+    back: new RoundedBoxGeometry(0.11, 0.56, BZ1 - BZ0 - 0.03, 3, 0.04),
+    plank: new THREE.BoxGeometry(0.035, 0.255, BZ1 - BZ0 + 0.04),
+    cap: new THREE.BoxGeometry(0.08, 0.035, BZ1 - BZ0 + 0.04),
+    end: new THREE.BoxGeometry(SOFA - 0.035, 0.5, 0.035),
+  };
+  /** A sofa whose back is at x = xBack, seated toward +X (dir 1) or -X (dir -1). */
+  const sofa = (xBack: number, dir: 1 | -1) => {
+    const zc = (BZ0 + BZ1) / 2;
+    const at = (d: number) => xBack + dir * d;
+    put(kit, lightWood, sofaGeo.plinth, [
+      at(0.035 + (SOFA - 0.06) / 2),
+      0.16,
+      zc,
+    ]);
+    put(kit, benchFab, sofaGeo.seat, [at(SOFA - 0.225), 0.385, zc]);
+    put(kit, benchFab, sofaGeo.back, [at(0.095), 0.74, zc], [0, 0, dir * 0.08]);
+    // the wooden shell: four horizontal planks, a slightly different tone each
+    for (let k = 0; k < 4; k++)
+      put(
+        kit,
+        lightWood,
+        sofaGeo.plank,
+        [at(0.0175), 0.15 + k * 0.26, zc],
+        [0, 0, 0],
+        [1, 1, 1],
+        new THREE.Color().setScalar(0.84 + rand() * 0.22),
+      );
+    put(kit, lightWood, sofaGeo.cap, [at(0.04), 1.1, zc]);
+    put(kit, lightWood, sofaGeo.end, [at(SOFA / 2 + 0.0175), 0.25, BZ1 + 0.02]);
+    ctx.wall(
+      Math.min(xBack, at(SOFA)),
+      BZ0 - 0.05,
+      Math.max(xBack, at(SOFA)),
+      BZ1 + 0.04,
+    );
+  };
+
+  // the concrete pillar at the window behind their sofa, with the round logo
   {
-    const back = Z0 + 0.22;
-    // plinth with a light wood front
+    put(kit, concreteMat, new THREE.BoxGeometry(PIL1 - PIL0, H, 0.7), [
+      (PIL0 + PIL1) / 2,
+      H / 2,
+      Z0 + 0.35,
+    ]);
+    // a light wood half wall closes the gap between the two sofa backs
     put(
       kit,
       lightWood,
-      new THREE.BoxGeometry(BQ1 - BQ0, 0.3, BQ_FRONT - back),
-      [(BQ0 + BQ1) / 2, 0.17, (back + BQ_FRONT) / 2],
+      new THREE.BoxGeometry(PIL1 - PIL0, 1.12, BZ1 - Z0 - 0.7),
+      [(PIL0 + PIL1) / 2, 0.56, (Z0 + 0.7 + BZ1) / 2],
     );
-    put(kit, blackMetal, new THREE.BoxGeometry(BQ1 - BQ0 - 0.04, 0.03, 0.02), [
-      (BQ0 + BQ1) / 2,
-      0.015,
-      BQ_FRONT - 0.03,
-    ]);
-    // seat cushions
-    const segs = Math.round((BQ1 - BQ0) / 1.1);
-    const sw = (BQ1 - BQ0) / segs;
-    const seat = new RoundedBoxGeometry(
-      sw - 0.01,
-      0.13,
-      BQ_FRONT - back - 0.12,
-      3,
-      0.03,
-    );
-    for (let i = 0; i < segs; i++)
-      put(kit, benchFab, seat, [
-        BQ0 + sw * (i + 0.5),
-        0.385,
-        (back + 0.12 + BQ_FRONT) / 2,
-      ]);
-    // back cushions with vertical channels
-    const ch = new RoundedBoxGeometry(0.2, 0.52, 0.1, 3, 0.04);
-    for (let x = BQ0 + 0.11; x < BQ1 - 0.08; x += 0.205)
-      put(kit, benchFab, ch, [x, 0.72, back + 0.07], [-0.1, 0, 0]);
-    // wooden back rail and end panels
-    put(kit, lightWood, new THREE.BoxGeometry(BQ1 - BQ0, 0.06, 0.16), [
-      (BQ0 + BQ1) / 2,
-      1.0,
-      back + 0.06,
-    ]);
-    for (const x of [BQ0 - 0.03, BQ1 + 0.03])
-      put(
-        kit,
-        lightWood,
-        new THREE.BoxGeometry(0.05, 1.03, BQ_FRONT - back + 0.02),
-        [x, 0.515, (back + BQ_FRONT) / 2],
-      );
-    ctx.wall(BQ0 - 0.06, back, BQ1 + 0.06, BQ_FRONT);
-  }
-
-  /* ---------- the booths along the wooden left wall ---------- */
-  const BZ0 = -6.1;
-  const BZ1 = 2.6;
-  {
-    const back = X0 + 0.04;
-    const front = back + 0.55;
-    put(kit, lightWood, new THREE.BoxGeometry(front - back, 0.3, BZ1 - BZ0), [
-      (back + front) / 2,
-      0.17,
-      (BZ0 + BZ1) / 2,
-    ]);
-    const seat = new RoundedBoxGeometry(
-      front - back - 0.1,
-      0.13,
-      1.08,
-      3,
-      0.03,
-    );
-    for (let z = BZ0 + 0.55; z < BZ1; z += 1.09)
-      put(kit, benchFab, seat, [(back + 0.1 + front) / 2, 0.385, z]);
-    const ch = new RoundedBoxGeometry(0.1, 0.62, 0.2, 3, 0.04);
-    for (let z = BZ0 + 0.11; z < BZ1 - 0.08; z += 0.205)
-      put(kit, benchFab, ch, [back + 0.07, 0.78, z], [0, 0, 0.1]);
-    put(kit, lightWood, new THREE.BoxGeometry(0.16, 0.06, BZ1 - BZ0), [
-      back + 0.07,
-      1.12,
-      (BZ0 + BZ1) / 2,
-    ]);
-    for (const z of [BZ0 - 0.03, BZ1 + 0.03])
-      put(
-        kit,
-        lightWood,
-        new THREE.BoxGeometry(front - back + 0.02, 1.15, 0.05),
-        [(back + front) / 2, 0.575, z],
-      );
-    ctx.wall(back, BZ0 - 0.06, front, BZ1 + 0.06);
+    ctx.wall(PIL0, Z0, PIL1, BZ1 + 0.04);
+    const logoMat = new THREE.MeshStandardMaterial({
+      map: logoTex(),
+      transparent: true,
+      roughness: 0.85,
+    });
+    const logo = new THREE.Mesh(new THREE.CircleGeometry(0.29, 64), logoMat);
+    logo.position.set(PIL1 + 0.004, 1.95, Z0 + 0.35);
+    logo.rotation.y = Math.PI / 2;
+    root.add(logo);
   }
 
   /* ---------- tables and chairs ---------- */
@@ -1196,7 +1200,7 @@ function build(ctx: SceneCtx) {
   };
 
   // tables: wooden tops on black pedestals
-  const rectTop = new RoundedBoxGeometry(0.8, 0.04, 0.7, 2, 0.008);
+  const rectTop = new RoundedBoxGeometry(0.7, 0.04, 1.2, 2, 0.008);
   const roundTop = new THREE.CylinderGeometry(0.5, 0.5, 0.04, 48);
   const pedestal = (() => {
     const col = new THREE.CylinderGeometry(0.035, 0.035, TOP - 0.06, 12);
@@ -1215,26 +1219,26 @@ function build(ctx: SceneCtx) {
   /** Settings (where people would sit) to dress with napkins, cutlery and a glass. */
   const places: { x: number; z: number; ry: number }[] = [];
 
-  // window row of 2-tops; the last one is theirs (built apart, bigger)
-  const ROW_Z = HZ;
-  for (const x of [-4.6, -2.5, -0.4, 1.7]) {
-    rectM.push(mat4(x, TOP - 0.02, ROW_Z));
-    pedM.push(mat4(x, 0, ROW_Z));
-    ctx.wall(x - 0.4, ROW_Z - 0.35, x + 0.4, ROW_Z + 0.35);
-    chair(x, ROW_Z + 0.75, Math.PI);
-    places.push({ x, z: ROW_Z - 0.2, ry: 0 });
-    places.push({ x, z: ROW_Z + 0.2, ry: Math.PI });
+  // booth pairs: sofa, table, sofa, repeated along the window
+  const boothTable = (x: number) => {
+    rectM.push(mat4(x, TOP - 0.02, HZ));
+    // one pedestal, its feet turned diagonally, clear of the sitters' feet
+    pedM.push(mat4(x, 0, HZ, Math.PI / 4));
+    ctx.wall(x - 0.35, HZ - 0.6, x + 0.35, HZ + 0.6);
+  };
+  for (const c of PAIRS) {
+    sofa(c - (SOFA + 0.35), 1);
+    sofa(c + (SOFA + 0.35), -1);
+    boothTable(c);
+    for (const s of [-1, 1])
+      for (const dz of [-0.3, 0.3])
+        places.push({ x: c + s * 0.2, z: HZ + dz, ry: (-s * Math.PI) / 2 });
   }
-  // booths: tables against the left wall
-  for (let z = BZ0 + 0.55; z < BZ1; z += 2.18) {
-    const x = X0 + 1.0;
-    rectM.push(mat4(x, TOP - 0.02, z, Math.PI / 2, 0, 0, 1, 1, 1));
-    pedM.push(mat4(x, 0, z));
-    ctx.wall(x - 0.35, z - 0.4, x + 0.35, z + 0.4);
-    chair(x + 0.72, z, -Math.PI / 2);
-    places.push({ x: x - 0.2, z, ry: Math.PI / 2 });
-    places.push({ x: x + 0.2, z, ry: -Math.PI / 2 });
-  }
+  // theirs: the sofa against the pillar, the table, two chairs across
+  sofa(PIL1, 1);
+  boothTable(HX);
+  chair(HX + 0.66, HZ - 0.3, -Math.PI / 2);
+  chair(HX + 0.72, HZ + 0.33, -Math.PI / 2 + 0.22);
   // round 4-tops in the middle, under the white domes
   const ROUND: [number, number][] = [
     [-2.0, -3.6],
@@ -1261,16 +1265,9 @@ function build(ctx: SceneCtx) {
       });
     }
   });
-  // their table's chair (Davi's side), pulled out a little
-  chair(HX - 0.12, HZ + 0.8, Math.PI + 0.25);
-
-  instanced(root, rectTop, tableWood, rectM);
-  instanced(root, roundTop, tableWood, roundM);
-  instanced(root, pedestal, blackMetal, [
-    ...pedM,
-    mat4(HX - 0.28, 0, HZ),
-    mat4(HX + 0.28, 0, HZ),
-  ]);
+  instanced(root, rectTop, tableStone, rectM);
+  instanced(root, roundTop, tableStone, roundM);
+  instanced(root, pedestal, blackMetal, pedM);
   instanced(root, chairFabGeo, chairFab, chairM);
   instanced(root, chairLegGeo, lightWood, chairM);
 
@@ -1312,15 +1309,6 @@ function build(ctx: SceneCtx) {
   food.position.set(HX, TOP, HZ);
   root.add(food);
   {
-    const top = new THREE.Mesh(
-      new RoundedBoxGeometry(1.1, 0.04, 0.75, 2, 0.008),
-      tableWood,
-    );
-    top.position.set(HX, TOP - 0.02, HZ);
-    top.castShadow = top.receiveShadow = true;
-    root.add(top);
-    ctx.wall(HX - 0.55, HZ - 0.375, HX + 0.55, HZ + 0.375);
-
     const fk: Kit = new Map();
     // paper placemats with the grey print
     const matTex = placematTex();
@@ -1330,8 +1318,8 @@ function build(ctx: SceneCtx) {
     });
     const sheet = new THREE.PlaneGeometry(0.42, 0.3);
     sheet.rotateX(-Math.PI / 2);
-    put(fk, paper, sheet, [0.02, 0.001, -0.19], [0, 0.03, 0]);
-    put(fk, paper, sheet, [0.04, 0.0012, 0.19], [0, -0.04, 0]);
+    put(fk, paper, sheet, [-0.17, 0.001, -0.29], [0, Math.PI / 2 + 0.03, 0]);
+    put(fk, paper, sheet, [-0.17, 0.0012, 0.29], [0, Math.PI / 2 - 0.04, 0]);
 
     /* --- cast-iron skillet: meatballs, tomato sauce, mozzarella, arugula, potato wedges --- */
     const iron = speckMaps(
@@ -1352,10 +1340,10 @@ function build(ctx: SceneCtx) {
     });
     iron.map.repeat.set(6, 2);
     iron.normalMap.repeat.set(6, 2);
-    const SK = { x: 0.13, z: 0.04 };
+    const SK = { x: -0.08, z: 0.28 };
     const skillet = new THREE.Group();
     skillet.position.set(SK.x, 0.0015, SK.z);
-    skillet.rotation.y = -0.2;
+    skillet.rotation.y = 0.6;
     food.add(skillet);
     const sk: Kit = new Map();
     put(
@@ -1642,7 +1630,7 @@ function build(ctx: SceneCtx) {
     });
     stone.map.repeat.set(6, 2);
     stone.normalMap.repeat.set(6, 2);
-    const PL = { x: -0.25, z: 0.03 };
+    const PL = { x: -0.06, z: -0.26 };
     const plate = new THREE.Group();
     plate.position.set(PL.x, 0.0015, PL.z);
     food.add(plate);
@@ -1743,12 +1731,12 @@ function build(ctx: SceneCtx) {
       ],
       48,
     );
-    put(fk, porcelain, smallPlate, [-0.02, 0.0015, -0.25]);
-    put(fk, porcelain, smallPlate, [0.0, 0.0015, 0.265]);
+    put(fk, porcelain, smallPlate, [0.2, 0.0015, -0.42]);
+    put(fk, porcelain, smallPlate, [0.2, 0.0015, 0.42]);
     const napkin = new RoundedBoxGeometry(0.11, 0.012, 0.19, 2, 0.004);
-    put(fk, napkinMat, napkin, [-0.2, 0.007, 0.26], [0, 0.05, 0]);
-    put(fk, napkinMat, napkin, [-0.22, 0.007, -0.26], [0, -0.06, 0]);
-    // fork (on the napkin) and knife for each of them
+    put(fk, napkinMat, napkin, [-0.2, 0.007, 0.06], [0, Math.PI / 2 + 0.05, 0]);
+    put(fk, napkinMat, napkin, [-0.2, 0.007, -0.5], [0, Math.PI / 2 - 0.06, 0]);
+    // fork (on the napkin, at the left) and knife (at the right) for each
     const forkGeo = (() => {
       const parts = [
         new THREE.BoxGeometry(0.012, 0.003, 0.12).translate(0, 0, 0.05),
@@ -1782,10 +1770,10 @@ function build(ctx: SceneCtx) {
       );
       return mergeGeometries([norm(handle), norm(blade)], false);
     })();
-    put(fk, steel, forkGeo, [-0.2, 0.015, 0.26], [0, 0.05, 0]);
-    put(fk, steel, knifeGeo, [0.12, 0.004, 0.27], [0, -0.03, 0]);
-    put(fk, steel, forkGeo, [-0.22, 0.015, -0.26], [0, Math.PI - 0.06, 0]);
-    put(fk, steel, knifeGeo, [0.12, 0.004, -0.27], [0, Math.PI + 0.04, 0]);
+    put(fk, steel, forkGeo, [-0.2, 0.015, 0.06], [0, -Math.PI / 2 + 0.05, 0]);
+    put(fk, steel, knifeGeo, [-0.2, 0.004, 0.47], [0, -Math.PI / 2 - 0.03, 0]);
+    put(fk, steel, forkGeo, [-0.2, 0.015, -0.5], [0, -Math.PI / 2 - 0.06, 0]);
+    put(fk, steel, knifeGeo, [-0.2, 0.004, -0.08], [0, -Math.PI / 2 + 0.04, 0]);
     // table card: a small folded tent
     {
       const cardMat = new THREE.MeshStandardMaterial({
@@ -1799,17 +1787,25 @@ function build(ctx: SceneCtx) {
         g.translate(0, 0.0425, 0);
         g.rotateX(-s * 0.28);
         if (s < 0) g.rotateY(Math.PI);
-        put(fk, cardMat, g, [0.26, 0, -0.29 + s * 0.012], [0, -0.3, 0]);
+        const r = Math.PI / 2 - 0.3;
+        put(
+          fk,
+          cardMat,
+          g,
+          [-0.02 + s * 0.012 * Math.sin(r), 0, 0.53 + s * 0.012 * Math.cos(r)],
+          [0, r, 0],
+        );
       }
     }
     bake(fk, food);
 
     // goblets: her water, the gin with lime and ice, his water
     const gob = gobletGeo(28);
+    const GIN = { x: 0.25, z: -0.04 };
     const glasses: [number, number][] = [
-      [-0.42, -0.24],
-      [0.44, -0.15],
-      [0.42, 0.24],
+      [0.27, -0.21],
+      [GIN.x, GIN.z],
+      [0.28, 0.14],
     ];
     for (const [x, z] of glasses) {
       const m = new THREE.Mesh(gob, clearGlass);
@@ -1837,7 +1833,7 @@ function build(ctx: SceneCtx) {
           depthWrite: false,
         }),
       );
-      liquid.position.set(0.44, 0, -0.15);
+      liquid.position.set(GIN.x, 0, GIN.z);
       liquid.renderOrder = 1;
       food.add(liquid);
       const ice = new THREE.Mesh(
@@ -1855,7 +1851,7 @@ function build(ctx: SceneCtx) {
         [0.004, 0.118, 0.014, 0.7],
       ] as const) {
         const c = ice.clone();
-        c.position.set(0.44 + dx, dy, -0.15 + dz);
+        c.position.set(GIN.x + dx, dy, GIN.z + dz);
         c.rotation.set(r, r * 1.3, 0.2);
         food.add(c);
       }
@@ -1872,7 +1868,7 @@ function build(ctx: SceneCtx) {
         ),
         new THREE.MeshStandardMaterial({ color: "#8fbf3a", roughness: 0.4 }),
       );
-      lime.position.set(0.432, 0.121, -0.153);
+      lime.position.set(GIN.x - 0.008, 0.121, GIN.z - 0.003);
       lime.rotation.set(0.2, 0.4, 0);
       food.add(lime);
     }
@@ -1929,7 +1925,7 @@ function build(ctx: SceneCtx) {
   root.add(new THREE.HemisphereLight("#ffdcb5", "#2a2018", 0.32));
   {
     const key = new THREE.SpotLight("#ffd3a0", 15, 0, 0.5, 0.75, 2);
-    key.position.set(HX + 0.15, H - 0.05, HZ + 0.35);
+    key.position.set(HX + 0.35, H - 0.05, HZ + 0.15);
     key.target.position.set(HX, TOP, HZ);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -1954,8 +1950,8 @@ function build(ctx: SceneCtx) {
     root.add(s, s.target);
   };
   spot(-0.4, -1.6, -0.4, 0, -1.6, 26, 1.05);
-  spot(-2.4, -6.3, -2.4, 0, -6.9, 18, 0.95);
-  spot(5.0, -5.6, X1, 1.6, -5.6, 9, 0.75);
+  spot(-2.4, -6.0, -2.4, 0, HZ, 18, 0.95);
+  spot(2.2, -6.0, PIL1, 1.9, Z0 + 0.35, 7, 0.6);
   const pt = (x: number, y: number, z: number, i: number, d: number) => {
     const p = new THREE.PointLight("#ffc88e", i, d, 2);
     p.position.set(x, y, z);
@@ -1974,14 +1970,25 @@ function build(ctx: SceneCtx) {
 
   /* ---------- photo, pack, people ---------- */
   ctx.photo("caramel-1.webp", 0.42, 0.56, v3(X1 - 0.02, 1.55, -6.55), -90);
-  ctx.pack(HX - 0.47, TOP + 0.0015, HZ + 0.18, 15);
+  ctx.pack(HX + 0.06, TOP + 0.0015, HZ + 0.02, 75);
 
   ctx.playerOutfit(OUTFITS);
   const line =
     ctx.player === "davi"
       ? "Feliz um mês, meu amor! Depois tem cinema 🎬"
       : "Um mês. Parece pouco, mas já é tudo 💗";
-  ctx.partner(HX + 0.05, BQ_FRONT - 0.22, 0, "sit", OUTFITS, line);
+  // side by side on the sofa, facing the chairs (+X): Elena at the window
+  // end, Davi on her right (their selfies); the player's seat is the other one
+  const seatX = PIL1 + SOFA - 0.22;
+  const seatZ = (who: "davi" | "elena") => HZ + (who === "elena" ? -0.3 : 0.3);
+  ctx.partner(
+    seatX,
+    seatZ(ctx.player === "davi" ? "elena" : "davi"),
+    90,
+    "sit",
+    OUTFITS,
+    line,
+  );
 
   // another couple at a middle table, and a waiter
   const [dx, dz] = ROUND[DINERS] ?? [1.3, -0.6];
