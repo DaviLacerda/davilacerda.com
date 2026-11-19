@@ -2148,7 +2148,7 @@ const scene: SceneModule = {
     /* ---------- lights (8) ---------- */
     root.add(new THREE.HemisphereLight("#ffd7b0", "#2a1c26", 0.55));
     // key spot from the truss onto the singer (the only shadow caster)
-    const key = new THREE.SpotLight("#ffd9b0", 140, 0, 0.42, 0.6, 2);
+    const key = new THREE.SpotLight("#ffd9b0", 26, 0, 0.42, 0.75, 2);
     key.position.set(0.6, TY - 0.2, TZ);
     key.target.position.copy(aim).setY(SH + 0.6);
     key.castShadow = true;
@@ -2159,8 +2159,8 @@ const scene: SceneModule = {
     key.shadow.camera.far = 12;
     root.add(key, key.target);
     for (const [x, color, power] of [
-      [2.0, "#ff3f9a", 70],
-      [-0.75, "#3f8cff", 55],
+      [2.0, "#ff3f9a", 14],
+      [-0.75, "#3f8cff", 11],
     ] as const) {
       const s = new THREE.SpotLight(color, power, 0, 0.55, 0.7, 2);
       s.position.set(x, TY - 0.2, TZ);
@@ -2321,7 +2321,7 @@ const scene: SceneModule = {
       lensMats.forEach(
         (m, i) => (m.emissiveIntensity = 6 + Math.sin(t * 1.3 + i * 1.7) * 1.5),
       );
-      key.intensity = 135 + Math.sin(t * 0.9) * 8;
+      key.intensity = 26 + Math.sin(t * 0.9) * 2;
     });
   },
 };
