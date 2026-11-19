@@ -1014,12 +1014,11 @@ const scene: SceneModule = {
       [1.0, 1],
       [3.0, -1],
     ] as const) {
-      const ang = dir * 78 * D;
       const leaf = M(
-        SX + 0.12 + Math.sin(ang) * 0.48,
+        SX + 0.12 + Math.sin(78 * D) * 0.48,
         1.2,
         hz + dir * Math.cos(78 * D) * 0.48,
-        -ang + Math.PI / 2,
+        -dir * 12 * D,
         0,
         0,
         0.98,
@@ -1038,6 +1037,17 @@ const scene: SceneModule = {
         leaf.clone().multiply(M(0, -0.49, 0, 0, 0, 0, 1.02, 0.03, 1.4)),
       );
     }
+    // colliders for the shell
+    ctx.wall(X0 - 0.3, ZB - 0.3, X0, ZS + 0.3);
+    ctx.wall(X0 - 0.3, ZS, SX + 0.3, ZS + 0.3);
+    ctx.wall(X0, ZB - 0.3, X1, -0.05); // the lanes: no walking past the foul line
+    ctx.wall(X1, ZB, X1 + 0.3, SZ0);
+    ctx.wall(X1, SZ0 - 0.3, SX, SZ0);
+    ctx.wall(X1 - 0.08, SZ0, X1 + 0.08, ZA + 0.14);
+    ctx.wall(SX - 0.12, -5.6, SX + 0.12, 0.98);
+    ctx.wall(SX - 0.12, 3.02, SX + 0.12, 10.4);
+    ctx.wall(SX + 0.12, 0.98, SX + 0.6, 1.12);
+    ctx.wall(SX + 0.12, 2.88, SX + 0.6, 3.02);
     // baseboards
     B.box(baseboard, X0, 0, ZA, X0 + 0.012, 0.08, ZS);
     B.box(baseboard, X0, 0, ZS - 0.012, 5.6, 0.08, ZS);
@@ -1150,6 +1160,7 @@ const scene: SceneModule = {
       for (const z of [-2.5, 0, 2.5, 5, 7.5])
         dl.push(M(x, H - 0.004, z, 0, Math.PI / 2));
     // purple spots
+    const purple = emissive("#9b3dff", 5);
     for (const x of [-3.0, 3.0]) {
       B.add(
         unitCyl,
@@ -1158,7 +1169,7 @@ const scene: SceneModule = {
       );
       B.add(
         new THREE.CircleGeometry(0.055, 14),
-        emissive("#9b3dff", 5),
+        purple,
         M(x, H - 0.225, 0.94, 0, Math.PI / 2 + 0.35),
       );
     }
@@ -1532,7 +1543,9 @@ const scene: SceneModule = {
         M(cx, 2.13, cz),
       );
       B.add(new THREE.SphereGeometry(0.08, 12, 8), gold, M(cx, 2.62, cz));
-      const seatCols = ["#e8e2d6", "#5ab3e8", "#f08ab4"];
+      const seatMats = ["#e8e2d6", "#5ab3e8", "#f08ab4"].map(
+        (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.35 }),
+      );
       for (let i = 0; i < 3; i++) {
         const a = (i / 3) * Math.PI * 2;
         const px = cx + Math.cos(a) * 0.5;
@@ -1540,18 +1553,12 @@ const scene: SceneModule = {
         B.add(unitCyl, gold, M(px, 1.18, pz, 0, 0, 0, 0.015, 1.9, 0.015));
         B.add(
           new RoundedBoxGeometry(0.16, 0.24, 0.5, 2, 0.06),
-          new THREE.MeshStandardMaterial({
-            color: seatCols[i]!,
-            roughness: 0.35,
-          }),
+          seatMats[i]!,
           M(px, 0.72, pz, -a),
         );
         B.add(
           new RoundedBoxGeometry(0.12, 0.22, 0.14, 2, 0.05),
-          new THREE.MeshStandardMaterial({
-            color: seatCols[i]!,
-            roughness: 0.35,
-          }),
+          seatMats[i]!,
           M(
             px + Math.cos(a + Math.PI / 2) * 0.2,
             0.92,
@@ -1709,6 +1716,10 @@ const scene: SceneModule = {
         M(12.6, 2.45, kz0 + 0.9),
       );
       // yellow beer crates by the stall
+      const capMat = new THREE.MeshStandardMaterial({
+        color: "#3a2410",
+        roughness: 0.3,
+      });
       for (let i = 0; i < 4; i++) {
         const cz = FENCE_Z - 0.6;
         const y = i * 0.29;
@@ -1716,10 +1727,7 @@ const scene: SceneModule = {
         for (let b = 0; b < 6; b++)
           B.add(
             unitCyl,
-            new THREE.MeshStandardMaterial({
-              color: "#3a2410",
-              roughness: 0.3,
-            }),
+            capMat,
             M(
               14.48 + (b % 3) * 0.18,
               y + 0.28,
@@ -1868,7 +1876,7 @@ const scene: SceneModule = {
         const cz = tz + Math.cos(a) * d;
         redChairs.push(M(cx, 0, cz, a + Math.PI));
       }
-      ctx.wall(tx - 0.4, tz - 0.4, tx + 0.4, tz + 0.4);
+      ctx.wall(tx - 0.8, tz - 0.8, tx + 0.8, tz + 0.8);
     });
     // what is on the couple's table: a red drink, the beer, a plate of torresmo, a menu card
     B.add(
@@ -2015,7 +2023,7 @@ const scene: SceneModule = {
       clearcoatRoughness: 0.15,
     });
     inst(
-      new THREE.SphereGeometry(0.109, 32, 20),
+      new THREE.SphereGeometry(0.109, high ? 32 : 18, high ? 20 : 12),
       ballMat,
       balls,
       true,
