@@ -7,7 +7,6 @@ import {
   carpet,
   emissive,
   fabric,
-  leather,
   marble,
   metal,
   pbr,
@@ -1994,17 +1993,122 @@ const scene: SceneModule = {
       }
     }
     const y0 = TB.h;
-    // the bouquet lying on the granite, heads toward the room
+    // Davi: "rosas, anel e chocolate estavam naquele porta baú preto" — an open
+    // black gift chest on the granite, with the roses, the chocolates and the
+    // ring box inside it
+    const CH = { x: TB.x + 0.12, z: TB.z + 0.02, w: 0.5, d: 0.32, h: 0.22 };
+    {
+      const chestMat = new THREE.MeshStandardMaterial({
+        color: "#101012",
+        roughness: 0.35,
+        metalness: 0.05,
+      });
+      const lining = new THREE.MeshStandardMaterial({
+        color: "#1c1416",
+        roughness: 0.9,
+      });
+      const gold = new THREE.MeshStandardMaterial({
+        color: "#c8a45a",
+        roughness: 0.3,
+        metalness: 0.9,
+      });
+      const chest = new THREE.Group();
+      const t = 0.012;
+      // floor and four walls (open on top), dark velvet inside
+      chest.add(
+        mesh(new THREE.BoxGeometry(CH.w, t, CH.d), chestMat, 0, t / 2, 0),
+      );
+      chest.add(
+        mesh(
+          new THREE.BoxGeometry(CH.w - 2 * t, 0.002, CH.d - 2 * t),
+          lining,
+          0,
+          t + 0.001,
+          0,
+          false,
+        ),
+      );
+      for (const sz of [-1, 1])
+        chest.add(
+          mesh(
+            new THREE.BoxGeometry(CH.w, CH.h, t),
+            chestMat,
+            0,
+            CH.h / 2,
+            sz * (CH.d / 2 - t / 2),
+          ),
+        );
+      for (const sx of [-1, 1])
+        chest.add(
+          mesh(
+            new THREE.BoxGeometry(t, CH.h, CH.d),
+            chestMat,
+            sx * (CH.w / 2 - t / 2),
+            CH.h / 2,
+            0,
+          ),
+        );
+      // gold trim along the rim and a little clasp
+      for (const sz of [-1, 1])
+        chest.add(
+          mesh(
+            new THREE.BoxGeometry(CH.w + 0.004, 0.012, 0.004),
+            gold,
+            0,
+            CH.h - 0.006,
+            sz * (CH.d / 2 + 0.001),
+            false,
+          ),
+        );
+      chest.add(
+        mesh(
+          new THREE.BoxGeometry(0.04, 0.03, 0.006),
+          gold,
+          0,
+          CH.h - 0.03,
+          CH.d / 2 + 0.003,
+          false,
+        ),
+      );
+      // the lid, hinged at the back and standing open
+      const lid = new THREE.Group();
+      lid.add(
+        mesh(
+          new THREE.BoxGeometry(CH.w, 0.03, CH.d),
+          chestMat,
+          0,
+          0.015,
+          CH.d / 2,
+        ),
+      );
+      lid.add(
+        mesh(
+          new THREE.BoxGeometry(CH.w + 0.004, 0.012, 0.004),
+          gold,
+          0,
+          0.015,
+          CH.d + 0.002,
+          false,
+        ),
+      );
+      lid.position.set(0, CH.h, -CH.d / 2);
+      lid.rotation.x = -1.9;
+      chest.add(lid);
+      chest.position.set(CH.x, y0, CH.z);
+      chest.rotation.y = -0.15;
+      S.add(chest);
+    }
+    // the bouquet standing in the chest, heads up and leaning out a little
     const bq = bouquet(ctx.quality);
     const tilt = new THREE.Group();
     tilt.add(bq);
-    tilt.rotation.z = -1.33;
+    tilt.rotation.z = -0.3;
     const bqHolder = new THREE.Group();
     bqHolder.add(tilt);
-    bqHolder.position.set(TB.x - 0.5, y0 + 0.035, TB.z - 0.05);
+    bqHolder.position.set(CH.x - 0.12, y0 + 0.02, CH.z - 0.03);
     bqHolder.rotation.y = -0.5;
     S.add(bqHolder);
-    // two Talento bars, the letter, the ring box, a glass plate, the cardboard gift box, her black bag
+    // two Talento bars and the ring box inside, in front of the roses
     const choc = chocolateTex();
     const chocMat = new THREE.MeshStandardMaterial({
       map: choc,
@@ -2015,89 +2119,47 @@ const scene: SceneModule = {
       color: "#a3121b",
       roughness: 0.35,
     });
-    for (const [dx, dz, r] of [
-      [0.35, 0.22, 0.3],
-      [0.47, 0.1, -0.2],
+    for (const [dx, dz, r, ry] of [
+      [0.1, 0.06, 0.25, 0.08],
+      [0.14, -0.04, -0.15, 0.1],
     ] as const) {
       const bar = mesh(
         new THREE.BoxGeometry(0.16, 0.012, 0.08),
         [chocSide, chocSide, chocMat, chocSide, chocSide, chocSide],
-        TB.x + dx,
-        y0 + 0.006,
-        TB.z + dz,
+        CH.x + dx,
+        y0 + ry,
+        CH.z + dz,
         false,
       );
       bar.rotation.y = r;
+      bar.rotation.z = 0.5;
       S.add(bar);
     }
+    const rb = ringBox();
+    rb.position.set(CH.x + 0.06, y0 + 0.014, CH.z + 0.07);
+    rb.rotation.y = 0.5;
+    S.add(rb);
+    // the letter and a glass plate stay on the granite beside the chest
     const envelope = mesh(
       new THREE.BoxGeometry(0.22, 0.003, 0.11),
       new THREE.MeshStandardMaterial({ color: "#f1ede6", roughness: 0.8 }),
-      TB.x - 0.02,
+      TB.x - 0.45,
       y0 + 0.0015,
-      TB.z - 0.22,
+      TB.z + 0.2,
       false,
     );
     envelope.rotation.y = 0.2;
     S.add(envelope);
-    const rb = ringBox();
-    rb.position.set(TB.x + 0.18, y0, TB.z + 0.3);
-    rb.rotation.y = 0.9;
-    S.add(rb);
     S.add(
       mesh(
         new THREE.CylinderGeometry(0.11, 0.09, 0.012, 32),
         glassLite("#ffffff", 0.2),
-        TB.x + 0.22,
+        TB.x - 0.45,
         y0 + 0.006,
-        TB.z - 0.28,
+        TB.z - 0.2,
         false,
       ),
     );
-    {
-      const kraft = new THREE.MeshStandardMaterial({
-        color: "#b48a5c",
-        roughness: 0.9,
-      });
-      const box = new THREE.Group();
-      box.add(mesh(new THREE.BoxGeometry(0.26, 0.2, 0.22), kraft, 0, 0.1, 0));
-      const flap = mesh(
-        new THREE.BoxGeometry(0.26, 0.004, 0.11),
-        kraft,
-        0,
-        0.2,
-        -0.16,
-      );
-      flap.rotation.x = -1.1;
-      box.add(flap);
-      box.add(
-        mesh(
-          new THREE.CylinderGeometry(0.1, 0.1, 0.08, 28),
-          new THREE.MeshStandardMaterial({ color: "#121212", roughness: 0.35 }),
-          0.02,
-          0.24,
-          0.01,
-        ),
-      );
-      box.position.set(TB.x + 0.56, y0, TB.z - 0.22);
-      box.rotation.y = -0.2;
-      S.add(box);
-      const bagLeather = rep(leather("#141215", 81), 1, 1, { roughness: 0.55 });
-      const bag = new THREE.Group();
-      bag.add(mesh(rbox(0.28, 0.18, 0.1, 0.03, 3), bagLeather, 0, 0.09, 0));
-      bag.add(
-        mesh(
-          new THREE.TorusGeometry(0.09, 0.007, 6, 20, Math.PI),
-          bagLeather,
-          0,
-          0.17,
-          0,
-        ),
-      );
-      bag.position.set(TB.x + 0.6, y0, TB.z + 0.32);
-      bag.rotation.y = -0.4;
-      S.add(bag);
-    }
     // the framed rings selfie on the little wooden table under the pass-through
     const PH = { w: 0.18, h: 0.24 };
     ctx.photo(
