@@ -1567,12 +1567,14 @@ function build(ctx: SceneCtx) {
   }
 
   /* ---------- dining table (aqua cloth) along the left side, carved chairs ---------- */
+  // big table, its head pushed against the entrance wall under the painting
+  // (Davi: "essa mesa é grudada na parede e maior")
   const tx = -0.75;
-  const tz = -1.75;
+  const tz = E - 1.27;
   {
     const g = group(tx, tz, 90);
-    const tw = 2.0;
-    const td = 1.0;
+    const tw = 2.4;
+    const td = 1.05;
     add(new THREE.BoxGeometry(tw, 0.04, td), darkWood, 0, 0.73, 0, g);
     for (const sx of [-1, 1])
       for (const sz of [-1, 1])
@@ -1752,18 +1754,20 @@ function build(ctx: SceneCtx) {
       c.updateMatrixWorld(true);
       ctx.solid(c, -0.03);
     };
-    chair(tx - 0.72, tz - 0.5, 90);
-    chair(tx - 0.72, tz + 0.5, 90);
-    chair(tx + 0.72, tz - 0.5, -90);
-    chair(tx + 0.74, tz + 0.48, -95);
-    chair(tx, tz + 1.27, 180);
-    chair(tx + 0.05, tz - 1.27, 3);
+    // three on each long side, one at the free end (the head is on the wall)
+    for (const dz of [-0.78, 0, 0.78]) {
+      chair(tx - 0.76, tz + dz, 90);
+      chair(tx + 0.76, tz + dz, dz === 0 ? -95 : -90);
+    }
+    chair(tx + 0.05, tz - 1.48, 3);
   }
   // the dark sideboard against the left wall: glass doors, red runner, the family's things
+  // long, flush against the left wall (four glass doors, as in the video)
   const sbz = -1.85;
   {
-    const g = group(L + 0.24, sbz, 90);
-    const len = 1.8;
+    const g = group(L + 0.235, sbz, 90);
+    const len = 2.3;
+    const doors = 4;
     add(rbox(len, 0.78, 0.46, 0.01, 2), mahogany, 0, 0.47, 0, g);
     add(
       rbox(len + 0.04, 0.03, 0.5, 0.008, 2),
@@ -1774,10 +1778,10 @@ function build(ctx: SceneCtx) {
       g,
     );
     box(len - 0.04, 0.08, 0.44, std("#2a1610", 0.7), 0, 0.04, 0, g);
-    for (let i = 0; i < 3; i++) {
-      const cx = -len / 2 + len / 6 + (i * len) / 3;
+    for (let i = 0; i < doors; i++) {
+      const cx = -len / 2 + len / (2 * doors) + (i * len) / doors;
       box(
-        len / 3 - 0.04,
+        len / doors - 0.04,
         0.48,
         0.01,
         std("#2a1810", 0.3, { metalness: 0.1 }),
@@ -1788,7 +1792,7 @@ function build(ctx: SceneCtx) {
         false,
       );
       box(
-        len / 3 - 0.14,
+        len / doors - 0.14,
         0.38,
         0.006,
         std("#141010", 0.08, { metalness: 0.3 }),
@@ -1798,10 +1802,10 @@ function build(ctx: SceneCtx) {
         g,
         false,
       );
-      box(len / 3 - 0.04, 0.14, 0.012, mahogany, cx, 0.74, 0.232, g, false);
+      box(len / doors - 0.04, 0.14, 0.012, mahogany, cx, 0.74, 0.232, g, false);
       box(0.08, 0.015, 0.02, metal("#b49660", 0.3), cx, 0.74, 0.245, g, false);
     }
-    box(1.3, 0.004, 0.3, runnerRed, 0, 0.893, 0, g, false);
+    box(1.7, 0.004, 0.3, runnerRed, 0, 0.893, 0, g, false);
     const vase = (px: number, h: number, c: string, r: number) =>
       add(
         new THREE.LatheGeometry(
