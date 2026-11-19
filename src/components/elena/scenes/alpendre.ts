@@ -1279,21 +1279,21 @@ const scene: SceneModule = {
         ],
         16,
       );
-      B.add(ex, redPaint, M(3.4, 0.62, Z0 + 0.12));
+      B.add(ex, redPaint, M(2.62, 0.62, Z0 + 0.12));
       B.add(
         unitBox,
         blackPaint,
-        M(3.4, 1.24, Z0 + 0.1, 0, 0, 0, 0.1, 0.06, 0.06),
+        M(2.62, 1.24, Z0 + 0.1, 0, 0, 0, 0.1, 0.06, 0.06),
       );
       B.add(
         new THREE.TorusGeometry(0.1, 0.008, 4, 12, Math.PI * 1.2),
         cableMat,
-        M(3.48, 1.05, Z0 + 0.16, 0, 0, -0.6),
+        M(2.7, 1.05, Z0 + 0.16, 0, 0, -0.6),
       );
       B.add(
         unitBox,
         redPaint,
-        M(3.4, 1.62, Z0 + 0.01, 0, 0, 0, 0.22, 0.3, 0.005),
+        M(2.62, 1.62, Z0 + 0.01, 0, 0, 0, 0.22, 0.3, 0.005),
       );
     }
 
@@ -1638,16 +1638,14 @@ const scene: SceneModule = {
         0.04 - 0.115 * Math.cos(0.15),
       );
       lid.rotation.set(-0.3, 0.15, 0, "YXZ");
-      lid.add(new THREE.Mesh(rbox(0.33, 0.22, 0.008, 0.004), alu));
+      const shell = new THREE.Mesh(rbox(0.33, 0.22, 0.008, 0.004), alu);
+      shell.position.y = 0.11;
       const scr = new THREE.Mesh(
         new THREE.PlaneGeometry(0.3, 0.19),
         emissive("#cfe2ff", 1.6),
       );
-      scr.position.set(0, 0.0, 0.0045);
-      lid.add(scr);
-      lid.children[0]?.position.set(0, 0, 0);
-      lid.position.y += 0.11 * Math.cos(0.3);
-      lid.position.z -= 0;
+      scr.position.set(0, 0.11, 0.0045);
+      lid.add(shell, scr);
       g.add(lid);
       // plastic cup with water
       const cup = lathe(
@@ -2300,7 +2298,7 @@ const scene: SceneModule = {
 
     ctx.pack(FRONT.x + 0.3, TABLE_TOP, FRONT.z - 0.12, 20);
     ctx.ambient("amb-alpendre.m4a", 0.5);
-    ctx.exit(DOOR_X, Z1 - 0.3, 0.6);
+    ctx.exit(DOOR_X, Z1 - 0.25, 0.6);
 
     /* ---------- collisions ---------- */
     ctx.wall(X0 - 0.5, Z0 - 0.5, X1 + 0.5, Z0); // back

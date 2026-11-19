@@ -790,7 +790,6 @@ const scene: SceneModule = {
     ctx.scene.background = new THREE.Color("#050608");
     const B = new Batch();
     const rand = seeded(2026);
-    const low = ctx.quality === "low";
 
     /* ---------- materials ---------- */
     const wallM = pbr(repeat(plaster("#46515c", 31), 1, 1));
@@ -945,13 +944,7 @@ const scene: SceneModule = {
       B.add(
         new THREE.CircleGeometry(0.06, 18),
         noCast(emissive("#c79bff", 3)),
-        M(
-          mx,
-          H - 0.56,
-          mz - 0.07,
-          Math.PI,
-          0.5 + Math.PI / 2 - Math.PI / 2 - 1.07,
-        ),
+        M(mx, H - 0.59, mz - 0.06, 0, Math.PI / 2 + 0.5),
       );
     }
 
@@ -1011,8 +1004,15 @@ const scene: SceneModule = {
     const muralH = 2.82;
     const mural = new THREE.Mesh(
       new THREE.PlaneGeometry(muralW, muralH),
-      std("#ffffff", 0.85, 0, { map: muralTexture() }),
+      std("#ffffff", 0.85, 0),
     );
+    {
+      const mt = muralTexture();
+      mural.material.map = mt;
+      mural.material.emissiveMap = mt;
+      mural.material.emissive.set("#ffffff");
+      mural.material.emissiveIntensity = 0.1;
+    }
     mural.position.set(0, ST.h + muralH / 2, Z0 + 0.012);
     mural.receiveShadow = true;
     root.add(mural);
@@ -1204,11 +1204,11 @@ const scene: SceneModule = {
         ),
       );
     };
-    // the head geometry is slightly larger so it shows only on the caps: use thin caps instead
-    drum(-0.12, sy + 0.72, -7.5, 0.13, 0.2, 0.35);
-    drum(0.2, sy + 0.72, -7.5, 0.14, 0.2, 0.35);
-    drum(0.38, sy + 0.6, -7.78, 0.18, 0.13, 0.12); // snare
-    drum(-0.45, sy + 0.42, -7.85, 0.2, 0.36, 0.05); // floor tom
+
+    drum(-0.12, sy + 0.72, -7.5, 0.13, 0.2, -0.35);
+    drum(0.2, sy + 0.72, -7.5, 0.14, 0.2, -0.35);
+    drum(0.38, sy + 0.6, -7.78, 0.18, 0.13, -0.12); // snare
+    drum(-0.45, sy + 0.42, -7.85, 0.2, 0.36, -0.05); // floor tom
     for (const [x, z] of [
       [-0.45 - 0.15, -7.75],
       [-0.45 + 0.15, -7.75],
@@ -1381,7 +1381,7 @@ const scene: SceneModule = {
         ),
       );
     };
-    micStand(0.25, sy, -6.62, 1.42, Math.PI);
+    micStand(0.25, sy, -6.62, 1.5, Math.PI);
     micStand(-1.95, sy, -7.2, 1.38, Math.PI * 0.95);
     micStand(0.55, 0, -5.75, 1.38, Math.PI);
     micStand(-0.85, sy, -7.5, 0.9, Math.PI * 0.7);
@@ -1435,13 +1435,13 @@ const scene: SceneModule = {
     B.add(
       rbox(0.5, 0.06, 0.25, 0.01),
       std("#0f0f10", 0.7),
-      M(0.35, sy + 0.03, -6.5),
+      M(0.75, sy + 0.03, -6.62),
     );
     for (let k = 0; k < 4; k++)
       B.add(
         rbox(0.07, 0.04, 0.11, 0.008),
         std(["#c22", "#e8b020", "#2a6be0", "#1fae5a"][k] ?? "#888", 0.5),
-        M(0.17 + k * 0.12, sy + 0.08, -6.5),
+        M(0.57 + k * 0.12, sy + 0.08, -6.62),
       );
     // cables on the stage floor
     {
@@ -1458,7 +1458,7 @@ const scene: SceneModule = {
       };
       cable(
         [
-          [0.35, -6.5],
+          [0.75, -6.62],
           [0.7, -6.9],
           [0.4, -7.3],
           [-0.6, -7.2],
@@ -1944,20 +1944,11 @@ const scene: SceneModule = {
           cylLo,
           M(sx * 0.18, 0.65, -0.205, 0, -0.1, 0, 0.011, 0.42, 0.011),
         ]);
-      for (const y of [0.62, 0.8]) {
-        const rail = new THREE.TorusGeometry(0.6, 0.012, 4, 8, 0.6);
+      for (const y of [0.64, 0.82])
         cf.push([
-          rail,
-          M(
-            0,
-            y,
-            0.38 - 0.02 * (y - 0.6),
-            -Math.PI / 2 - 0.3 + Math.PI / 2,
-            Math.PI / 2,
-            0,
-          ),
+          box,
+          M(0, y, -0.205 - (y - 0.45) * 0.1, 0, -0.1, 0, 0.38, 0.045, 0.012),
         ]);
-      }
       cf.push([box, M(0, 0.14, 0, 0, 0, 0, 0.36, 0.012, 0.012)]);
       cf.push([box, M(0, 0.14, 0, 0, 0, 0, 0.012, 0.012, 0.36)]);
       const chairFrameGeo = merged(cf);
@@ -2285,7 +2276,6 @@ const scene: SceneModule = {
       stageA.color.copy(ca.setHSL(h, 0.85, 0.6));
       stageB.color.copy(ca.setHSL((h + 0.08) % 1, 0.8, 0.55));
     });
-    void low;
 
     /* ---------- spawn and exit ---------- */
     ctx.spawn(4.5, 5.0, 19);

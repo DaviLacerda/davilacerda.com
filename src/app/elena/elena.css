@@ -2965,11 +2965,20 @@ button {
   transform: rotateY(calc(180deg + var(--tx) * 14deg))
     rotateX(calc(var(--ty) * -10deg));
   transition: transform 0.7s cubic-bezier(0.3, 1.4, 0.4, 1);
-  animation: rip2-card-in 0.7s cubic-bezier(0.2, 1.2, 0.4, 1);
+  animation: rip2-card-in 0.7s cubic-bezier(0.2, 1.2, 0.4, 1) both;
 }
+/* entry uses the independent translate/scale properties so it never
+   fights the tilt transform */
 @keyframes rip2-card-in {
   from {
-    transform: translateY(40vh) rotateY(180deg) scale(0.6);
+    translate: 0 40vh;
+    scale: 0.6;
+    opacity: 0;
+  }
+  to {
+    translate: 0 0;
+    scale: 1;
+    opacity: 1;
   }
 }
 .rip2-card.is-flipped {
