@@ -5,10 +5,9 @@ import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 
 import { JsonLd } from "@/components/seo/json-ld";
-import { ThingDrawing } from "@/components/things/art";
 import { ThingsWall, type WallItem } from "@/components/things/things-wall";
 import { Container } from "@/components/ui/container";
-import { things, thingStore } from "@/content/things";
+import { things, thingSticker, thingStore } from "@/content/things";
 import { getDictionary, isLocale, t, type Locale } from "@/i18n";
 import { routes } from "@/lib/routes";
 import {
@@ -50,13 +49,13 @@ function wallItem(thing: (typeof things)[number], lang: Locale): WallItem {
     facts: thing.facts[lang],
     url,
     store: thingStore(url),
-    art: <ThingDrawing art={thing.art} />,
+    sticker: thingSticker(thing.id),
   };
 }
 
 /**
  * Things (`/[lang]/personal/things`): what Davi uses every day, as a wall of
- * drawings on one surface panel. A tile zooms the wall into that thing, with
+ * stickers on one surface panel. A tile zooms the wall into that thing, with
  * a card that says what it is and links to its maker's page (see
  * `ThingsWall`). The list lives in `src/content/things.ts`.
  */

@@ -4,14 +4,16 @@ import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
 import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type MouseEvent,
-  type ReactNode,
+  type PointerEvent,
 } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -28,8 +30,8 @@ export type WallItem = {
   url: string;
   /** "apple.com". */
   store: string;
-  /** The drawing, rendered on the server. */
-  art: ReactNode;
+  /** The sticker: the product photo in its white die-cut border. */
+  sticker: { src: string; width: number; height: number };
 };
 
 export type WallStrings = {
@@ -50,9 +52,13 @@ export type WallStrings = {
 
 /** The camera's move: heavy and fluid, so the zoom settles instead of snapping. */
 const CAMERA = "transform 700ms cubic-bezier(0.32, 0.72, 0, 1)";
-/** How much of the free area the zoomed drawing fills. */
+/** How much of the free area the zoomed sticker fills. */
 const FILL = 0.82;
 const MAX_SCALE = 3;
+/** Each sticker's resting angle, in degrees, so the wall looks stuck on by hand. */
+const TILTS = [-3, 2.5, -1.5, 3, -2.5, 1.5];
+/** How far a sticker turns toward the pointer at the tile's edge, in degrees. */
+const TURN = 14;
 
 function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -72,9 +78,40 @@ function boxWithin(el: HTMLElement, ancestor: HTMLElement) {
 }
 
 /**
- * The Things wall: every object on its plate, on one surface panel. Picking
- * one moves the camera: the whole wall scales and slides until that drawing
- * fills the free side of the panel (the left on a wide screen, the top on a
+ * Hover on a tile (a mouse only): the sticker lifts and turns toward the
+ * pointer in perspective, its shadow sliding the other way, and settles back
+ * flat when the pointer leaves. The angles go to CSS variables on the
+ * sticker (`[data-sticker]` in globals.css), so React never re-renders.
+ */
+function tiltToward(event: PointerEvent<HTMLElement>) {
+  if (event.pointerType !== "mouse" || reducedMotion()) return;
+  const sticker =
+    event.currentTarget.querySelector<HTMLElement>("[data-sticker]");
+  if (!sticker) return;
+  const rect = event.currentTarget.getBoundingClientRect();
+  const x = (event.clientX - rect.left) / rect.width - 0.5;
+  const y = (event.clientY - rect.top) / rect.height - 0.5;
+  sticker.style.setProperty("--rx", `${(-y * TURN).toFixed(2)}deg`);
+  sticker.style.setProperty("--ry", `${(x * TURN).toFixed(2)}deg`);
+  sticker.style.setProperty("--sx", `${(-x * 14).toFixed(1)}px`);
+  sticker.style.setProperty("--sy", `${(10 - y * 8).toFixed(1)}px`);
+  sticker.dataset.lifted = "";
+}
+
+function settle(event: PointerEvent<HTMLElement>) {
+  const sticker =
+    event.currentTarget.querySelector<HTMLElement>("[data-sticker]");
+  if (!sticker) return;
+  for (const name of ["--rx", "--ry", "--sx", "--sy"]) {
+    sticker.style.removeProperty(name);
+  }
+  delete sticker.dataset.lifted;
+}
+
+/**
+ * The Things wall: every object as a sticker, on one surface panel. Picking
+ * one moves the camera: the whole wall scales and slides until that sticker
+ * sticker fills the free side of the panel (the left on a wide screen, the top on a
  * phone), the others dim, and a card beside it says what it is, a few facts
  * and where to get it. Another tile, the arrows or the arrow keys fly the
  * camera to the next thing; Escape, the close button, the zoomed thing or
@@ -281,6 +318,8 @@ export function ThingsWall({
                 }}
                 type="button"
                 onClick={() => (isActive ? close() : open(index))}
+                onPointerMove={tiltToward}
+                onPointerLeave={settle}
                 aria-label={
                   isActive
                     ? strings.zoomOut
@@ -293,12 +332,34 @@ export function ThingsWall({
                   isActive ? "cursor-zoom-out" : "cursor-zoom-in",
                 )}
               >
-                <span className="block aspect-[4/3] rounded-surface bg-background p-[9%] transition-colors duration-200 ease-out dark:bg-surface-strong">
+                <span className="flex aspect-[4/3] items-center justify-center p-[6%]">
                   <span
                     data-art=""
-                    className="block size-full transition-transform duration-300 ease-out group-hover/tile:scale-[1.04] group-data-zoomed/stage:group-hover/tile:scale-100 [&>svg]:size-full"
+                    data-sticker=""
+                    style={
+                      {
+                        "--tilt": `${TILTS[index % TILTS.length]}deg`,
+                        aspectRatio: `${item.sticker.width} / ${item.sticker.height}`,
+                      } as CSSProperties
+                    }
+                    className={cn(
+                      "block max-h-full max-w-full",
+                      item.sticker.width / item.sticker.height > 4 / 3
+                        ? "w-full"
+                        : "h-full",
+                    )}
                   >
-                    {item.art}
+                    <Image
+                      src={item.sticker.src}
+                      width={item.sticker.width}
+                      height={item.sticker.height}
+                      alt=""
+                      draggable={false}
+                      priority={index < 3}
+                      // Zoomed, a sticker fills most of the panel.
+                      sizes="(min-width: 640px) 560px, 90vw"
+                      className="size-full select-none"
+                    />
                   </span>
                 </span>
                 <span className="block px-1 pt-2.5 pb-2 transition-opacity duration-200 ease-out group-data-zoomed/stage:opacity-0">

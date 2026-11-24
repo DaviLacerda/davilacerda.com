@@ -1,7 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { ThingDrawing } from "@/components/things/art";
-import { things } from "@/content/things";
+import { things, thingSticker } from "@/content/things";
 import { defaultLocale, getDictionary, isLocale, locales } from "@/i18n";
 import {
   OG_CONTENT_TYPE,
@@ -11,9 +10,10 @@ import {
   OgTitle,
   loadOgFonts,
   ogColors,
+  ogPublicImage,
 } from "@/lib/og/template";
 
-/** Social card for the Things page: the wall's drawings in a row, the title and the line. */
+/** Social card for the Things page: the wall's stickers in a row, the title and the line. */
 export const alt = getDictionary(defaultLocale).meta.things.description;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
@@ -22,7 +22,17 @@ export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
 
-const PLATE = { width: 168, height: 126 } as const;
+const CELL = { width: 168, height: 126 } as const;
+const TILTS = [-3, 2.5, -1.5, 3, -2.5, 1.5];
+
+/** A sticker's size inside a cell, keeping its proportions. */
+function fit(width: number, height: number) {
+  const scale = Math.min(CELL.width / width, CELL.height / height);
+  return {
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  };
+}
 
 export default async function Image({
   params,
@@ -46,25 +56,28 @@ export default async function Image({
           alignSelf: "flex-start",
         }}
       >
-        {things.slice(0, 6).map((thing) => (
-          <div
-            key={thing.id}
-            style={{
-              display: "flex",
-              width: PLATE.width,
-              height: PLATE.height,
-              padding: 14,
-              borderRadius: 20,
-              background: ogColors.page,
-            }}
-          >
-            <ThingDrawing
-              art={thing.art}
-              width={PLATE.width - 28}
-              height={PLATE.height - 28}
-            />
-          </div>
-        ))}
+        {things.slice(0, 6).map((thing, index) => {
+          const sticker = thingSticker(thing.id);
+          return (
+            <div
+              key={thing.id}
+              style={{
+                display: "flex",
+                width: CELL.width,
+                height: CELL.height,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <img
+                src={ogPublicImage(sticker.src)}
+                alt=""
+                {...fit(sticker.width, sticker.height)}
+                style={{ transform: `rotate(${TILTS[index]}deg)` }}
+              />
+            </div>
+          );
+        })}
       </div>
       <OgTitle text={dict.personal.things.title} />
       <OgLead>{dict.personal.things.lead}</OgLead>

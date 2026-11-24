@@ -19,13 +19,12 @@ import {
 import { TeamsBoard } from "@/components/personal/teams";
 import { WatchingTile } from "@/components/personal/watching";
 import { JsonLd } from "@/components/seo/json-ld";
-import { ThingDrawing } from "@/components/things/art";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/container";
 import { BrandLogo } from "@/components/ui/logo";
 import { teams } from "@/content/personal";
 import { getSocial, profile } from "@/content/profile";
-import { things } from "@/content/things";
+import { things, thingSticker } from "@/content/things";
 import { getDictionary, interpolate, isLocale, t } from "@/i18n";
 import { localeMeta } from "@/i18n/config";
 import { getAllPosts } from "@/lib/blog";
@@ -214,9 +213,14 @@ export default async function PersonalPage({ params }: PageProps) {
               {things.map((thing) => (
                 <span
                   key={thing.id}
-                  className="block aspect-[4/3] rounded-tile bg-background p-2 dark:bg-surface-strong"
+                  className="flex aspect-[4/3] items-center justify-center p-1"
                 >
-                  <ThingDrawing art={thing.art} className="size-full" />
+                  <Image
+                    {...thingSticker(thing.id)}
+                    alt=""
+                    sizes="120px"
+                    className="h-auto max-h-full w-auto max-w-full"
+                  />
                 </span>
               ))}
             </span>

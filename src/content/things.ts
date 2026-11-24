@@ -1,11 +1,12 @@
 /**
  * Things Davi uses every day: the Things page (`/[lang]/personal/things`), a
- * wall of drawings that zooms into one to show what it is and where to get
+ * wall of stickers that zooms into one to show what it is and where to get
  * it. Edit this list; the page, its Markdown rendition, llms files, the
  * sitemap entry's page and the JSON-LD follow.
  *
- * - `art` picks the drawing in `src/components/things/art.tsx` (one per
- *   kind of object; add a drawing there for a new kind).
+ * - The picture is a sticker: `public/things/<id>.png`, made by
+ *   `yarn stickers` from the product photo cut out of its background
+ *   (`assets/things/<id>.png`). Add the photo there for a new thing.
  * - `url` is the maker's own page for the product (a localized one when the
  *   maker has a Brazilian store). Prefer the product page over a reseller.
  * - `facts` are short, verifiable product facts (two or three), not opinions.
@@ -13,8 +14,7 @@
  */
 import type { L10n, Localizable } from "@/i18n";
 
-export type ThingArt =
-  "wayfarer" | "macbook-air" | "airpods-pro" | "runner" | "court" | "mouse";
+import stickers from "./stickers.json";
 
 export type ThingCategory = "tech" | "wear";
 
@@ -32,8 +32,6 @@ export type Thing = {
   facts: L10n<string[]>;
   /** The maker's page for it. */
   url: Localizable;
-  /** The drawing on the wall. */
-  art: ThingArt;
 };
 
 export const things: Thing[] = [
@@ -53,7 +51,6 @@ export const things: Thing[] = [
       ],
     },
     url: "https://www.meta.com/ai-glasses/wayfarer/",
-    art: "wayfarer",
   },
   {
     id: "macbook-air-m3",
@@ -69,7 +66,6 @@ export const things: Thing[] = [
       en: "https://www.apple.com/macbook-air/",
       "pt-br": "https://www.apple.com/br/macbook-air/",
     },
-    art: "macbook-air",
   },
   {
     id: "airpods-pro-2",
@@ -89,7 +85,6 @@ export const things: Thing[] = [
       en: "https://www.apple.com/airpods-pro/",
       "pt-br": "https://www.apple.com/br/airpods-pro/",
     },
-    art: "airpods-pro",
   },
   {
     id: "nike-vomero-5",
@@ -104,7 +99,6 @@ export const things: Thing[] = [
       "pt-br": ["Amortecimento Zoom Air", "Cabedal em malha e sintético"],
     },
     url: "https://www.nike.com/w?q=vomero%205",
-    art: "runner",
   },
   {
     id: "nike-book-1",
@@ -118,7 +112,6 @@ export const things: Thing[] = [
       "pt-br": ["Primeiro tênis assinado por Devin Booker", "Cano baixo"],
     },
     url: "https://www.nike.com/w?q=book%201",
-    art: "court",
   },
   {
     id: "logitech-g-pro",
@@ -137,9 +130,17 @@ export const things: Thing[] = [
       "pt-br":
         "https://www.logitechg.com/pt-br/products/gaming-mice/pro-wireless-mouse.html",
     },
-    art: "mouse",
   },
 ];
+
+export type ThingSticker = { src: string; width: number; height: number };
+
+/** A thing's sticker (`yarn stickers` writes the file and its size). */
+export function thingSticker(id: string): ThingSticker {
+  const size = (stickers as Record<string, Omit<ThingSticker, "src">>)[id];
+  if (!size) throw new Error(`No sticker for "${id}": run yarn stickers.`);
+  return { src: `/things/${id}.png`, ...size };
+}
 
 /** The host of a thing's link, as shown on its button: "apple.com". */
 export function thingStore(url: string): string {
