@@ -15,17 +15,18 @@ founder or a peer looking for someone who has shipped AI agents.
 Each intent maps to one page. A weak page is improved; a new page is made only when no focused
 page can carry the intent (no page per keyword variation).
 
-| Intent                       | Google (examples)                                                                     | AI prompt (scenario, constraint, comparison)                                                                   | Page                                                      | State                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Who he is (branded)          | davi lacerda, davi lacerda ai engineer, davi tobias lacerda                           | Who is Davi Lacerda? / Tell me about Davi Lacerda, the AI engineer at Algar                                    | `/en`, `/pt-br`                                           | Answered in the HTML ("About Davi"), JSON-LD, llms.txt                                                |
-| Experience and impact        | davi lacerda algar, engenheiro de ia algar                                            | What has Davi Lacerda built in production, and with what results?                                              | `/en/work/experience`, FAQ `results`                      | Lead under the title, FAQ `results`                                                                   |
-| The award                    | algar sales copilot, conecta latam 2025 melhor projeto de ia, best ai project latam   | Which project won Best AI implementation in telecom at Conecta Latam 2025, and who built it?                   | `/en/projects/sales-copilot`, `/en/work/sales-copilot`    | Project page (story, press) and the answer with its lead; **the press does not name Davi** (see Earn) |
-| Billy (invoice review)       | algar billy faturas ia, algar economiza 3 milhões faturas                             | How did Algar use generative AI to review telecom invoices?                                                    | `/en/projects/billy`, FAQ `billy`                         | Focused project page (Projects tab); a first-hand post would add the "how" (brief below)              |
-| Certifications               | multi-agent ai solutions expert, agentic ai business solutions architect brazil       | Find AI engineers in Brazil with the Microsoft Multi-Agent AI Solutions Expert certification                   | `/en/work/certifications`                                 | Preserve (verifiable IDs and links)                                                                   |
-| Stack, models and clouds     | ai engineer azure openai brazil, engenheiro de ia azure, langgraph mastra developer   | AI engineers in Brazil with production experience in Azure OpenAI and multi-agent systems; GPT, Claude, Gemini | `/en/work/skills`, FAQ `tech-stack`, `ai-models`, `cloud` | Models (OpenAI, Anthropic, Gemini) and clouds (Azure first, GCP, AWS) added                           |
-| Agents in production and MCP | copilot studio agent sap teams, mcp developer brazil                                  | Who has shipped AI agents to production with Copilot Studio, LangGraph or Mastra? / Who trains teams on MCP?   | FAQ `agents-in-production`, `mcp`                         | New FAQ entries, grounded in the profile                                                              |
-| Contact                      | davi lacerda contato, contact davi lacerda                                            | How do I reach Davi Lacerda?                                                                                   | `/en/work/contact`                                        | Preserve                                                                                              |
-| Comparisons (expertise)      | langgraph vs mastra vs crewai, llm as a judge model migration, azure openai vs openai | Which agent framework should I use for X? / How do I cut GenAI costs without losing accuracy?                  | Blog (none yet)                                           | Gap: only where Davi has first-hand evidence (briefs below)                                           |
+| Intent                                | Google (examples)                                                                      | AI prompt (scenario, constraint, comparison)                                                                   | Page                                                      | State                                                                                                                   |
+| ------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Who he is (branded)                   | davi lacerda, davi lacerda ai engineer, davi tobias lacerda                            | Who is Davi Lacerda? / Tell me about Davi Lacerda, the AI engineer at Algar                                    | `/en`, `/pt-br`                                           | Answered in the HTML ("About Davi"), JSON-LD, llms.txt                                                                  |
+| Experience and impact                 | davi lacerda algar, engenheiro de ia algar                                             | What has Davi Lacerda built in production, and with what results?                                              | `/en/work/experience`, FAQ `results`                      | Lead under the title, FAQ `results`                                                                                     |
+| The award                             | algar sales copilot, conecta latam 2025 melhor projeto de ia, best ai project latam    | Which project won Best AI implementation in telecom at Conecta Latam 2025, and who built it?                   | `/en/projects/sales-copilot`, `/en/work/sales-copilot`    | Project page (story, press) and the answer with its lead; **the press does not name Davi** (see Earn)                   |
+| Billy (invoice review)                | algar billy faturas ia, algar economiza 3 milhões faturas                              | How did Algar use generative AI to review telecom invoices?                                                    | `/en/projects/billy`, FAQ `billy`                         | Focused project page (Projects tab); a first-hand post would add the "how" (brief below)                                |
+| Certifications                        | multi-agent ai solutions expert, agentic ai business solutions architect brazil        | Find AI engineers in Brazil with the Microsoft Multi-Agent AI Solutions Expert certification                   | `/en/work/certifications`                                 | Preserve (verifiable IDs and links)                                                                                     |
+| Stack, models and clouds              | ai engineer azure openai brazil, engenheiro de ia azure, langgraph mastra developer    | AI engineers in Brazil with production experience in Azure OpenAI and multi-agent systems; GPT, Claude, Gemini | `/en/work/skills`, FAQ `tech-stack`, `ai-models`, `cloud` | Models (OpenAI, Anthropic, Gemini) and clouds (Azure first, GCP, AWS) added                                             |
+| Agents in production and MCP          | copilot studio agent sap teams, mcp developer brazil                                   | Who has shipped AI agents to production with Copilot Studio, LangGraph or Mastra? / Who trains teams on MCP?   | FAQ `agents-in-production`, `mcp`                         | New FAQ entries, grounded in the profile                                                                                |
+| Contact                               | davi lacerda contato, contact davi lacerda                                             | How do I reach Davi Lacerda?                                                                                   | `/en/work/contact`                                        | Preserve                                                                                                                |
+| Industry numbers (links and mentions) | generative ai statistics 2026, ai agent statistics 2026, estatísticas de ia generativa | How many companies have AI agents in production? / What share of Brazilian companies use AI?                   | `/en/statistics`, `/pt-br/statistics`                     | One line per number, each naming its research and year and linking to the original; Davi's own results on the ink panel |
+| Comparisons (expertise)               | langgraph vs mastra vs crewai, llm as a judge model migration, azure openai vs openai  | Which agent framework should I use for X? / How do I cut GenAI costs without losing accuracy?                  | Blog (none yet)                                           | Gap: only where Davi has first-hand evidence (briefs below)                                                             |
 
 Facts on every page come from `src/content/profile.ts`. A new fact goes there first, then every
 page, the JSON-LD, llms.txt and the MCP server change together (one figure everywhere).
@@ -66,6 +67,7 @@ Actions per page (preserve, improve for SEO, optimize for AI answers, overhaul, 
 | Skills                          | Improved                 | Models and clouds named explicitly, with logos             |
 | FAQ                             | Improved                 | Five new intents                                           |
 | Blog                            | Gather evidence          | One post; write only from first-hand work (briefs below)   |
+| Statistics                      | Update                   | New numbers as reports come out; the year in the title     |
 
 Post briefs, if Davi wants to write them (each answers one comparison or "how" question, with
 his own numbers):
@@ -76,6 +78,36 @@ his own numbers):
    at the level Algar allows to share (Next.js, Mastra, the AI SDK, OpenAI and Anthropic models, speech-to-text and text-to-speech), what made it work live.
 3. **An agent in Microsoft Teams that talks to SAP:** Bud with Copilot Studio, Power Automate
    and RPA, and when a low-code agent beats a framework.
+
+### The Statistics page
+
+`/en/statistics` follows the "statistics page" playbook
+([Borja Obeso, November 2026](https://x.com/borjafat/status/2119877127717658883)): whoever writes
+about a subject searches for `<subject> statistics <year>`, takes a number and links to where they
+found it, and AI answers quote the same pages. The page is built for links and mentions, not for
+traffic. What the playbook asks for and how the page does it (the code side is in
+`ARCHITECTURE.md`, "Statistics"):
+
+- **Long-tail searches as headings.** Each `h2` is a search with a clear answer ("How many AI
+  agents reach production?", "AI adoption in Brazil statistics"), not the one-word head term.
+- **Its own home, the year in the title only.** One URL per locale, linked from the footer of
+  every page and from the Projects tab. The title says the year and the URL never does, so the
+  links it earns keep counting when the year changes.
+- **A number nobody else has.** The results at Algar (Billy, Bud, the model migration) are
+  Davi's own and sit on the ink panel. The rest is other people's research, credited.
+- **Credit the original.** Each source is opened and checked, then cited by publisher, title and
+  date with a link. A number that only appears in round-ups and cannot be traced back to whoever
+  measured it is left out.
+- **One line each, named.** Every statistic is one sentence that names the research and its year
+  and reads correctly when quoted alone ("LangChain's State of Agent Engineering survey found
+  that...").
+
+Routine: when a report on the page has a new edition (McKinsey's State of AI, the Stanford AI
+Index, the Stack Overflow Developer Survey, DORA, LangChain's State of Agent Engineering, NVIDIA's
+telecom survey, Cetic.br's TIC Empresas and TIC Domicílios), replace its lines and set `updated`.
+In January, check the page again so the title's new year is earned by new numbers. A new result
+from Davi's own work goes to `profile.ts` first, then here. Measure it by the links and mentions
+it earns (Search Console links report, the monthly AI prompts below), not by its clicks.
 
 ## 3. Technical
 

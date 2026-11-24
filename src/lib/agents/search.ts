@@ -6,8 +6,10 @@ import {
   getProjectPage,
   profile,
 } from "@/content/profile";
+import { getStatSource, statistics } from "@/content/statistics";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { formatDateRange, formatPartialDate } from "@/i18n/format";
+import { sourceLine, statisticsMeta } from "@/lib/statistics";
 import { absoluteUrl } from "@/lib/utils";
 import type { TopicId } from "@/lib/work/topics";
 
@@ -15,16 +17,16 @@ import { markdownPath, pagePath, type PageRef } from "./discovery";
 import { getRawPosts } from "./posts";
 
 /**
- * Tiny keyword search over the profile and the blog, for the MCP `search`
- * tool. Deterministic and dependency-free: documents are profile sections and
- * post sections; scoring is term frequency weighted by field, with accents and
+ * Tiny keyword search over the profile, the statistics and the blog, for the
+ * MCP `search` tool. Deterministic and dependency-free: documents are profile
+ * sections, statistics sections and post sections; scoring is term frequency weighted by field, with accents and
  * case folded so "uberlandia" finds "Uberlândia".
  */
 
 export type SearchDocument = {
   id: string;
   lang: Locale;
-  type: "profile" | "post";
+  type: "profile" | "statistics" | "post";
   section: string;
   title: string;
   url: string;
@@ -272,6 +274,32 @@ function profileDocuments(lang: Locale): SearchDocument[] {
   ];
 }
 
+/** One document per section of the Statistics page: each line with the source it names. */
+function statisticsDocuments(lang: Locale): SearchDocument[] {
+  const page: PageRef = { kind: "statistics", lang };
+  const title = statisticsMeta(lang).title;
+  return statistics.sections.map((section) => ({
+    id: `statistics:${lang}:${section.id}`,
+    lang,
+    type: "statistics" as const,
+    section: title,
+    title: t(section.title, lang),
+    url: `${absoluteUrl(pagePath(page))}#${section.id}`,
+    markdownUrl: absoluteUrl(markdownPath(page)),
+    text: [
+      section.intro && t(section.intro, lang),
+      ...section.stats.map((stat) => {
+        const source = getStatSource(stat);
+        return source
+          ? `${t(stat.text, lang)} (${sourceLine(source, lang)}: ${t(source.url, lang)})`
+          : t(stat.text, lang);
+      }),
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  }));
+}
+
 function postDocuments(lang: Locale): SearchDocument[] {
   return getRawPosts(lang).flatMap((post) => {
     const url = absoluteUrl(post.url);
@@ -305,6 +333,7 @@ function getIndex(): SearchDocument[] {
   if (index && process.env.NODE_ENV === "production") return index;
   index = locales.flatMap((lang) => [
     ...profileDocuments(lang),
+    ...statisticsDocuments(lang),
     ...postDocuments(lang),
   ]);
   return index;

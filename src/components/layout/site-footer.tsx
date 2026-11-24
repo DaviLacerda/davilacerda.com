@@ -1,15 +1,19 @@
+import Link from "next/link";
+
 import { Container } from "@/components/ui/container";
 import { getSocial, profile } from "@/content/profile";
 import { getDictionary, type Locale } from "@/i18n";
 import { agentPaths } from "@/lib/agents/discovery";
+import { routes } from "@/lib/routes";
 
 const linkClass =
   "link-underline rounded-sm text-muted-foreground hover:text-foreground";
 
 /**
- * One quiet line on the wide frame: copyright, three ways to reach Davi and
- * llms.txt, the entry point for agents (the rest of the machine-readable
- * layer is announced in the head and the HTTP Link header).
+ * One quiet line on the wide frame: copyright, three ways to reach Davi,
+ * the Statistics page (linked from every page, since it sits outside the
+ * tabs) and llms.txt, the entry point for agents (the rest of the
+ * machine-readable layer is announced in the head and the HTTP Link header).
  */
 export function SiteFooter({ lang }: { lang: Locale }) {
   const dict = getDictionary(lang);
@@ -57,11 +61,18 @@ export function SiteFooter({ lang }: { lang: Locale }) {
             </li>
           </ul>
         </nav>
-        <p>
-          <a href={agentPaths.llms} className={linkClass}>
-            llms.txt
-          </a>
-        </p>
+        <ul className="flex flex-wrap gap-x-5 gap-y-1">
+          <li>
+            <Link href={routes.statistics(lang)} className={linkClass}>
+              {dict.nav.statistics}
+            </Link>
+          </li>
+          <li>
+            <a href={agentPaths.llms} className={linkClass}>
+              llms.txt
+            </a>
+          </li>
+        </ul>
       </Container>
     </footer>
   );

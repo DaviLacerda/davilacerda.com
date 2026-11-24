@@ -43,6 +43,17 @@ public/work/<id>/demo.png    the poster, the first frame; its size sets the play
 For the Sales Copilot that is `public/work/sales-copilot/`. The player appears under the result
 (no autoplay, nothing loads until it is played). Without the files the page shows no player.
 
+## Statistics
+
+`/en/statistics` (and `/pt-br/statistics`) is a page of numbers on generative AI and AI agents,
+one per line, each with the research it comes from. It all lives in `src/content/statistics.ts`.
+To add a number, open the original source and check it, add the source to `sources` (publisher,
+title, URL, date) and one entry to a section's `stats`: the figure, and one sentence in each
+language that names the research and its year. Then set `updated` to the day. The year in the
+page's title comes from `updated`; the URL never changes.
+
+Leave out any number you cannot trace back to whoever measured it.
+
 ## Spotify now playing
 
 The Personal tab shows what Davi is listening to on Spotify (or the last song played). The page

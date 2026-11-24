@@ -21,7 +21,7 @@ import { matchTopic } from "@/lib/work/topics";
  *   When the `Accept` header prefers `text/markdown`, known pages are rewritten
  *   to their Markdown rendition instead (`Vary: Accept` on both variants).
  * - `/en.md`, `/en/index.md`, `/en/work/<topic>.md`, `/en/projects.md`,
- *   `/en/projects/<slug>.md`, `/en/personal.md`,
+ *   `/en/projects/<slug>.md`, `/en/statistics.md`, `/en/personal.md`,
  *   `/en/personal/blog/<slug>.md` are rewritten to the internal Markdown
  *   routes (`src/app/markdown`).
  * - `/en/ask?q=...` (the Work composer's form without JavaScript) is
