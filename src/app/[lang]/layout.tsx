@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { AgentDiscovery } from "@/components/agents/agent-discovery";
+import { LatestPostNotice } from "@/components/blog/latest-post-notice";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MotionProvider } from "@/components/motion/motion-provider";
@@ -12,6 +13,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { siteConfig } from "@/config/site";
 import { profile } from "@/content/profile";
 import { getDictionary, isLocale, localeMeta, locales } from "@/i18n";
+import { getAllPosts, getPostTranslations } from "@/lib/blog";
 
 import { fontVariables } from "../fonts";
 import "../globals.css";
@@ -112,6 +114,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dict = getDictionary(lang);
+  const [latest] = getAllPosts(lang);
 
   return (
     <html
@@ -136,6 +139,24 @@ export default async function RootLayout({ children, params }: LayoutProps) {
                 {children}
               </main>
               <SiteFooter lang={lang} />
+              {latest ? (
+                <LatestPostNotice
+                  id={latest.translationKey ?? latest.url}
+                  url={latest.url}
+                  urls={Object.values(getPostTranslations(latest)).map(
+                    (post) => post.url,
+                  )}
+                  title={latest.title}
+                  description={latest.description}
+                  cover={latest.cover}
+                  accent={latest.accent}
+                  labels={{
+                    newPost: dict.blog.newPost,
+                    readNow: dict.blog.readNow,
+                    dismiss: dict.blog.dismiss,
+                  }}
+                />
+              ) : null}
             </AlternateLinksProvider>
           </MotionProvider>
         </ThemeProvider>

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { LatestPostCard } from "@/components/blog/latest-post-card";
 import { Overview } from "@/components/chat/answers";
 import { Piece } from "@/components/chat/piece";
 import { JsonLd } from "@/components/seo/json-ld";
 import { profile } from "@/content/profile";
 import { getDictionary, isLocale, t } from "@/i18n";
+import { getAllPosts } from "@/lib/blog";
 import { routes } from "@/lib/routes";
 import {
   breadcrumbJsonLd,
@@ -36,7 +38,8 @@ export async function generateMetadata({
  * Work tab (home). The layout supplies Davi's name (this page's h1), one
  * line, the composer and the suggestions; the canvas shows the overview: the
  * award, the Microsoft certifications, the current role and how to reach
- * him, each a link to the answer that tells the whole story. Under them,
+ * him, each a link to the answer that tells the whole story. Then the
+ * newest blog post, featured. Under it,
  * "About Davi": the long factual TL;DR, the same paragraph the JSON-LD, the
  * Markdown rendition, llms.txt and the MCP server carry, so the page answers
  * "who is Davi Lacerda?" in its own HTML too.
@@ -45,6 +48,7 @@ export default async function WorkPage({ params }: PageProps) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dict = getDictionary(lang);
+  const [latest] = getAllPosts(lang);
 
   return (
     <>
@@ -61,6 +65,16 @@ export default async function WorkPage({ params }: PageProps) {
         ]}
       />
       <Overview lang={lang} />
+      {latest ? (
+        <Piece
+          as="section"
+          i={4}
+          aria-label={dict.blog.newPost}
+          className="mt-12 sm:mt-16"
+        >
+          <LatestPostCard post={latest} lang={lang} />
+        </Piece>
+      ) : null}
       <section aria-labelledby="about-title" className="mt-12 sm:mt-16">
         <Piece as="h2" i={4} id="about-title" className="font-semibold">
           {dict.chat.home.aboutTitle}

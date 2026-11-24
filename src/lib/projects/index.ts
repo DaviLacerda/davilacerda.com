@@ -160,19 +160,28 @@ function pngSize(file: string): { width: number; height: number } | null {
 /**
  * A project's demo video, when its files are in `public/work/<id>/`:
  * `demo.mp4` (required), `demo.webm` (optional, served first) and
- * `demo.png` (the poster; its size sets the player's aspect ratio). Checked
- * at build time, so the slot renders only once the files are committed.
+ * `demo.png` (the poster; its size sets the player's aspect ratio). A demo
+ * with words on screen can have one cut per language, `demo.<lang>.mp4`
+ * (and `.webm`, `.png`), which wins over the shared one for that language.
+ * Checked at build time, so the slot renders only once the files are
+ * committed.
  */
-export function projectDemo(id: string): ProjectDemo | null {
-  const base = `/work/${id}/demo`;
-  const file = (ext: string) => path.join(PUBLIC, `${base}.${ext}`);
-  if (!existsSync(file("mp4"))) return null;
-  const size = existsSync(file("png")) ? pngSize(file("png")) : null;
-  return {
-    mp4: `${base}.mp4`,
-    ...(existsSync(file("webm")) ? { webm: `${base}.webm` } : {}),
-    ...(size ? { poster: `${base}.png` } : {}),
-    width: size?.width ?? 16,
-    height: size?.height ?? 9,
-  };
+export function projectDemo(id: string, lang?: Locale): ProjectDemo | null {
+  const bases = [
+    ...(lang ? [`/work/${id}/demo.${lang}`] : []),
+    `/work/${id}/demo`,
+  ];
+  for (const base of bases) {
+    const file = (ext: string) => path.join(PUBLIC, `${base}.${ext}`);
+    if (!existsSync(file("mp4"))) continue;
+    const size = existsSync(file("png")) ? pngSize(file("png")) : null;
+    return {
+      mp4: `${base}.mp4`,
+      ...(existsSync(file("webm")) ? { webm: `${base}.webm` } : {}),
+      ...(size ? { poster: `${base}.png` } : {}),
+      width: size?.width ?? 16,
+      height: size?.height ?? 9,
+    };
+  }
+  return null;
 }

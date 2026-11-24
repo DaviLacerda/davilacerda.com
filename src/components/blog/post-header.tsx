@@ -44,6 +44,15 @@ export function PostHeader({ post, translation }: PostHeaderProps) {
         </Link>
       </nav>
 
+      {post.kicker ? (
+        <p
+          data-enter=""
+          style={{ "--i": 0, color: post.accent } as CSSProperties}
+          className="mt-8 -mb-6 font-hand text-[1.6rem] leading-none font-semibold sm:mt-10 sm:-mb-8"
+        >
+          {post.kicker}
+        </p>
+      ) : null}
       <h1
         data-enter=""
         style={{ "--i": 0 } as CSSProperties}

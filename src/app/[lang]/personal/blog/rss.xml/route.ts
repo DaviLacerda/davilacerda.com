@@ -72,7 +72,7 @@ function rfc822(date: string): string {
  */
 function feedHtml(post: Post): string {
   const pageUrl = absoluteUrl(post.url);
-  return post.html
+  return post.feedHtml
     .replace(/\s(href|src)="\/(?!\/)/g, ` $1="${siteConfig.url}/`)
     .replace(/\shref="#/g, ` href="${pageUrl}#`)
     .replace(/style="([^"]*)"/g, (_match, style: string) => {

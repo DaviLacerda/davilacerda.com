@@ -17,11 +17,13 @@
  *    The canvas swap and the chips use Motion (see `src/components/chat`).
  * 5. The docked composer on phones and tablets.
  * 6. `.markdown`: blog prose and code.
+ * 7. The notebook look of blog posts.
+ * 8. Piet, piecet's mascot.
  *
  * Rules the components follow:
  * - Fills, not lines: a surface is one tone step from the page (`bg-surface`),
  *   the emphasis panel is the inverse (`bg-ink`, black in light mode, white
- *   in dark). No 1px outlines, no shadows, no gradients. Only form fields and
+ *   in dark). No 1px outlines, no shadows (the Things stickers aside), no gradients. Only form fields and
  *   real tables have lines.
  * - The primary action is ink (black in light mode, white in dark). There is
  *   no accent colour.
@@ -105,6 +107,8 @@
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   /* Literal code only (pre, code, kbd). */
   --font-mono: var(--font-geist-mono), monospace; /* taste-skill-ignore */
+  /* Handwriting, for the notebook touches of blog posts only. */
+  --font-hand: var(--font-caveat), cursive;
 }
 
 @theme static {
@@ -382,7 +386,57 @@
   }
 }
 
+/*
+ * The Things stickers (see ThingsWall): each rests at its own small angle
+ * with a thin shadow, the one place the site uses shadows, because a sticker
+ * is a thing stuck on the panel. Under a mouse it lifts and turns toward the
+ * pointer in perspective (--rx, --ry), its shadow sliding the other way
+ * (--sx, --sy); it follows the pointer quickly and settles back slowly.
+ */
+[data-sticker] {
+  --rx: 0deg;
+  --ry: 0deg;
+  --sx: 0px;
+  --sy: 2px;
+  --shade: oklch(0 0 0 / 0.14);
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))
+    rotate(var(--tilt, 0deg));
+  filter: drop-shadow(var(--sx) var(--sy) 3px var(--shade));
+  transition:
+    transform 600ms var(--ease-out),
+    filter 600ms var(--ease-out);
+}
+
+.dark [data-sticker] {
+  --shade: oklch(0 0 0 / 0.45);
+}
+
+[data-sticker][data-lifted] {
+  --shade: oklch(0 0 0 / 0.2);
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))
+    rotate(var(--tilt, 0deg)) scale(1.06);
+  filter: drop-shadow(var(--sx) var(--sy) 10px var(--shade));
+  transition-duration: 160ms;
+}
+
+.dark [data-sticker][data-lifted] {
+  --shade: oklch(0 0 0 / 0.6);
+}
+
+/* The Things wall's card arrives once the camera is on its way (see ThingsWall). */
+@keyframes thing-card {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  [data-thing-card] {
+    animation: thing-card 360ms var(--ease-out) 140ms both;
+  }
+
   [data-bar] {
     animation: bar 640ms var(--ease-out) both;
     animation-delay: calc(var(--b, 0) * 140ms + 320ms);
@@ -626,6 +680,13 @@ html:has(dialog[data-lightbox][open]) {
 
   html:has([data-dock]) {
     scroll-padding-bottom: calc(var(--dock-h) + 1rem);
+  }
+}
+
+/* The "New on the blog" notice sits above the dock where both are at the foot. */
+@media (40rem <= width < 64rem) {
+  body:has([data-dock]) [data-notice] {
+    bottom: calc(var(--dock-h) + 1rem);
   }
 }
 
@@ -876,5 +937,894 @@ html:has(dialog[data-lightbox][open]) {
     color: var(--shiki-dark);
     font-weight: var(--shiki-dark-font-weight, inherit);
     font-style: var(--shiki-dark-font-style, inherit);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. The notebook look of blog posts (src/lib/scrapbook.ts): taped prints,
+ *    handwritten captions, notes and quotes, scribbles and brand chips.
+ *    The one place the site allows paper, tape and a soft shadow: a post is
+ *    a notebook. `--accent` comes from the post's frontmatter (`accent`).
+ * ------------------------------------------------------------------------- */
+
+@layer components {
+  .markdown {
+    --accent: var(--foreground);
+    --paper: #fffdf8;
+    --paper-line: color-mix(in srgb, #8fb3d9 30%, transparent);
+    --note-paper: #f6efdf;
+    --tape: color-mix(in srgb, #e6cf9f 72%, transparent);
+    --print-shadow:
+      0 1px 2px rgb(0 0 0 / 0.06), 0 12px 32px -12px rgb(0 0 0 / 0.22);
+  }
+
+  .dark .markdown {
+    --paper: #1c1b19;
+    --paper-line: color-mix(in srgb, #8fb3d9 14%, transparent);
+    --note-paper: #24211b;
+    --tape: color-mix(in srgb, #c9b07c 45%, transparent);
+    --print-shadow:
+      0 1px 2px rgb(0 0 0 / 0.4), 0 16px 36px -14px rgb(0 0 0 / 0.7);
+  }
+
+  /* Handwriting in the text: a few words, a touch larger. */
+  .markdown .hand-note {
+    font-family: var(--font-hand);
+    font-size: 1.3em;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  /* Prints: photos and screens taped to the page. */
+  .markdown .prints {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.25rem);
+    margin-block: 2.75em;
+  }
+
+  @media (min-width: 640px) {
+    .markdown .prints[data-prints="2"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+
+    .markdown .prints[data-prints="3"] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+
+  .markdown .print {
+    position: relative;
+    margin: 0;
+    border-radius: 0.25rem;
+    background: var(--paper);
+    padding: 0.75rem 0.75rem 0.5rem;
+    box-shadow: var(--print-shadow);
+    rotate: var(--tilt, 0deg);
+  }
+
+  .markdown .prints[data-prints="1"] .print {
+    rotate: calc(var(--tilt, 0deg) * 0.5);
+  }
+
+  .markdown .print-image {
+    display: block;
+    overflow: hidden;
+    border-radius: 0.125rem;
+    background: var(--surface);
+  }
+
+  .markdown .print img {
+    display: block;
+    width: 100%;
+    max-width: none;
+    border-radius: 0;
+  }
+
+  .markdown .print figcaption {
+    padding: 0.6rem 0.25rem 0.2rem;
+    font-family: var(--font-hand);
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--muted-foreground);
+  }
+
+  .markdown .tape {
+    position: absolute;
+    top: -0.9rem;
+    left: 50%;
+    z-index: 1;
+    width: clamp(4.5rem, 22%, 7.5rem);
+    height: 1.75rem;
+    translate: -50% 0;
+    rotate: calc(var(--tilt, 0deg) * -2 - 2deg);
+    background: var(--tape);
+    clip-path: polygon(
+      2% 8%,
+      10% 0,
+      22% 6%,
+      36% 0,
+      52% 5%,
+      68% 0,
+      84% 6%,
+      96% 0,
+      100% 12%,
+      98% 92%,
+      88% 100%,
+      72% 94%,
+      56% 100%,
+      40% 95%,
+      24% 100%,
+      8% 94%,
+      0 100%
+    );
+  }
+
+  /* A taped note on lined paper. */
+  .markdown .taped-note {
+    position: relative;
+    max-width: 62ch;
+    margin-block: 2.75em;
+    border-radius: 0.25rem;
+    background-color: var(--note-paper);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(1.75em - 1px),
+      var(--paper-line) calc(1.75em - 1px),
+      var(--paper-line) 1.75em
+    );
+    padding: 1.75rem clamp(1.25rem, 4vw, 2rem) 1.5rem;
+    box-shadow: var(--print-shadow);
+    rotate: -0.4deg;
+  }
+
+  .markdown .taped-note > * + * {
+    margin-top: 0.9em;
+  }
+
+  .markdown .taped-note-title {
+    font-family: var(--font-hand);
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--accent);
+  }
+
+  /* A pull quote, in handwriting, with a stroke down the side. */
+  .markdown blockquote.hand-quote {
+    margin-block: 2.5em;
+    border-left: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    padding-left: 1.25rem;
+    font-family: var(--font-hand);
+    font-size: clamp(1.6rem, 1.3rem + 1vw, 2.1rem);
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: 0;
+  }
+
+  /* Scribbles: a stroke under or around the words. */
+  .markdown .scribble {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .markdown .scribble-circle {
+    margin-inline: 0.35em;
+  }
+
+  .markdown .scribble svg {
+    position: absolute;
+    pointer-events: none;
+    overflow: visible;
+    fill: none;
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .markdown .scribble-underline svg,
+  .markdown .scribble-double svg {
+    left: -3%;
+    bottom: -0.32em;
+    width: 106%;
+    height: 0.5em;
+    stroke-width: 2.6px;
+  }
+
+  .markdown .scribble-double svg {
+    height: 0.6em;
+    bottom: -0.42em;
+  }
+
+  .markdown .scribble-circle svg {
+    left: -12%;
+    top: -28%;
+    width: 124%;
+    height: 156%;
+    stroke-width: 2.2px;
+  }
+
+  .markdown .scribble path {
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Brand chips: the icon and the name, with a card on hover or focus. */
+  .markdown .brand-chip {
+    position: relative;
+    display: inline-block;
+    vertical-align: baseline;
+  }
+
+  .markdown a.brand-chip-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    border-radius: 999px;
+    background: var(--surface);
+    padding: 0.05em 0.6em 0.05em 0.35em;
+    font-weight: 500;
+    line-height: 1.5;
+    text-decoration: none;
+    transition: background-color 200ms var(--ease-out);
+  }
+
+  .markdown a.brand-chip-link:hover,
+  .markdown a.brand-chip-link:focus-visible {
+    background: var(--surface-strong);
+  }
+
+  .markdown .brand-icon {
+    flex: none;
+  }
+
+  .markdown .brand-icon-chip {
+    width: 1.1em;
+    height: 1.1em;
+  }
+
+  .markdown .brand-icon-image {
+    border-radius: 999px;
+  }
+
+  .markdown .brand-icon-initial {
+    display: inline-grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 0.7em;
+    font-weight: 600;
+  }
+
+  .markdown .brand-card {
+    position: absolute;
+    bottom: calc(100% + 0.6rem);
+    left: 50%;
+    z-index: 20;
+    width: min(18rem, 80vw);
+    overflow: hidden;
+    border-radius: 1rem;
+    background: var(--background);
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 18px 40px -16px rgb(0 0 0 / 0.35);
+    font-size: var(--text-small);
+    line-height: 1.45;
+    white-space: normal;
+    text-align: left;
+    opacity: 0;
+    visibility: hidden;
+    translate: -50% 0.35rem;
+    scale: 0.97;
+    transform-origin: 50% 100%;
+    pointer-events: none;
+    transition:
+      opacity 160ms var(--ease-out),
+      translate 220ms var(--ease-out),
+      scale 220ms var(--ease-out),
+      visibility 0s linear 220ms;
+  }
+
+  /* Touch screens (and phone widths): a tap follows the link; no card. */
+  @media (hover: none), (max-width: 40rem) {
+    .markdown .brand-card {
+      display: none;
+    }
+  }
+
+  .markdown .brand-chip:hover .brand-card,
+  .markdown .brand-chip:focus-within .brand-card {
+    opacity: 1;
+    visibility: visible;
+    translate: -50% 0;
+    scale: 1;
+    transition-delay: 80ms, 80ms, 80ms, 0s;
+  }
+
+  .markdown .brand-card-head {
+    display: flex;
+    align-items: center;
+    height: 4.5rem;
+    background: color-mix(in srgb, var(--brand) 16%, var(--background));
+    padding-inline: 1rem;
+    color: var(--foreground);
+  }
+
+  .markdown .brand-card-head .brand-icon-card {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .markdown .brand-card-head .brand-icon-initial {
+    font-size: 1.25rem;
+  }
+
+  .markdown .brand-card-body {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.85rem 1rem 1rem;
+  }
+
+  .markdown .brand-card-by,
+  .markdown .brand-card-host {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+  }
+
+  .markdown .brand-card-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .markdown .brand-card-desc {
+    color: var(--foreground);
+  }
+
+  /* Without motion, everything is simply there. With it, prints settle in
+     and strokes draw themselves once they scroll into view (the script adds
+     `data-motion` to the post, then `data-shown` to each element). */
+  @media (prefers-reduced-motion: no-preference) {
+    .markdown[data-motion] [data-reveal] {
+      opacity: 0;
+      translate: 0 1.25rem;
+      rotate: 0deg;
+      transition:
+        opacity 500ms var(--ease-out),
+        translate 700ms var(--ease-out),
+        rotate 900ms cubic-bezier(0.34, 1.4, 0.64, 1);
+      transition-delay: calc(var(--i, 0) * 90ms);
+    }
+
+    .markdown[data-motion] .print[data-shown] {
+      rotate: var(--tilt, 0deg);
+    }
+
+    .markdown[data-motion] .prints[data-prints="1"] .print[data-shown] {
+      rotate: calc(var(--tilt, 0deg) * 0.5);
+    }
+
+    .markdown[data-motion] .taped-note[data-shown] {
+      rotate: -0.4deg;
+    }
+
+    .markdown[data-motion] [data-reveal][data-shown] {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .markdown[data-motion] .scribble path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      transition: stroke-dashoffset 700ms cubic-bezier(0.65, 0, 0.35, 1)
+        var(--delay, 0ms);
+    }
+
+    .markdown[data-motion] .scribble[data-shown] path {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Piet, piecet's mascot (src/components/piet): the figure and its poses,
+ *    as on piecet.com, and the guide that rides down a page beside the text.
+ * ------------------------------------------------------------------------- */
+
+@layer components {
+  .piet {
+    --piet: #bd84fc;
+    --piet-eye: #0a0913;
+    --piet-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .piet .piet-body {
+    fill: var(--piet);
+  }
+
+  .piet .piet-eyes {
+    fill: var(--piet-eye);
+  }
+
+  /* The brain's folds, shown as he turns into one (`PietGuide`). */
+  .piet .piet-folds {
+    fill: none;
+    stroke: #805aad;
+    stroke-width: 13;
+    stroke-linecap: round;
+    opacity: var(--piet-brain, 0);
+  }
+
+  .piet .piet-eyes .glint {
+    fill: var(--piet);
+  }
+
+  .piet .eye-open {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: piet-blink 5.2s ease infinite;
+  }
+
+  .piet .eye-joy,
+  .piet .eye-rest {
+    display: none;
+    fill: none;
+    stroke: var(--piet-eye);
+    stroke-linecap: round;
+  }
+
+  .piet .eye-joy {
+    stroke-width: 34;
+  }
+
+  .piet .eye-rest {
+    stroke-width: 30;
+  }
+
+  .piet .arm {
+    opacity: var(--piet-piece, 1);
+    transform-box: view-box;
+    transition: transform 400ms var(--piet-spring);
+  }
+
+  .piet .arm-l {
+    transform-origin: 146px 282px;
+  }
+
+  .piet .arm-r {
+    transform-origin: 677px 282px;
+  }
+
+  .piet .piet-all,
+  .piet .piet-eyes {
+    transform-box: view-box;
+    transform-origin: 411px 560px;
+    transition: transform 400ms var(--piet-spring);
+  }
+
+  .piet.pose-wave .arm-l {
+    transform: rotate(-10deg);
+  }
+  .piet.pose-wave .arm-r {
+    animation: piet-wave 0.7s ease-in-out infinite alternate;
+  }
+  .piet.pose-wave .piet-all {
+    animation: piet-lean 1.4s ease-in-out infinite alternate;
+  }
+
+  .piet.pose-joy .arm-l,
+  .piet.pose-dance .arm-l {
+    transform: rotate(52deg);
+  }
+  .piet.pose-joy .arm-r,
+  .piet.pose-dance .arm-r {
+    transform: rotate(-52deg);
+  }
+  .piet.pose-joy .piet-all {
+    animation: piet-jump 0.62s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  .piet.pose-joy .eye-open,
+  .piet.pose-dance .eye-open,
+  .piet.pose-rest .eye-open {
+    display: none;
+  }
+  .piet.pose-joy .eye-joy,
+  .piet.pose-dance .eye-joy,
+  .piet.pose-rest .eye-rest {
+    display: block;
+  }
+  .piet.pose-dance .arm-l {
+    animation: piet-dance-l 0.5s ease-in-out infinite alternate;
+  }
+  .piet.pose-dance .arm-r {
+    animation: piet-dance-r 0.5s ease-in-out infinite alternate;
+  }
+  .piet.pose-dance .piet-all {
+    animation: piet-sway 1s ease-in-out infinite;
+  }
+
+  .piet.pose-listen .arm-r {
+    transform: rotate(-42deg);
+  }
+  .piet.pose-listen .piet-eyes {
+    transform: translateY(-30px);
+  }
+  .piet.pose-listen .piet-all {
+    animation: piet-nod 1.6s ease-in-out infinite;
+  }
+
+  .piet.pose-think .arm-l {
+    transform: rotate(46deg);
+  }
+  .piet.pose-think .arm-r {
+    transform: rotate(-6deg);
+  }
+  .piet.pose-think .piet-eyes {
+    animation: piet-ponder 2.4s ease-in-out infinite;
+  }
+  .piet.pose-think .piet-all {
+    transform: rotate(-4deg);
+  }
+
+  .piet.pose-rest .arm-l {
+    transform: rotate(-14deg);
+  }
+  .piet.pose-rest .arm-r {
+    transform: rotate(14deg);
+  }
+  .piet.pose-rest .piet-all {
+    animation: piet-breathe 2.6s ease-in-out infinite;
+  }
+
+  /* On piecet's card in the Projects tab: he waves while the card is hovered. */
+  .group:hover .piet-card .arm-r {
+    animation: piet-wave 0.7s ease-in-out infinite alternate;
+  }
+
+  /* The guide: hidden until the script places him, so he never flashes at 0,0. */
+  .piet-guide {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 30;
+    width: 5.25rem;
+    opacity: 0;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 10px rgb(20 20 19 / 0.18));
+    transform-origin: 0 0;
+    will-change: transform;
+    transition: opacity 400ms ease-out;
+  }
+
+  .piet-guide[data-piet-on] {
+    opacity: 1;
+  }
+
+  @media (max-width: 47.99rem) {
+    .piet-guide {
+      width: 3.25rem;
+    }
+  }
+
+  .piet-guide-bubble {
+    position: absolute;
+    right: 70%;
+    bottom: 92%;
+    width: max-content;
+    max-width: 9rem;
+    border-radius: 1rem 1rem 0.25rem 1rem;
+    background: var(--background);
+    box-shadow: 0 0 0 1px var(--border);
+    padding: 0.35rem 0.7rem;
+    color: var(--foreground);
+    font-family: var(--font-hand);
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.1;
+    animation: piet-bubble 400ms var(--piet-spring, ease-out) both;
+  }
+
+  /* Reduced motion: he sits in the corner, still. */
+  .piet-guide[data-piet-still] {
+    top: auto;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    left: auto;
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .piet *,
+    .piet-guide-bubble {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+@keyframes piet-blink {
+  0%,
+  95.5%,
+  100% {
+    transform: scaleY(1);
+  }
+  97.5% {
+    transform: scaleY(0.08);
+  }
+}
+@keyframes piet-wave {
+  from {
+    transform: rotate(-34deg);
+  }
+  to {
+    transform: rotate(-66deg);
+  }
+}
+@keyframes piet-lean {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+@keyframes piet-jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.04, 0.96);
+  }
+  45% {
+    transform: translateY(-110px) scale(0.97, 1.04);
+  }
+}
+@keyframes piet-dance-l {
+  from {
+    transform: rotate(52deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+@keyframes piet-dance-r {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(-52deg);
+  }
+}
+@keyframes piet-sway {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+@keyframes piet-nod {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(5deg) translateY(-10px);
+  }
+}
+@keyframes piet-ponder {
+  0%,
+  100% {
+    transform: translate(22px, -30px);
+  }
+  50% {
+    transform: translate(-14px, -34px);
+  }
+}
+@keyframes piet-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03, 0.97);
+  }
+}
+@keyframes piet-bubble {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
+
+/* The image viewer on a post (src/components/blog/image-viewer.tsx). */
+@layer components {
+  .image-viewer {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    padding: clamp(1rem, 4vw, 3rem);
+    color: var(--foreground);
+  }
+
+  .image-viewer[open] {
+    display: grid;
+    place-items: center;
+  }
+
+  .image-viewer::backdrop {
+    background: rgb(10 10 10 / 0.72);
+    backdrop-filter: blur(6px);
+  }
+
+  .image-viewer-figure {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+  }
+
+  .image-viewer-figure img {
+    max-width: min(100%, 72rem);
+    max-height: calc(100dvh - 9rem);
+    border-radius: 0.5rem;
+    background: var(--background);
+    box-shadow: 0 30px 60px -24px rgb(0 0 0 / 0.6);
+    object-fit: contain;
+  }
+
+  .image-viewer-figure figcaption {
+    color: #fff;
+    font-family: var(--font-hand);
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .image-viewer-button {
+    position: fixed;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.14);
+    color: #fff;
+    transition: background-color 200ms ease-out;
+  }
+
+  .image-viewer-button:hover {
+    background: rgb(255 255 255 / 0.26);
+  }
+
+  .image-viewer-close {
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .image-viewer-prev,
+  .image-viewer-next {
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  .image-viewer-prev {
+    left: 1rem;
+  }
+
+  .image-viewer-next {
+    right: 1rem;
+  }
+
+  @media (max-width: 47.99rem) {
+    .image-viewer-prev,
+    .image-viewer-next {
+      top: auto;
+      bottom: 1rem;
+      translate: none;
+    }
+  }
+
+  .markdown a.print-image {
+    cursor: zoom-in;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .image-viewer[open] .image-viewer-figure {
+      animation: image-viewer-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .image-viewer[open]::backdrop {
+      animation: image-viewer-fade 200ms ease-out;
+    }
+  }
+}
+
+@keyframes image-viewer-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+@keyframes image-viewer-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The next part of a series as an empty piece Piet fits into (series-list.tsx). */
+@layer components {
+  .series-slot {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 3.25rem;
+    height: 2.4rem;
+    margin-inline: -0.4rem -0.2rem;
+  }
+
+  .series-slot-piece {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .series-slot-piece path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 26;
+    stroke-dasharray: 46 34;
+    stroke-linecap: round;
+    transition: opacity 300ms ease-out;
+  }
+
+  .series-slot-n {
+    position: relative;
+    color: var(--accent);
+    font-family: var(--font-hand);
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1;
+    transition: opacity 200ms ease-out;
+  }
+
+  /* Piet sits in it: the outline and the number give way to him. */
+  .series-slot[data-filled] .series-slot-piece path,
+  .series-slot[data-filled] .series-slot-n {
+    opacity: 0;
+  }
+
+  .series-fits {
+    display: block;
+    margin-top: 0.35rem;
+    opacity: 0;
+    translate: 0 0.25rem;
+    transition:
+      opacity 300ms ease-out,
+      translate 400ms cubic-bezier(0.34, 1.4, 0.5, 1);
+  }
+
+  li:has([data-piet-slot][data-filled]) .series-fits {
+    opacity: 1;
+    translate: 0 0;
   }
 }

@@ -22,6 +22,7 @@
 import type { L10n, Localizable } from "@/i18n";
 import type { PartialDate } from "@/i18n/format";
 import type { LogoSource } from "@/lib/logos";
+import type { PietShape } from "@/lib/piet";
 
 export type SocialId =
   "github" | "linkedin" | "instagram" | "spotify" | "discord" | "email";
@@ -130,6 +131,15 @@ export type Project = {
   story?: ProjectStory;
   isPrivate?: boolean;
   year?: PartialDate;
+  /** The product's own site, linked from its page ("https://piecet.com"). */
+  url?: string;
+  /** Its App Store link, or "soon" before launch (a "coming soon" button). */
+  appStore?: string;
+  /**
+   * Piet, piecet's mascot, rides down the project's page: `true`, or his
+   * form in each section (see `src/lib/piet.ts`), the first for the top.
+   */
+  mascot?: true | PietShape[];
 };
 
 export type SkillGroupId =
@@ -593,6 +603,107 @@ export const profile: Profile = {
           lang: "pt-BR",
         },
       ],
+    },
+    // Davi's own app (not built at a job). Facts from Davi (November 2026),
+    // the piecet repository's spec and his notes on the process: first commit
+    // 2026-11-07, 773 commits and about 197 pull requests by 2026-11-24.
+    {
+      id: "piecet",
+      name: "piecet",
+      role: { en: "Creator", "pt-br": "Criador" },
+      year: "2026",
+      url: "https://piecet.com",
+      // Not on the App Store yet: swap in its link at launch.
+      appStore: "soon",
+      // The top, the blog series, the problem, what it does, how it is built.
+      mascot: ["piece", "piece", "bubble", "brain", "phone"],
+      summary: {
+        en: "An iPhone app where everything you keep is a piece, and Piet fits the pieces into puzzles.",
+        "pt-br":
+          "Um app para iPhone em que tudo que você guarda é uma peça, e o Piet encaixa as peças em quebra-cabeças.",
+      },
+      description: {
+        en: "A local-first iPhone app for keeping what's worth keeping. Every note, voice memo, photo or video is a piece; Piet, the mascot, fits related pieces into puzzles on his own, and search runs on the device, with no account and no server. I designed and built it with Claude, from the name and the brand to the app.",
+        "pt-br":
+          "Um app para iPhone, local-first, para guardar o que vale guardar. Cada texto, áudio, foto ou vídeo é uma peça; o Piet, o mascote, encaixa sozinho as peças relacionadas em quebra-cabeças, e a busca roda no próprio aparelho, sem conta e sem servidor. Projetei e construí com o Claude, do nome e da marca ao app.",
+      },
+      stack: [
+        "Swift",
+        "SwiftUI",
+        "SwiftData",
+        "CloudKit",
+        "Foundation Models",
+        "SpeechAnalyzer",
+        "NaturalLanguage",
+        "Vision",
+        "MapKit",
+        "WidgetKit",
+        "App Intents",
+        "Claude Code",
+      ],
+      topics: [
+        "iOS app",
+        "Personal knowledge management",
+        "On-device AI",
+        "Product design",
+      ],
+      story: {
+        problem: {
+          en: "I record voice notes of ideas and possibilities all the time, and later I could never find them. Everything was kept; almost nothing was findable.",
+          "pt-br":
+            "Eu gravo áudios de ideias e possibilidades o tempo todo, e depois nunca conseguia encontrá-los. Tudo guardado, quase nada encontrável.",
+        },
+        solution: {
+          en: [
+            "Everything you keep is a piece: text, voice, photos and video.",
+            "Piet fits related pieces into puzzles on his own: a person, a trip, a plan.",
+            "Search and answers run on the iPhone, with Apple's models and curated open-source ones: no remote AI to pay for.",
+            "No account and no server: pieces stay on your device and your private iCloud.",
+          ],
+          "pt-br": [
+            "Tudo que você guarda é uma peça: texto, áudio, fotos e vídeos.",
+            "O Piet encaixa sozinho as peças relacionadas em quebra-cabeças: uma pessoa, uma viagem, um plano.",
+            "Busca e respostas rodam no iPhone, com os modelos da Apple e modelos open source selecionados: sem pagar por IA remota.",
+            "Sem conta e sem servidor: as peças ficam no seu aparelho e no seu iCloud privado.",
+          ],
+        },
+        build: [
+          {
+            part: {
+              en: "iPhone, iPad, Mac and Apple Watch",
+              "pt-br": "iPhone, iPad, Mac e Apple Watch",
+            },
+            stack: ["Swift", "SwiftUI"],
+          },
+          {
+            part: { en: "Data and sync", "pt-br": "Dados e sincronização" },
+            stack: ["SwiftData", "CloudKit"],
+          },
+          {
+            part: { en: "Capture", "pt-br": "Captura" },
+            stack: ["SpeechAnalyzer", "Vision", "MapKit"],
+          },
+          {
+            part: { en: "On-device AI", "pt-br": "IA no aparelho" },
+            stack: [
+              "Foundation Models",
+              "NaturalLanguage",
+              "Open-source models",
+            ],
+          },
+          {
+            part: {
+              en: "Widgets, Live Activities and Shortcuts",
+              "pt-br": "Widgets, Live Activities e Atalhos",
+            },
+            stack: ["WidgetKit", "App Intents"],
+          },
+          {
+            part: { en: "Built with", "pt-br": "Construído com" },
+            stack: ["Claude Code"],
+          },
+        ],
+      },
     },
     {
       id: "billy",

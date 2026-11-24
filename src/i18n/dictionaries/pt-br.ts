@@ -15,12 +15,17 @@ export const ptBr: Dictionary = {
     projects: {
       title: "Projetos",
       description:
-        "O que Davi Lacerda construiu com IA na Algar, e os resultados: o Sales Copilot, Melhor Projeto de IA da América Latina, o Billy, que reduziu em 96% o tempo de revisão manual de faturas, e a imprensa que os cobriu.",
+        "O que Davi Lacerda construiu com IA, na Algar e por conta própria: o Sales Copilot, Melhor Projeto de IA da América Latina, o Billy, que reduziu em 96% o tempo de revisão manual de faturas, o piecet, seu app para iPhone, e a imprensa que os cobriu.",
     },
     personal: {
       title: "Pessoal",
       description:
         "Música, séries, seus times, jogos, textos e onde encontrar Davi Lacerda.",
+    },
+    things: {
+      title: "Coisas",
+      description:
+        "As coisas que Davi Lacerda usa todo dia: o MacBook Air, os AirPods Pro, os óculos Ray-Ban Meta, o mouse Logitech G PRO e os tênis Nike, com onde encontrar cada um.",
     },
     blog: {
       title: "Blog",
@@ -291,7 +296,7 @@ export const ptBr: Dictionary = {
 
   projects: {
     title: "Projetos",
-    lead: "O que construí com IA na Algar, e os resultados.",
+    lead: "O que construí com IA, na Algar e por conta própria, e os resultados.",
     press: "Na mídia",
     pressNote: "Matérias sobre o projeto, com as manchetes originais.",
     language: { "pt-BR": "Português", en: "Inglês" },
@@ -306,6 +311,12 @@ export const ptBr: Dictionary = {
       role: "Função",
       access: "Acesso",
     },
+    /** Where to get the app; before launch, a "coming soon" placeholder. */
+    appStore: "Baixar na App Store",
+    appStoreSoon: "Em breve na App Store",
+    site: "Visitar {host}",
+    series: "No blog",
+    seriesNote: "A história de como ele foi feito, em partes.",
     problem: "O problema",
     solution: "O que ele faz",
     build: "Como foi construído",
@@ -414,6 +425,22 @@ export const ptBr: Dictionary = {
         champion: "Campeão",
       },
     },
+    things: {
+      title: "Coisas",
+      lead: "O que eu carrego, visto e uso para trabalhar, todo dia.",
+      tile: "Coisas que eu uso",
+      back: "Pessoal",
+      wall: {
+        label: "Coisas",
+        zoomIn: "Ampliar {name}",
+        zoomOut: "Afastar",
+        previous: "Coisa anterior",
+        next: "Próxima coisa",
+        position: "{index} de {total}",
+        link: "Ver em {store}",
+        facts: "Destaques",
+      },
+    },
     sections: {
       writing: {
         title: "Textos",
@@ -454,6 +481,23 @@ export const ptBr: Dictionary = {
     moreAboutMe: "Mais sobre mim",
     morePosts: "Mais posts",
     feedTitle: "{name} | Blog",
+    newPost: "Novo no blog",
+    readNow: "Ler agora",
+    dismiss: "Dispensar",
+    /** The image viewer on a post (a print, full size). */
+    openImage: "Ampliar imagem",
+    previousImage: "Imagem anterior",
+    nextImage: "Próxima imagem",
+    closeImage: "Fechar imagem",
+    /** What Piet, piecet's mascot, says at the top of a page he rides down. */
+    pietHello: "Oi! Eu sou o Piet.",
+    series: {
+      youAreHere: "Você está aqui",
+      /** Beside the next part, once Piet has fitted into it. */
+      fits: "Encaixou!",
+      soon: "Em breve",
+      part: "Parte {n}",
+    },
   },
 
   statistics: {

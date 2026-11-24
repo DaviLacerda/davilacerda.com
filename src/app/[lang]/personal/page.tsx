@@ -1,5 +1,7 @@
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -9,7 +11,11 @@ import { Elsewhere } from "@/components/personal/elsewhere";
 import { Games } from "@/components/personal/games";
 import { Interests } from "@/components/personal/interests";
 import { NowPlayingCard } from "@/components/personal/now-playing";
-import { tileClass, TileTitle } from "@/components/personal/parts";
+import {
+  tileClass,
+  tileLinkClass,
+  TileTitle,
+} from "@/components/personal/parts";
 import { TeamsBoard } from "@/components/personal/teams";
 import { WatchingTile } from "@/components/personal/watching";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -18,6 +24,7 @@ import { Container } from "@/components/ui/container";
 import { BrandLogo } from "@/components/ui/logo";
 import { teams } from "@/content/personal";
 import { getSocial, profile } from "@/content/profile";
+import { things, thingSticker } from "@/content/things";
 import { getDictionary, interpolate, isLocale, t } from "@/i18n";
 import { localeMeta } from "@/i18n/config";
 import { getAllPosts } from "@/lib/blog";
@@ -178,11 +185,52 @@ export default async function PersonalPage({ params }: PageProps) {
         <Tile id="games" enter={5} title={dict.personal.games.title}>
           <Games lang={lang} />
         </Tile>
+
+        {/* The things he uses: the whole tile opens the Things wall. */}
+        <Reveal
+          as="section"
+          aria-labelledby="things-title"
+          enter={6}
+          className="col-span-2 sm:col-span-12"
+        >
+          <Link
+            href={routes.things(lang)}
+            className={cn(tileClass, tileLinkClass, "group block")}
+          >
+            <span className="flex h-5 items-center justify-between gap-4">
+              <TileTitle as="h2" id="things-title">
+                {dict.personal.things.tile}
+              </TileTitle>
+              <ArrowRightIcon
+                aria-hidden="true"
+                className="size-4 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+              />
+            </span>
+            <span
+              aria-hidden="true"
+              className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3"
+            >
+              {things.map((thing) => (
+                <span
+                  key={thing.id}
+                  className="flex aspect-[4/3] items-center justify-center p-1"
+                >
+                  <Image
+                    {...thingSticker(thing.id)}
+                    alt=""
+                    sizes="120px"
+                    className="h-auto max-h-full w-auto max-w-full"
+                  />
+                </span>
+              ))}
+            </span>
+          </Link>
+        </Reveal>
       </div>
 
       <PersonalSection
         id="blog"
-        enter={6}
+        enter={7}
         title={sections.writing.title}
         aside={
           posts.length > 0 ? (
@@ -190,15 +238,15 @@ export default async function PersonalPage({ params }: PageProps) {
           ) : null
         }
       >
-        <PostList posts={posts} lang={lang} enter={7} />
+        <PostList posts={posts} lang={lang} enter={8} />
       </PersonalSection>
 
       <PersonalSection
         id="elsewhere"
-        enter={8}
+        enter={9}
         title={sections.elsewhere.title}
       >
-        <Elsewhere lang={lang} enter={9} />
+        <Elsewhere lang={lang} enter={10} />
       </PersonalSection>
     </Container>
   );

@@ -6,13 +6,14 @@ const nextConfig: NextConfig = {
   // Files read from disk at build/request time must be traced into any server
   // function: Markdown posts (RSS, llms.txt, MCP, Markdown renditions), the
   // TTF fonts used by the generated OG images and icons, and the PNGs those
-  // cards show (the certificate prints and the portrait).
+  // cards show (the certificate prints, the portrait and the Things stickers).
   outputFileTracingIncludes: {
     "/**": [
       "./content/**/*",
       "./src/lib/og/fonts/*.ttf",
       "./public/certificates/*.png",
       "./public/images/davi.png",
+      "./public/things/*.png",
     ],
   },
   images: {
