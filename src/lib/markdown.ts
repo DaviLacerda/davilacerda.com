@@ -14,7 +14,9 @@ import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
 import { siteConfig } from "@/config/site";
+import type { Locale } from "@/i18n";
 import { codeThemes } from "@/lib/code-theme";
+import { rehypeScrapbook } from "@/lib/scrapbook";
 
 export type Heading = {
   /** 2 for `##`, 3 for `###`. */
@@ -102,11 +104,15 @@ function rehypeMarkCodeBlocks() {
  * and self-links, external link handling, and Shiki highlighting with dual
  * light/dark themes. Raw HTML in markdown is NOT rendered (safe by default).
  *
+ * Blog posts also get the notebook look (taped prints, brand chips,
+ * scribbles): see `src/lib/scrapbook.ts`.
+ *
  * Code fences support rehype-pretty-code meta, e.g.
  * ```ts title="agent.ts" {2-3} /tool/
  */
 export async function renderMarkdown(
   markdown: string,
+  { lang = "en", plain = false }: { lang?: Locale; plain?: boolean } = {},
 ): Promise<RenderedMarkdown> {
   const headings: Heading[] = [];
 
@@ -114,6 +120,7 @@ export async function renderMarkdown(
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype)
+    .use(rehypeScrapbook, { lang, plain })
     .use(rehypeSlug)
     .use(rehypeCollectHeadings(headings))
     .use(rehypeAutolinkHeadings, {

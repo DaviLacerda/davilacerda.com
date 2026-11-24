@@ -15,7 +15,7 @@ export const ptBr: Dictionary = {
     projects: {
       title: "Projetos",
       description:
-        "O que Davi Lacerda construiu com IA na Algar, e os resultados: o Sales Copilot, Melhor Projeto de IA da América Latina, o Billy, que reduziu em 96% o tempo de revisão manual de faturas, e a imprensa que os cobriu.",
+        "O que Davi Lacerda construiu com IA, na Algar e por conta própria: o Sales Copilot, Melhor Projeto de IA da América Latina, o Billy, que reduziu em 96% o tempo de revisão manual de faturas, o piecet, seu app para iPhone, e a imprensa que os cobriu.",
     },
     personal: {
       title: "Pessoal",
@@ -285,7 +285,7 @@ export const ptBr: Dictionary = {
 
   projects: {
     title: "Projetos",
-    lead: "O que construí com IA na Algar, e os resultados.",
+    lead: "O que construí com IA, na Algar e por conta própria, e os resultados.",
     press: "Na mídia",
     pressNote: "Matérias sobre o projeto, com as manchetes originais.",
     language: { "pt-BR": "Português", en: "Inglês" },
@@ -448,6 +448,9 @@ export const ptBr: Dictionary = {
     moreAboutMe: "Mais sobre mim",
     morePosts: "Mais posts",
     feedTitle: "{name} | Blog",
+    newPost: "Novo no blog",
+    readNow: "Ler agora",
+    dismiss: "Dispensar",
   },
 
   dates: {
@@ -468,7 +471,6 @@ export const ptBr: Dictionary = {
   footer: {
     rights: "Todos os direitos reservados.",
   },
-
 
   common: {
     readMore: "Ler mais",

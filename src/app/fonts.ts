@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google"; // taste-skill-ignore: Geist Mono is for literal code only
+import { Caveat, Geist, Geist_Mono } from "next/font/google"; // taste-skill-ignore: Geist Mono is for literal code only
 
 /**
  * Typefaces (self-hosted at build time by next/font):
@@ -7,6 +7,8 @@ import { Geist, Geist_Mono } from "next/font/google"; // taste-skill-ignore: Gei
  *   figures and Latin Extended (Portuguese accents) included.
  * - Geist Mono, its monospaced sibling, for literal code inside `<pre>` and
  *   `<code>` only. Never for labels, dates or metadata.
+ * - Caveat, a handwriting face, for the notebook touches of blog posts only
+ *   (captions, notes, pull quotes; see `src/lib/scrapbook.ts`).
  *
  * The CSS variables are mapped to `font-sans` / `font-mono` in `globals.css`.
  * Apply `fontVariables` to `<html>`. The OG images use static Geist TTFs from
@@ -27,4 +29,15 @@ const mono = Geist_Mono({
   preload: false,
 });
 
-export const fontVariables = [sans.variable, mono.variable].join(" ");
+const hand = Caveat({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600"],
+  display: "swap",
+  variable: "--font-caveat",
+  // Only blog posts use it.
+  preload: false,
+});
+
+export const fontVariables = [sans.variable, mono.variable, hand.variable].join(
+  " ",
+);

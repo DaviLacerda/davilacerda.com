@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { AuthorCard } from "@/components/blog/author-card";
 import { PostHeader } from "@/components/blog/post-header";
 import { PostPager } from "@/components/blog/post-pager";
+import { ScrapbookMotion } from "@/components/blog/scrapbook-motion";
 import { RssLink } from "@/components/blog/rss-link";
 import { TableOfContents } from "@/components/blog/table-of-contents";
 import { Reveal } from "@/components/motion/reveal";
@@ -123,7 +124,9 @@ export default async function PostPage({ params }: PageProps) {
         html={post.html}
         className="mt-12 [&>p:first-child]:text-lead"
         enter={4}
+        accent={post.accent}
       />
+      <ScrapbookMotion />
 
       <footer>
         {post.tags.length > 0 || updated ? (

@@ -75,7 +75,7 @@ export default async function ProjectPage({ params }: PageProps) {
   const { story } = project;
   const name = t(project.name, lang);
   const headline = projectHeadline(project, lang);
-  const demo = projectDemo(project.id);
+  const demo = projectDemo(project.id, lang);
   const next = nextProject(project);
   const employer = profile.experience.find(
     (job) => splitCompanyName(t(job.company, lang)).short === project.context,

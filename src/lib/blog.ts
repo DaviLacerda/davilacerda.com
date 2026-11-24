@@ -9,6 +9,7 @@ import { cache } from "react";
 import { isLocale, locales, type Locale } from "@/i18n/config";
 import { renderMarkdown, type Heading } from "@/lib/markdown";
 import { routes } from "@/lib/routes";
+import { plainScrapbookMarkdown } from "@/lib/scrapbook";
 
 /**
  * Blog content loader.
@@ -36,6 +37,12 @@ export type PostFrontmatter = {
   draft: boolean;
   /** Shared by the en and pt-br versions of the same post. */
   translationKey?: string;
+  /** A few handwritten words above the title ("notes from a launch"). */
+  kicker?: string;
+  /** An image in /public that stands for the post where it is featured (home page, notice). */
+  cover?: string;
+  /** The colour of the post's scribbles and handwriting accents, e.g. "#a970ff". */
+  accent?: string;
 };
 
 export type PostMeta = PostFrontmatter & {
@@ -51,6 +58,8 @@ export type PostMeta = PostFrontmatter & {
 export type Post = PostMeta & {
   /** Rendered, trusted HTML. Put it inside an element with the `markdown` class. */
   html: string;
+  /** The same, for feed readers: brand chips as plain links, no scribbles. */
+  feedHtml: string;
   headings: Heading[];
   /** Raw markdown body (without frontmatter), e.g. for llms-full.txt. */
   markdown: string;
@@ -71,7 +80,16 @@ function parseFrontmatter(
   data: Record<string, unknown>,
   file: string,
 ): PostFrontmatter {
-  const { title, description, tags = [], draft = false, translationKey } = data;
+  const {
+    title,
+    description,
+    tags = [],
+    draft = false,
+    translationKey,
+    kicker,
+    accent,
+    cover,
+  } = data;
   if (typeof title !== "string" || !title.trim()) {
     throw new Error(`[blog] ${file}: "title" is required.`);
   }
@@ -87,6 +105,25 @@ function parseFrontmatter(
   if (translationKey !== undefined && typeof translationKey !== "string") {
     throw new Error(`[blog] ${file}: "translationKey" must be a string.`);
   }
+  if (kicker !== undefined && typeof kicker !== "string") {
+    throw new Error(`[blog] ${file}: "kicker" must be a string.`);
+  }
+  if (
+    cover !== undefined &&
+    (typeof cover !== "string" || !cover.startsWith("/"))
+  ) {
+    throw new Error(
+      `[blog] ${file}: "cover" must be a path in /public, "/images/...".`,
+    );
+  }
+  if (
+    accent !== undefined &&
+    (typeof accent !== "string" || !/^#[0-9a-f]{6}$/i.test(accent))
+  ) {
+    throw new Error(
+      `[blog] ${file}: "accent" must be a hex colour, "#rrggbb".`,
+    );
+  }
   return {
     title: title.trim(),
     description: description.trim(),
@@ -98,6 +135,9 @@ function parseFrontmatter(
     tags,
     draft,
     translationKey,
+    ...(kicker ? { kicker: kicker.trim() } : {}),
+    ...(accent ? { accent } : {}),
+    ...(cover ? { cover } : {}),
   };
 }
 
@@ -172,8 +212,15 @@ export const getPost = cache(
     if (!isLocale(lang)) return null;
     const raw = readAll(lang).find((post) => post.meta.slug === slug);
     if (!raw) return null;
-    const { html, headings } = await renderMarkdown(raw.markdown);
-    return { ...raw.meta, html, headings, markdown: raw.markdown };
+    const { html, headings } = await renderMarkdown(raw.markdown, { lang });
+    const feed = await renderMarkdown(raw.markdown, { lang, plain: true });
+    return {
+      ...raw.meta,
+      html,
+      feedHtml: feed.html,
+      headings,
+      markdown: plainScrapbookMarkdown(raw.markdown, lang),
+    };
   },
 );
 

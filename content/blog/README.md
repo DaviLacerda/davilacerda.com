@@ -40,6 +40,9 @@ translationKey: "first-agent"
 | `updated`        | no       | Last meaningful update, `"YYYY-MM-DD"`. Shown as "Updated on …" and used as `dateModified` for search engines. Skip it for typo fixes.                                                             |
 | `tags`           | no       | List of lowercase, kebab-case tags (`["ai-engineering", "rag"]`). Write them in the post's language (`agents` / `agentes`).                                                                        |
 | `draft`          | no       | `true` = only visible in `yarn dev`; never built in production (no page, no RSS, no sitemap). Defaults to `false`.                                                                                 |
+| `kicker`         | no       | A few words in handwriting above the title (`"the piecet series, part 1"`).                                                                                                                       |
+| `accent`         | no       | The colour of the post's scribbles and handwriting, `"#rrggbb"`. Defaults to the text colour.                                                                                                     |
+| `cover`          | no       | An image in /public that stands for the post on the home page and in the "New on the blog" notice. The newest post is featured there automatically.                                            |
 | `translationKey` | no       | Any string, **identical in the `en` and `pt-br` files of the same post**. Powers the "Also available in …" link, the header's language switcher, `hreflang` alternates and the JSON-LD link. |
 
 Posts without a translation are fine: they simply have no alternate, and the
@@ -99,7 +102,7 @@ Publishing in only one language? Skip step 3 (and you can leave out `translation
   or more of them the post gets a table of contents ("On this page").
 - GitHub Flavored Markdown works: tables, task lists, footnotes, strikethrough, autolinks.
 - Raw HTML is **not** rendered (it is stripped for safety).
-- `> quote` renders as an italic pull quote; use it sparingly.
+- `> quote` renders as a handwritten pull quote; use it sparingly (see "The notebook look" below).
 - Code blocks are highlighted with Shiki in light and dark themes. Optional meta after the language:
 
   ````md
@@ -114,6 +117,21 @@ Publishing in only one language? Skip step 3 (and you can leave out `translation
 - Links: external links open in a new tab automatically. Link to other pages with
   site-relative paths (`/en/personal/blog/other-post`); the RSS feed makes them absolute.
 - Reading time is estimated automatically (code blocks are not counted).
+
+## The notebook look
+
+Posts can read like a notebook, all from plain Markdown:
+
+| Write                                         | You get                                                                                       |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `[Claude](brand:claude)`                      | A chip with the brand's icon and a card on hover. Brands live in `src/content/brands.ts`.     |
+| `[the words](scribble:underline)`             | A hand-drawn stroke that draws itself on scroll. Also `scribble:double` and `scribble:circle`. |
+| `[7 nov, 2 a.m.](note:)`                      | A few words in handwriting, in the post's `accent`.                                           |
+| A paragraph with only images                  | Prints taped to the page (two or three side by side). The image title is the handwritten caption: `![alt](/images/x.webp "caption")`. |
+| `> [!note] Title` as a quote's first line     | A taped note on lined paper.                                                                  |
+| Any other `> quote`                           | A pull quote in handwriting.                                                                  |
+
+Feeds, `llms-full.txt` and the Markdown versions get plain links and text instead.
 
 ## Checklist
 

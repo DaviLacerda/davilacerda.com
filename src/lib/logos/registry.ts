@@ -119,6 +119,13 @@ export const logoRegistry = {
     label: "Claude Code",
     names: ["Claude Code"],
   },
+  apple: { icon: "simple-icons:apple", label: "Apple" },
+  x: { icon: "simple-icons:x", label: "X" },
+  swift: {
+    icon: "logos:swift",
+    label: "Swift",
+    names: ["Swift", "SwiftUI"],
+  },
   githubcopilot: {
     icon: "simple-icons:githubcopilot",
     label: "GitHub Copilot",

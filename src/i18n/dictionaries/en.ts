@@ -24,7 +24,7 @@ export const en = {
     projects: {
       title: "Projects",
       description:
-        "What Davi Lacerda built with AI at Algar, and the results: the Sales Copilot, Best AI Project in LATAM, Billy, which cut manual invoice review time by 96%, and the press that covered them.",
+        "What Davi Lacerda built with AI, at Algar and on his own: the Sales Copilot, Best AI Project in LATAM, Billy, which cut manual invoice review time by 96%, piecet, his iPhone app, and the press that covered them.",
     },
     personal: {
       title: "Personal",
@@ -324,7 +324,7 @@ export const en = {
   projects: {
     title: "Projects",
     /** First-person line under the title. */
-    lead: "What I built with AI at Algar, and the results.",
+    lead: "What I built with AI, at Algar and on my own, and the results.",
     /** The outlets' row on the tab, and the coverage on a project's page. */
     press: "In the press",
     /** Under "In the press" on a project's page (the articles do not name Davi). */
@@ -529,6 +529,10 @@ export const en = {
     morePosts: "More posts",
     /** RSS channel title, e.g. "Davi Lacerda | Blog". */
     feedTitle: "{name} | Blog",
+    /** The newest post, featured on the home page and in the notice on other pages. */
+    newPost: "New on the blog",
+    readNow: "Read now",
+    dismiss: "Dismiss",
   },
 
   dates: {
@@ -551,7 +555,6 @@ export const en = {
   footer: {
     rights: "All rights reserved.",
   },
-
 
   common: {
     readMore: "Read more",
