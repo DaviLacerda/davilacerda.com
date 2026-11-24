@@ -22,6 +22,7 @@
 import type { L10n, Localizable } from "@/i18n";
 import type { PartialDate } from "@/i18n/format";
 import type { LogoSource } from "@/lib/logos";
+import type { PietShape } from "@/lib/piet";
 
 export type SocialId =
   "github" | "linkedin" | "instagram" | "spotify" | "discord" | "email";
@@ -132,8 +133,11 @@ export type Project = {
   year?: PartialDate;
   /** The product's own site, linked from its page ("https://piecet.com"). */
   url?: string;
-  /** Piet, piecet's mascot, rides down the project's page. */
-  mascot?: boolean;
+  /**
+   * Piet, piecet's mascot, rides down the project's page: `true`, or his
+   * form in each section (see `src/lib/piet.ts`), the first for the top.
+   */
+  mascot?: true | PietShape[];
 };
 
 export type SkillGroupId =
@@ -607,7 +611,8 @@ export const profile: Profile = {
       role: { en: "Creator", "pt-br": "Criador" },
       year: "2026",
       url: "https://piecet.com",
-      mascot: true,
+      // The top, the blog series, the problem, what it does, how it is built.
+      mascot: ["piece", "piece", "bubble", "brain", "phone"],
       summary: {
         en: "An iPhone app where everything you keep is a piece, and Piet fits the pieces into puzzles.",
         "pt-br":

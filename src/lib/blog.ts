@@ -9,6 +9,7 @@ import { cache } from "react";
 import { isLocale, locales, type Locale } from "@/i18n/config";
 import { renderMarkdown, type Heading } from "@/lib/markdown";
 import { routes } from "@/lib/routes";
+import { isPietShape, pietShapes, type PietShape } from "@/lib/piet";
 import { plainScrapbookMarkdown } from "@/lib/scrapbook";
 import { isSeries, type SeriesId } from "@/content/series";
 
@@ -46,8 +47,12 @@ export type PostFrontmatter = {
   accent?: string;
   /** The series the post belongs to, by id in `src/content/series.ts` ("piecet"). */
   series?: SeriesId;
-  /** Piet, piecet's mascot, keeps the reader company down the page. */
-  mascot?: boolean;
+  /**
+   * Piet, piecet's mascot, keeps the reader company down the page: `true`,
+   * or his form in each section, in order (`[piece, bubble, heart]`, see
+   * `src/lib/piet.ts`), the first for what comes before the first heading.
+   */
+  mascot?: true | PietShape[];
 };
 
 export type PostMeta = PostFrontmatter & {
@@ -139,8 +144,13 @@ function parseFrontmatter(
       `[blog] ${file}: "series" must be a series id in src/content/series.ts.`,
     );
   }
-  if (typeof mascot !== "boolean") {
-    throw new Error(`[blog] ${file}: "mascot" must be true or false.`);
+  if (
+    typeof mascot !== "boolean" &&
+    !(Array.isArray(mascot) && mascot.length && mascot.every(isPietShape))
+  ) {
+    throw new Error(
+      `[blog] ${file}: "mascot" must be true, false or a list of Piet's forms (${pietShapes.join(", ")}).`,
+    );
   }
   return {
     title: title.trim(),

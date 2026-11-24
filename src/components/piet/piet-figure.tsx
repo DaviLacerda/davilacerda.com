@@ -10,14 +10,17 @@ export type PietPose =
  */
 export function PietFigure({
   pose = "idle",
+  morph = false,
   className,
 }: {
   pose?: PietPose;
+  /** Ready to change form (`PietGuide`): the brain's folds, a roomier box. */
+  morph?: boolean;
   className?: string;
 }) {
   return (
     <svg
-      viewBox="0 0 823 595"
+      viewBox={morph ? "-20 -20 863 635" : "0 0 823 595"}
       aria-hidden="true"
       focusable="false"
       className={cn("piet", `pose-${pose}`, className)}
@@ -33,8 +36,15 @@ export function PietFigure({
         />
         <path
           className="piet-body"
+          data-piet-shape=""
           d="M 259 0 L 324 0 C 336.15 0 346 9.85 346 22 L 346 47.25 C 322.69 73.85 327.98 110.2 358.3 131.8 C 388.63 153.4 434.37 153.4 464.7 131.8 C 495.02 110.2 500.31 73.85 477 47.25 L 477 22 C 477 9.85 486.85 0 499 0 L 564 0 C 633.04 0 689 55.96 689 125 L 689 470 C 689 539.04 633.04 595 564 595 L 499 595 C 486.85 595 477 585.15 477 573 L 477 547.75 C 500.31 521.15 495.02 484.8 464.7 463.2 C 434.37 441.6 388.63 441.6 358.3 463.2 C 327.98 484.8 322.69 521.15 346 547.75 L 346 573 C 346 585.15 336.15 595 324 595 L 259 595 C 189.96 595 134 539.04 134 470 L 134 125 C 134 55.96 189.96 0 259 0 Z"
         />
+        {morph ? (
+          <path
+            className="piet-folds"
+            d="M411 95Q427 187 411 297T411 499M552 104Q517 131 538 181M650 219Q604 221 589 277M650 375Q613 349 564 383M552 490Q537 450 480 449M270 490Q285 450 342 449M172 375Q209 349 258 383M172 219Q218 221 233 277M270 104Q305 131 284 181"
+          />
+        ) : null}
         <g className="piet-eyes">
           <g className="eye-open">
             <rect x="286" y="195" width="78" height="155" rx="39" />

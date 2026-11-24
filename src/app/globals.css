@@ -1306,6 +1306,15 @@ html:has(dialog[data-lightbox][open]) {
     fill: var(--piet-eye);
   }
 
+  /* The brain's folds, shown as he turns into one (`PietGuide`). */
+  .piet .piet-folds {
+    fill: none;
+    stroke: #805aad;
+    stroke-width: 13;
+    stroke-linecap: round;
+    opacity: var(--piet-brain, 0);
+  }
+
   .piet .piet-eyes .glint {
     fill: var(--piet);
   }
@@ -1333,6 +1342,7 @@ html:has(dialog[data-lightbox][open]) {
   }
 
   .piet .arm {
+    opacity: var(--piet-piece, 1);
     transform-box: view-box;
     transition: transform 400ms var(--piet-spring);
   }

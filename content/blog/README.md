@@ -44,7 +44,7 @@ translationKey: "first-agent"
 | `accent`         | no       | The colour of the post's scribbles and handwriting, `"#rrggbb"`. Defaults to the text colour.                                                                                                     |
 | `cover`          | no       | An image in /public that stands for the post on the home page and in the "New on the blog" notice. The newest post is featured there automatically.                                            |
 | `series`         | no       | The series the post is part of, by id in `src/content/series.ts` (`"piecet"`). The post ends with the series' parts, published and upcoming, and so does the project's page. |
-| `mascot`         | no       | `true`: Piet, piecet's mascot, rides down the margin as the post is read.                                                                                                       |
+| `mascot`         | no       | `true`: Piet, piecet's mascot, rides down the margin as the post is read. Or a list of his forms, one per section (the top, then each `##`), which he morphs between: `piece`, `bubble`, `phone`, `circle`, `heart`, `brain` (`src/lib/piet.ts`). |
 | `translationKey` | no       | Any string, **identical in the `en` and `pt-br` files of the same post**. Powers the "Also available in …" link, the header's language switcher, `hreflang` alternates and the JSON-LD link. |
 
 Posts without a translation are fine: they simply have no alternate, and the

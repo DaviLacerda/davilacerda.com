@@ -9,7 +9,8 @@ series: "piecet"
 kicker: "the piecet series, part 1"
 accent: "#8b5cf6"
 cover: "/images/blog/piecet-1/04-nasce-o-piet.webp"
-mascot: true
+# Piet's form per section: the top, then each "##" heading in order.
+mascot: [piece, bubble, phone, circle, piece, piece, phone, heart, brain, piece]
 ---
 
 I record voice notes about everything. An idea in the middle of the day, a possibility out of nowhere, a "what if we did it this way?". Recording was never the problem. The problem was [finding them later](scribble:underline).

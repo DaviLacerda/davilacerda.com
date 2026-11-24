@@ -138,7 +138,12 @@ export default async function PostPage({ params }: PageProps) {
           next: dict.blog.nextImage,
         }}
       />
-      {post.mascot ? <PietGuide hello={dict.blog.pietHello} /> : null}
+      {post.mascot ? (
+        <PietGuide
+          hello={dict.blog.pietHello}
+          shapes={post.mascot === true ? undefined : post.mascot}
+        />
+      ) : null}
 
       {post.series ? (
         <Reveal className="mt-14">

@@ -306,7 +306,11 @@ export default async function ProjectPage({ params }: PageProps) {
       </Reveal>
 
       {project.mascot ? (
-        <PietGuide target="[data-piet-track]" hello={dict.blog.pietHello} />
+        <PietGuide
+          target="[data-piet-track]"
+          hello={dict.blog.pietHello}
+          shapes={project.mascot === true ? undefined : project.mascot}
+        />
       ) : null}
 
       {next ? (

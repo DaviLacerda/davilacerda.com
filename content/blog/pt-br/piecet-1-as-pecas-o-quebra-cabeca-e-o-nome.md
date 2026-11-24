@@ -9,7 +9,8 @@ series: "piecet"
 kicker: "série piecet, parte 1"
 accent: "#8b5cf6"
 cover: "/images/blog/piecet-1/04-nasce-o-piet.webp"
-mascot: true
+# Piet's form per section: the top, then each "##" heading in order.
+mascot: [piece, bubble, phone, circle, piece, piece, phone, heart, brain, piece]
 ---
 
 Eu gravo áudio de tudo. Uma ideia no meio do dia, uma possibilidade que aparece do nada, um "e se a gente fizesse assim?". Gravar nunca foi o problema. O problema era [achar depois](scribble:underline).
