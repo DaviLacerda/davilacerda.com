@@ -5,9 +5,12 @@ import { AuthorCard } from "@/components/blog/author-card";
 import { PostHeader } from "@/components/blog/post-header";
 import { PostPager } from "@/components/blog/post-pager";
 import { ScrapbookMotion } from "@/components/blog/scrapbook-motion";
+import { SeriesList } from "@/components/blog/series-list";
 import { RssLink } from "@/components/blog/rss-link";
 import { TableOfContents } from "@/components/blog/table-of-contents";
+import { ImageViewer } from "@/components/blog/image-viewer";
 import { Reveal } from "@/components/motion/reveal";
+import { PietGuide } from "@/components/piet/piet-guide";
 import { LocaleAlternates } from "@/components/providers/alternate-links";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
@@ -127,6 +130,25 @@ export default async function PostPage({ params }: PageProps) {
         accent={post.accent}
       />
       <ScrapbookMotion />
+      <ImageViewer
+        labels={{
+          close: dict.blog.closeImage,
+          open: dict.blog.openImage,
+          previous: dict.blog.previousImage,
+          next: dict.blog.nextImage,
+        }}
+      />
+      {post.mascot ? <PietGuide hello={dict.blog.pietHello} /> : null}
+
+      {post.series ? (
+        <Reveal className="mt-14">
+          <SeriesList
+            id={post.series}
+            lang={lang}
+            current={post.translationKey}
+          />
+        </Reveal>
+      ) : null}
 
       <footer>
         {post.tags.length > 0 || updated ? (

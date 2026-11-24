@@ -17,6 +17,8 @@
  *    The canvas swap and the chips use Motion (see `src/components/chat`).
  * 5. The docked composer on phones and tablets.
  * 6. `.markdown`: blog prose and code.
+ * 7. The notebook look of blog posts.
+ * 8. Piet, piecet's mascot.
  *
  * Rules the components follow:
  * - Fills, not lines: a surface is one tone step from the page (`bg-surface`),
@@ -1179,8 +1181,8 @@ html:has(dialog[data-lightbox][open]) {
       visibility 0s linear 220ms;
   }
 
-  /* Touch screens: a tap follows the link; there is no hover to show a card. */
-  @media (hover: none) {
+  /* Touch screens (and phone widths): a tap follows the link; no card. */
+  @media (hover: none), (max-width: 40rem) {
     .markdown .brand-card {
       display: none;
     }
@@ -1277,5 +1279,430 @@ html:has(dialog[data-lightbox][open]) {
     .markdown[data-motion] .scribble[data-shown] path {
       stroke-dashoffset: 0;
     }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Piet, piecet's mascot (src/components/piet): the figure and its poses,
+ *    as on piecet.com, and the guide that rides down a page beside the text.
+ * ------------------------------------------------------------------------- */
+
+@layer components {
+  .piet {
+    --piet: #bd84fc;
+    --piet-eye: #0a0913;
+    --piet-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .piet .piet-body {
+    fill: var(--piet);
+  }
+
+  .piet .piet-eyes {
+    fill: var(--piet-eye);
+  }
+
+  .piet .piet-eyes .glint {
+    fill: var(--piet);
+  }
+
+  .piet .eye-open {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: piet-blink 5.2s ease infinite;
+  }
+
+  .piet .eye-joy,
+  .piet .eye-rest {
+    display: none;
+    fill: none;
+    stroke: var(--piet-eye);
+    stroke-linecap: round;
+  }
+
+  .piet .eye-joy {
+    stroke-width: 34;
+  }
+
+  .piet .eye-rest {
+    stroke-width: 30;
+  }
+
+  .piet .arm {
+    transform-box: view-box;
+    transition: transform 400ms var(--piet-spring);
+  }
+
+  .piet .arm-l {
+    transform-origin: 146px 282px;
+  }
+
+  .piet .arm-r {
+    transform-origin: 677px 282px;
+  }
+
+  .piet .piet-all,
+  .piet .piet-eyes {
+    transform-box: view-box;
+    transform-origin: 411px 560px;
+    transition: transform 400ms var(--piet-spring);
+  }
+
+  .piet.pose-wave .arm-l {
+    transform: rotate(-10deg);
+  }
+  .piet.pose-wave .arm-r {
+    animation: piet-wave 0.7s ease-in-out infinite alternate;
+  }
+  .piet.pose-wave .piet-all {
+    animation: piet-lean 1.4s ease-in-out infinite alternate;
+  }
+
+  .piet.pose-joy .arm-l,
+  .piet.pose-dance .arm-l {
+    transform: rotate(52deg);
+  }
+  .piet.pose-joy .arm-r,
+  .piet.pose-dance .arm-r {
+    transform: rotate(-52deg);
+  }
+  .piet.pose-joy .piet-all {
+    animation: piet-jump 0.62s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  .piet.pose-joy .eye-open,
+  .piet.pose-dance .eye-open,
+  .piet.pose-rest .eye-open {
+    display: none;
+  }
+  .piet.pose-joy .eye-joy,
+  .piet.pose-dance .eye-joy,
+  .piet.pose-rest .eye-rest {
+    display: block;
+  }
+  .piet.pose-dance .arm-l {
+    animation: piet-dance-l 0.5s ease-in-out infinite alternate;
+  }
+  .piet.pose-dance .arm-r {
+    animation: piet-dance-r 0.5s ease-in-out infinite alternate;
+  }
+  .piet.pose-dance .piet-all {
+    animation: piet-sway 1s ease-in-out infinite;
+  }
+
+  .piet.pose-listen .arm-r {
+    transform: rotate(-42deg);
+  }
+  .piet.pose-listen .piet-eyes {
+    transform: translateY(-30px);
+  }
+  .piet.pose-listen .piet-all {
+    animation: piet-nod 1.6s ease-in-out infinite;
+  }
+
+  .piet.pose-think .arm-l {
+    transform: rotate(46deg);
+  }
+  .piet.pose-think .arm-r {
+    transform: rotate(-6deg);
+  }
+  .piet.pose-think .piet-eyes {
+    animation: piet-ponder 2.4s ease-in-out infinite;
+  }
+  .piet.pose-think .piet-all {
+    transform: rotate(-4deg);
+  }
+
+  .piet.pose-rest .arm-l {
+    transform: rotate(-14deg);
+  }
+  .piet.pose-rest .arm-r {
+    transform: rotate(14deg);
+  }
+  .piet.pose-rest .piet-all {
+    animation: piet-breathe 2.6s ease-in-out infinite;
+  }
+
+  /* On piecet's card in the Projects tab: he waves while the card is hovered. */
+  .group:hover .piet-card .arm-r {
+    animation: piet-wave 0.7s ease-in-out infinite alternate;
+  }
+
+  /* The guide: hidden until the script places him, so he never flashes at 0,0. */
+  .piet-guide {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 30;
+    width: 5.25rem;
+    opacity: 0;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 10px rgb(20 20 19 / 0.18));
+    will-change: transform;
+    transition: opacity 400ms ease-out;
+  }
+
+  .piet-guide[data-piet-on] {
+    opacity: 1;
+  }
+
+  @media (max-width: 47.99rem) {
+    .piet-guide {
+      width: 3.25rem;
+    }
+  }
+
+  .piet-guide-bubble {
+    position: absolute;
+    right: 70%;
+    bottom: 92%;
+    width: max-content;
+    max-width: 9rem;
+    border-radius: 1rem 1rem 0.25rem 1rem;
+    background: var(--background);
+    box-shadow: 0 0 0 1px var(--border);
+    padding: 0.35rem 0.7rem;
+    color: var(--foreground);
+    font-family: var(--font-hand);
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.1;
+    animation: piet-bubble 400ms var(--piet-spring, ease-out) both;
+  }
+
+  /* Reduced motion: he sits in the corner, still. */
+  .piet-guide[data-piet-still] {
+    top: auto;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    left: auto;
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .piet *,
+    .piet-guide-bubble {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+@keyframes piet-blink {
+  0%,
+  95.5%,
+  100% {
+    transform: scaleY(1);
+  }
+  97.5% {
+    transform: scaleY(0.08);
+  }
+}
+@keyframes piet-wave {
+  from {
+    transform: rotate(-34deg);
+  }
+  to {
+    transform: rotate(-66deg);
+  }
+}
+@keyframes piet-lean {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+@keyframes piet-jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.04, 0.96);
+  }
+  45% {
+    transform: translateY(-110px) scale(0.97, 1.04);
+  }
+}
+@keyframes piet-dance-l {
+  from {
+    transform: rotate(52deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+@keyframes piet-dance-r {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(-52deg);
+  }
+}
+@keyframes piet-sway {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+@keyframes piet-nod {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(5deg) translateY(-10px);
+  }
+}
+@keyframes piet-ponder {
+  0%,
+  100% {
+    transform: translate(22px, -30px);
+  }
+  50% {
+    transform: translate(-14px, -34px);
+  }
+}
+@keyframes piet-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03, 0.97);
+  }
+}
+@keyframes piet-bubble {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
+
+/* The image viewer on a post (src/components/blog/image-viewer.tsx). */
+@layer components {
+  .image-viewer {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    padding: clamp(1rem, 4vw, 3rem);
+    color: var(--foreground);
+  }
+
+  .image-viewer[open] {
+    display: grid;
+    place-items: center;
+  }
+
+  .image-viewer::backdrop {
+    background: rgb(10 10 10 / 0.72);
+    backdrop-filter: blur(6px);
+  }
+
+  .image-viewer-figure {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+  }
+
+  .image-viewer-figure img {
+    max-width: min(100%, 72rem);
+    max-height: calc(100dvh - 9rem);
+    border-radius: 0.5rem;
+    background: var(--background);
+    box-shadow: 0 30px 60px -24px rgb(0 0 0 / 0.6);
+    object-fit: contain;
+  }
+
+  .image-viewer-figure figcaption {
+    color: #fff;
+    font-family: var(--font-hand);
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .image-viewer-button {
+    position: fixed;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.14);
+    color: #fff;
+    transition: background-color 200ms ease-out;
+  }
+
+  .image-viewer-button:hover {
+    background: rgb(255 255 255 / 0.26);
+  }
+
+  .image-viewer-close {
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .image-viewer-prev,
+  .image-viewer-next {
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  .image-viewer-prev {
+    left: 1rem;
+  }
+
+  .image-viewer-next {
+    right: 1rem;
+  }
+
+  @media (max-width: 47.99rem) {
+    .image-viewer-prev,
+    .image-viewer-next {
+      top: auto;
+      bottom: 1rem;
+      translate: none;
+    }
+  }
+
+  .markdown a.print-image {
+    cursor: zoom-in;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .image-viewer[open] .image-viewer-figure {
+      animation: image-viewer-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .image-viewer[open]::backdrop {
+      animation: image-viewer-fade 200ms ease-out;
+    }
+  }
+}
+
+@keyframes image-viewer-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+@keyframes image-viewer-fade {
+  from {
+    opacity: 0;
   }
 }

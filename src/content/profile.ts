@@ -130,6 +130,10 @@ export type Project = {
   story?: ProjectStory;
   isPrivate?: boolean;
   year?: PartialDate;
+  /** The product's own site, linked from its page ("https://piecet.com"). */
+  url?: string;
+  /** Piet, piecet's mascot, rides down the project's page. */
+  mascot?: boolean;
 };
 
 export type SkillGroupId =
@@ -602,27 +606,13 @@ export const profile: Profile = {
       name: "piecet",
       role: { en: "Creator", "pt-br": "Criador" },
       year: "2026",
+      url: "https://piecet.com",
+      mascot: true,
       summary: {
         en: "An iPhone app where everything you keep is a piece, and Piet fits the pieces into puzzles.",
         "pt-br":
           "Um app para iPhone em que tudo que você guarda é uma peça, e o Piet encaixa as peças em quebra-cabeças.",
       },
-      metric: {
-        value: "773",
-        label: {
-          en: "commits in 17 days, from the first spec to version 2.0",
-          "pt-br": "commits em 17 dias, da primeira especificação à versão 2.0",
-        },
-      },
-      results: [
-        {
-          value: "~197",
-          label: {
-            en: "pull requests in the same 17 days",
-            "pt-br": "pull requests nos mesmos 17 dias",
-          },
-        },
-      ],
       description: {
         en: "A local-first iPhone app for keeping what's worth keeping. Every note, voice memo, photo or video is a piece; Piet, the mascot, fits related pieces into puzzles on his own, and search runs on the device, with no account and no server. I designed and built it with Claude, from the name and the brand to the app.",
         "pt-br":
@@ -634,6 +624,12 @@ export const profile: Profile = {
         "SwiftData",
         "CloudKit",
         "Foundation Models",
+        "SpeechAnalyzer",
+        "NaturalLanguage",
+        "Vision",
+        "MapKit",
+        "WidgetKit",
+        "App Intents",
         "Claude Code",
       ],
       topics: [
@@ -664,7 +660,10 @@ export const profile: Profile = {
         },
         build: [
           {
-            part: { en: "App", "pt-br": "Aplicativo" },
+            part: {
+              en: "iPhone, iPad, Mac and Apple Watch",
+              "pt-br": "iPhone, iPad, Mac e Apple Watch",
+            },
             stack: ["Swift", "SwiftUI"],
           },
           {
@@ -672,8 +671,23 @@ export const profile: Profile = {
             stack: ["SwiftData", "CloudKit"],
           },
           {
+            part: { en: "Capture", "pt-br": "Captura" },
+            stack: ["SpeechAnalyzer", "Vision", "MapKit"],
+          },
+          {
             part: { en: "On-device AI", "pt-br": "IA no aparelho" },
-            stack: ["Foundation Models", "Open-source models"],
+            stack: [
+              "Foundation Models",
+              "NaturalLanguage",
+              "Open-source models",
+            ],
+          },
+          {
+            part: {
+              en: "Widgets, Live Activities and Shortcuts",
+              "pt-br": "Widgets, Live Activities e Atalhos",
+            },
+            stack: ["WidgetKit", "App Intents"],
           },
           {
             part: { en: "Built with", "pt-br": "Construído com" },

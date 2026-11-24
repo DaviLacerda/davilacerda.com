@@ -345,6 +345,11 @@ export const en = {
       role: "Role",
       access: "Access",
     },
+    /** The site of a project, beside its name on its page. */
+    site: "Visit {host}",
+    /** The blog series about a project, on its page. */
+    series: "On the blog",
+    seriesNote: "The story of how it was made, in parts.",
     problem: "The problem",
     solution: "What it does",
     build: "How it's built",
@@ -533,6 +538,19 @@ export const en = {
     newPost: "New on the blog",
     readNow: "Read now",
     dismiss: "Dismiss",
+    /** The parts of a blog series, at the foot of a part and on the project's page. */
+    /** The image viewer on a post (a print, full size). */
+    openImage: "Open image",
+    previousImage: "Previous image",
+    nextImage: "Next image",
+    closeImage: "Close image",
+    /** What Piet, piecet's mascot, says at the top of a page he rides down. */
+    pietHello: "Hi! I'm Piet.",
+    series: {
+      youAreHere: "You are here",
+      soon: "Coming soon",
+      part: "Part {n}",
+    },
   },
 
   dates: {

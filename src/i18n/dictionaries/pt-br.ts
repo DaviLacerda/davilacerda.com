@@ -300,6 +300,9 @@ export const ptBr: Dictionary = {
       role: "Função",
       access: "Acesso",
     },
+    site: "Visitar {host}",
+    series: "No blog",
+    seriesNote: "A história de como ele foi feito, em partes.",
     problem: "O problema",
     solution: "O que ele faz",
     build: "Como foi construído",
@@ -451,6 +454,18 @@ export const ptBr: Dictionary = {
     newPost: "Novo no blog",
     readNow: "Ler agora",
     dismiss: "Dispensar",
+    /** The image viewer on a post (a print, full size). */
+    openImage: "Ampliar imagem",
+    previousImage: "Imagem anterior",
+    nextImage: "Próxima imagem",
+    closeImage: "Fechar imagem",
+    /** What Piet, piecet's mascot, says at the top of a page he rides down. */
+    pietHello: "Oi! Eu sou o Piet.",
+    series: {
+      youAreHere: "Você está aqui",
+      soon: "Em breve",
+      part: "Parte {n}",
+    },
   },
 
   dates: {

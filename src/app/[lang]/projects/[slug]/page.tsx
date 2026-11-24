@@ -1,10 +1,13 @@
 import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
+import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 
+import { SeriesList } from "@/components/blog/series-list";
 import { Reveal } from "@/components/motion/reveal";
+import { PietGuide } from "@/components/piet/piet-guide";
 import { NextProjectLink, ProjectHero } from "@/components/projects/cards";
 import { DemoVideo } from "@/components/projects/demo-video";
 import { PressCards } from "@/components/projects/press";
@@ -13,6 +16,7 @@ import { Container } from "@/components/ui/container";
 import { BrandLogo, LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { getProjectPage, getProjectPages, profile } from "@/content/profile";
+import { series as allSeries, type SeriesId } from "@/content/series";
 import { getDictionary, interpolate, isLocale, t } from "@/i18n";
 import { formatPartialDate } from "@/i18n/format";
 import { techLogo } from "@/lib/logos";
@@ -80,6 +84,9 @@ export default async function ProjectPage({ params }: PageProps) {
   const employer = profile.experience.find(
     (job) => splitCompanyName(t(job.company, lang)).short === project.context,
   );
+  const seriesId = (Object.keys(allSeries) as SeriesId[]).find(
+    (id) => allSeries[id].project === project.id,
+  );
   const enter = (i: number) => ({
     "data-enter": "",
     style: { "--i": i } as CSSProperties,
@@ -111,7 +118,7 @@ export default async function ProjectPage({ params }: PageProps) {
   ].filter((fact) => fact !== null);
 
   return (
-    <Container bento className="pt-8 sm:pt-14">
+    <Container bento className="pt-8 sm:pt-14" data-piet-track="">
       <JsonLd
         data={[
           personJsonLd(lang),
@@ -147,6 +154,21 @@ export default async function ProjectPage({ params }: PageProps) {
           {t(project.summary, lang)}
         </p>
       ) : null}
+      {project.url ? (
+        <div {...enter(2)} className="mt-6">
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex h-10 pressable items-center gap-1.5 rounded-full bg-foreground pr-4 pl-5 text-small font-medium text-background hover:opacity-90"
+          >
+            {interpolate(p.site, {
+              host: new URL(project.url).hostname.replace(/^www\./, ""),
+            })}
+            <ArrowUpRightIcon aria-hidden="true" className="size-4" />
+          </a>
+        </div>
+      ) : null}
 
       {/* The demo first: seeing it work says more than any fact below. */}
       {demo ? (
@@ -179,6 +201,23 @@ export default async function ProjectPage({ params }: PageProps) {
         <div {...enter(4)} className="mt-10">
           <ProjectHero project={project} headline={headline} lang={lang} />
         </div>
+      ) : null}
+
+      {/* The story behind it, part by part, on the blog. */}
+      {seriesId ? (
+        <section aria-labelledby="series-title" className="mt-20 sm:mt-24">
+          <Reveal>
+            <h2 id="series-title" className="text-heading">
+              {p.series}
+            </h2>
+            <p className="mt-2 text-small text-muted-foreground">
+              {p.seriesNote}
+            </p>
+          </Reveal>
+          <Reveal className="mt-6">
+            <SeriesList id={seriesId} lang={lang} />
+          </Reveal>
+        </section>
       ) : null}
 
       {/* The press right under the result: what others wrote comes first. */}
@@ -265,6 +304,10 @@ export default async function ProjectPage({ params }: PageProps) {
           />
         )}
       </Reveal>
+
+      {project.mascot ? (
+        <PietGuide target="[data-piet-track]" hello={dict.blog.pietHello} />
+      ) : null}
 
       {next ? (
         <Reveal className="mt-20 sm:mt-24">

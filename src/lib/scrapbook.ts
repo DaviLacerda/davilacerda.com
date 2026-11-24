@@ -263,10 +263,9 @@ function prints(p: Element, start: number): Element | null {
           el(
             "a",
             {
+              // Opens full size in the post (ImageViewer); the file itself without JS.
               href: src,
               className: ["print-image"],
-              target: "_blank",
-              rel: ["noopener"],
             },
             [img],
           ),

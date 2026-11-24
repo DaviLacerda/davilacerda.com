@@ -76,7 +76,8 @@ export const brands = {
       "pt-br":
         "A marca de roupas do Kai Cenat. O jeito como o nome e a identidade dela foram criados é a minha referência para o nome do piecet.",
     },
-    url: "https://www.complex.com/style/a/mariah-rivera/kai-cenat-vivet-clothing-brand-everything-we-know",
+    url: "https://vivetofficial.com",
+    logo: "vivet",
     color: "#111111",
     onColor: "#ffffff",
   },
@@ -101,7 +102,8 @@ export const brands = {
       "pt-br":
         "Um app para capturar qualquer coisa, a começar pelos seus screenshots. A faísca do piecet.",
     },
-    url: "https://apps.apple.com/us/app/-/id6752956163",
+    url: "https://pool.day",
+    image: "/images/blog/brands/pool.png",
     color: "#0a0a0a",
     onColor: "#ffffff",
   },
@@ -113,7 +115,8 @@ export const brands = {
       "pt-br":
         "Um app que o Matheus Gobbi constrói em público, com o Pumpy de mascote. Uma das minhas referências para o piecet ter um personagem.",
     },
-    url: "https://matheusgobbi.com",
+    url: "https://fitfolio.com.br",
+    image: "/images/blog/brands/fitfolio.webp",
     color: "#e2582b",
     onColor: "#ffffff",
   },
@@ -126,6 +129,7 @@ export const brands = {
         "O que ele escreve sobre movimento em interfaces, em forma de skills para o Claude, guiou como o piecet se mexe.",
     },
     url: "https://emilkowal.ski",
+    image: "/images/blog/brands/emil-kowalski.webp",
     color: "#0a0a0a",
     onColor: "#ffffff",
   },

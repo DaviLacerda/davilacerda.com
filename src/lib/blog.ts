@@ -10,6 +10,7 @@ import { isLocale, locales, type Locale } from "@/i18n/config";
 import { renderMarkdown, type Heading } from "@/lib/markdown";
 import { routes } from "@/lib/routes";
 import { plainScrapbookMarkdown } from "@/lib/scrapbook";
+import { isSeries, type SeriesId } from "@/content/series";
 
 /**
  * Blog content loader.
@@ -43,6 +44,10 @@ export type PostFrontmatter = {
   cover?: string;
   /** The colour of the post's scribbles and handwriting accents, e.g. "#a970ff". */
   accent?: string;
+  /** The series the post belongs to, by id in `src/content/series.ts` ("piecet"). */
+  series?: SeriesId;
+  /** Piet, piecet's mascot, keeps the reader company down the page. */
+  mascot?: boolean;
 };
 
 export type PostMeta = PostFrontmatter & {
@@ -89,6 +94,8 @@ function parseFrontmatter(
     kicker,
     accent,
     cover,
+    series,
+    mascot = false,
   } = data;
   if (typeof title !== "string" || !title.trim()) {
     throw new Error(`[blog] ${file}: "title" is required.`);
@@ -124,6 +131,17 @@ function parseFrontmatter(
       `[blog] ${file}: "accent" must be a hex colour, "#rrggbb".`,
     );
   }
+  if (
+    series !== undefined &&
+    (typeof series !== "string" || !isSeries(series))
+  ) {
+    throw new Error(
+      `[blog] ${file}: "series" must be a series id in src/content/series.ts.`,
+    );
+  }
+  if (typeof mascot !== "boolean") {
+    throw new Error(`[blog] ${file}: "mascot" must be true or false.`);
+  }
   return {
     title: title.trim(),
     description: description.trim(),
@@ -138,6 +156,8 @@ function parseFrontmatter(
     ...(kicker ? { kicker: kicker.trim() } : {}),
     ...(accent ? { accent } : {}),
     ...(cover ? { cover } : {}),
+    ...(series ? { series } : {}),
+    ...(mascot ? { mascot } : {}),
   };
 }
 
