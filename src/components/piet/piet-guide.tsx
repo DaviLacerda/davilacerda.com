@@ -15,7 +15,9 @@ import { pietShapePaths, type PietShape } from "@/lib/piet";
  * for a while and dances at the end. With `shapes`, he also changes form
  * from section to section (one form per `h2`, the first for what comes
  * before it), his outline morphing as each heading crosses the middle of
- * the screen, like on piecet.com. Decorative: hidden from assistive tech
+ * the screen, like on piecet.com. At the end of a post he flies into the
+ * next part of the series (`data-piet-slot`, an empty piece in the series
+ * list) and fits there, like the last piece of a puzzle. Decorative: hidden from assistive tech
  * and never in the way of a click. With reduced motion he simply sits in
  * the corner.
  */
@@ -62,6 +64,9 @@ export function PietGuide({
     const prints = Array.from(root.querySelectorAll(".print, video"));
 
     const morph = shapes?.length ? createMorph(node, root, shapes) : null;
+    // The next part of the series, at the end of a post: he fits into it.
+    const slot = document.querySelector<HTMLElement>("[data-piet-slot]");
+    let fittedAt = 0;
 
     const set = (next: PietPose) => {
       if (next === current) return;
@@ -92,11 +97,30 @@ export function PietGuide({
       lastScroll = scroll;
       if (Math.abs(velocity) > 0.5) lastMove = now;
 
-      x = x < 0 ? tx : x + (tx - x) * 0.18;
-      y = y < 0 ? ty : y + (ty - y) * 0.1;
+      // As the slot comes up the screen, he flies into it and shrinks to fit.
+      let dock = 0;
+      let dx = tx;
+      let dy = ty;
+      let scale = 1;
+      if (slot) {
+        const r = slot.getBoundingClientRect();
+        dock = ease(Math.min(1, Math.max(0, (vh * 0.85 - r.top) / (vh * 0.3))));
+        dx = tx + (r.left - tx) * dock;
+        dy = ty + (r.top - ty) * dock;
+        scale = 1 + (r.width / size - 1) * dock;
+      }
+      const follow = 0.1 + 0.9 * dock * dock;
+      x = x < 0 ? dx : x + (dx - x) * Math.max(0.18, follow);
+      y = y < 0 ? dy : y + (dy - y) * Math.max(0.1, follow);
       const lean = Math.max(-14, Math.min(14, velocity * 0.6));
-      tilt += (lean + (margin ? 0 : -10) - tilt) * 0.12;
-      node.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${tilt.toFixed(2)}deg)`;
+      tilt += ((lean + (margin ? 0 : -10)) * (1 - dock) - tilt) * 0.12;
+      node.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${tilt.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+
+      const fitted = dock > 0.97;
+      if (slot && fitted !== slot.hasAttribute("data-filled")) {
+        slot.toggleAttribute("data-filled", fitted);
+        fittedAt = fitted ? now : 0;
+      }
 
       // A print reaching the middle of the screen: a little jump, once each.
       for (const item of prints) {
@@ -108,10 +132,12 @@ export function PietGuide({
         }
       }
 
-      morph?.(vh);
+      morph?.(vh, dock);
 
       const still = now - lastMove;
-      if (progress >= 0.97) set("dance");
+      if (fittedAt) set(now - fittedAt < 1100 ? "joy" : "idle");
+      else if (dock > 0) set("listen");
+      else if (progress >= 0.97) set("dance");
       else if (now < joyUntil) set("joy");
       else if (box.top > vh * 0.15) set("wave");
       else if (still > 6000) set("rest");
@@ -225,13 +251,13 @@ function createMorph(
   const out = new Float32Array(POINTS * 2);
   let last = "";
 
-  return (vh: number) => {
+  return (vh: number, dock = 0) => {
     // How far each heading has crossed the middle of the screen, 0 to 1.
     const amounts = headings.slice(0, forms.length - 1).map((heading) => {
       const top = heading.getBoundingClientRect().top;
       return ease(Math.min(1, Math.max(0, (vh * 0.55 - top) / 260 + 0.5)));
     });
-    const key = amounts.map((t) => t.toFixed(3)).join();
+    const key = `${amounts.map((t) => t.toFixed(3)).join()}|${dock.toFixed(3)}`;
     if (key === last) return;
     last = key;
 
@@ -248,6 +274,15 @@ function createMorph(
       piece += ((next === "piece" ? 1 : 0) - piece) * t;
       brain += ((next === "brain" ? 1 : 0) - brain) * t;
     });
+    // Fitting into the next part: back to a piece, arms tucked in.
+    if (dock > 0) {
+      const target = form("piece");
+      for (let k = 0; k < out.length; k++) {
+        out[k] = out[k]! + (target[k]! - out[k]!) * dock;
+      }
+      brain *= 1 - dock;
+      piece = (piece + (1 - piece) * dock) * (1 - dock);
+    }
     body.setAttribute("d", toPath(out));
     svg.style.setProperty("--piet-piece", piece.toFixed(3));
     svg.style.setProperty("--piet-brain", brain.toFixed(3));

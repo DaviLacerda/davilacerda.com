@@ -1,5 +1,4 @@
 import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
-import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,6 +10,7 @@ import { PietGuide } from "@/components/piet/piet-guide";
 import { NextProjectLink, ProjectHero } from "@/components/projects/cards";
 import { DemoVideo } from "@/components/projects/demo-video";
 import { PressCards } from "@/components/projects/press";
+import { ProjectLinks } from "@/components/projects/project-links";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { BrandLogo, LogoTile } from "@/components/ui/logo";
@@ -154,21 +154,9 @@ export default async function ProjectPage({ params }: PageProps) {
           {t(project.summary, lang)}
         </p>
       ) : null}
-      {project.url ? (
-        <div {...enter(2)} className="mt-6">
-          <a
-            href={project.url}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex h-10 pressable items-center gap-1.5 rounded-full bg-foreground pr-4 pl-5 text-small font-medium text-background hover:opacity-90"
-          >
-            {interpolate(p.site, {
-              host: new URL(project.url).hostname.replace(/^www\./, ""),
-            })}
-            <ArrowUpRightIcon aria-hidden="true" className="size-4" />
-          </a>
-        </div>
-      ) : null}
+      <div {...enter(2)}>
+        <ProjectLinks project={project} lang={lang} className="mt-6" />
+      </div>
 
       {/* The demo first: seeing it work says more than any fact below. */}
       {demo ? (

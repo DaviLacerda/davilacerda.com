@@ -39,6 +39,14 @@ export function SeriesList({
   const published = getAllPosts(lang)
     .filter((post) => post.series === id)
     .sort((a, b) => a.date.localeCompare(b.date));
+  // The part after the one being read: an empty piece Piet fits into.
+  const at = published.findIndex((post) => post.translationKey === current);
+  const next = at >= 0 ? at + 1 : -1;
+  const fits = (
+    <span className="series-fits font-hand text-[1.2rem] leading-none font-semibold text-(--accent)">
+      {dict.blog.series.fits}
+    </span>
+  );
 
   return (
     <nav
@@ -61,7 +69,11 @@ export function SeriesList({
           const here = post.translationKey === current;
           const body = (
             <>
-              <Number n={i + 1} active={here} />
+              {i === next ? (
+                <Slot n={i + 1} />
+              ) : (
+                <Number n={i + 1} active={here} />
+              )}
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold text-balance">
                   {post.title}
@@ -69,6 +81,7 @@ export function SeriesList({
                 <span className="mt-0.5 block text-small text-muted-foreground">
                   {here ? dict.blog.series.youAreHere : post.description}
                 </span>
+                {i === next ? fits : null}
               </span>
               {here ? null : (
                 <ArrowRightIcon
@@ -103,7 +116,11 @@ export function SeriesList({
             key={t(part.title, "en")}
             className="flex items-center gap-4 rounded-2xl p-3"
           >
-            <Number n={published.length + i + 1} />
+            {published.length + i === next ? (
+              <Slot n={published.length + i + 1} />
+            ) : (
+              <Number n={published.length + i + 1} />
+            )}
             <span className="min-w-0 flex-1">
               <span className="block font-medium text-balance text-muted-foreground">
                 <span className="sr-only">
@@ -117,6 +134,7 @@ export function SeriesList({
               <span className="mt-0.5 block text-small text-muted-foreground/80">
                 {t(part.summary, lang)}
               </span>
+              {published.length + i === next ? fits : null}
             </span>
             <span className="shrink-0 rounded-full border border-dashed border-border px-2.5 py-0.5 text-[0.75rem] text-muted-foreground">
               {dict.blog.series.soon}
@@ -140,6 +158,21 @@ function Number({ n, active = false }: { n: number; active?: boolean }) {
       )}
     >
       {n}
+    </span>
+  );
+}
+
+/**
+ * The next part's number as an empty, dashed puzzle piece: at the end of a
+ * post, Piet (`PietGuide`) flies down and fits into it (`data-piet-slot`).
+ */
+function Slot({ n }: { n: number }) {
+  return (
+    <span aria-hidden="true" className="series-slot" data-piet-slot="">
+      <svg viewBox="-20 -20 863 635" className="series-slot-piece">
+        <path d="M 259 0 L 324 0 C 336.15 0 346 9.85 346 22 L 346 47.25 C 322.69 73.85 327.98 110.2 358.3 131.8 C 388.63 153.4 434.37 153.4 464.7 131.8 C 495.02 110.2 500.31 73.85 477 47.25 L 477 22 C 477 9.85 486.85 0 499 0 L 564 0 C 633.04 0 689 55.96 689 125 L 689 470 C 689 539.04 633.04 595 564 595 L 499 595 C 486.85 595 477 585.15 477 573 L 477 547.75 C 500.31 521.15 495.02 484.8 464.7 463.2 C 434.37 441.6 388.63 441.6 358.3 463.2 C 327.98 484.8 322.69 521.15 346 547.75 L 346 573 C 346 585.15 336.15 595 324 595 L 259 595 C 189.96 595 134 539.04 134 470 L 134 125 C 134 55.96 189.96 0 259 0 Z" />
+      </svg>
+      <span className="series-slot-n">{n}</span>
     </span>
   );
 }

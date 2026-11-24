@@ -346,6 +346,9 @@ export const en = {
       access: "Access",
     },
     /** The site of a project, beside its name on its page. */
+    /** Where to get the app; before launch, a "coming soon" placeholder. */
+    appStore: "Download on the App Store",
+    appStoreSoon: "Coming soon to the App Store",
     site: "Visit {host}",
     /** The blog series about a project, on its page. */
     series: "On the blog",
@@ -548,6 +551,8 @@ export const en = {
     pietHello: "Hi! I'm Piet.",
     series: {
       youAreHere: "You are here",
+      /** Beside the next part, once Piet has fitted into it. */
+      fits: "It fits!",
       soon: "Coming soon",
       part: "Part {n}",
     },

@@ -300,6 +300,9 @@ export const ptBr: Dictionary = {
       role: "Função",
       access: "Acesso",
     },
+    /** Where to get the app; before launch, a "coming soon" placeholder. */
+    appStore: "Baixar na App Store",
+    appStoreSoon: "Em breve na App Store",
     site: "Visitar {host}",
     series: "No blog",
     seriesNote: "A história de como ele foi feito, em partes.",
@@ -463,6 +466,8 @@ export const ptBr: Dictionary = {
     pietHello: "Oi! Eu sou o Piet.",
     series: {
       youAreHere: "Você está aqui",
+      /** Beside the next part, once Piet has fitted into it. */
+      fits: "Encaixou!",
       soon: "Em breve",
       part: "Parte {n}",
     },

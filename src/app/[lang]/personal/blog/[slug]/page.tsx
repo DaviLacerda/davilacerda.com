@@ -11,11 +11,14 @@ import { TableOfContents } from "@/components/blog/table-of-contents";
 import { ImageViewer } from "@/components/blog/image-viewer";
 import { Reveal } from "@/components/motion/reveal";
 import { PietGuide } from "@/components/piet/piet-guide";
+import { ProjectLinks } from "@/components/projects/project-links";
 import { LocaleAlternates } from "@/components/providers/alternate-links";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Prose } from "@/components/ui/prose";
 import { TagList } from "@/components/ui/tag";
+import { getProjectPage } from "@/content/profile";
+import { series } from "@/content/series";
 import { getDictionary, isLocale, otherLocales } from "@/i18n";
 import { formatDate, toIsoDate } from "@/i18n/format";
 import {
@@ -88,6 +91,9 @@ export default async function PostPage({ params }: PageProps) {
     .map((other) => translations[other])
     .find(Boolean);
   const { newer, older } = getAdjacentPosts(post);
+  const seriesProject = post.series
+    ? getProjectPage(series[post.series].project ?? "")
+    : undefined;
   // "Updated on {date}": render the date as a <time> inside the sentence.
   const [updatedBefore, updatedAfter = ""] =
     dict.blog.updatedOn.split("{date}");
@@ -152,6 +158,13 @@ export default async function PostPage({ params }: PageProps) {
             lang={lang}
             current={post.translationKey}
           />
+          {seriesProject ? (
+            <ProjectLinks
+              project={seriesProject}
+              lang={lang}
+              className="mt-4 justify-center"
+            />
+          ) : null}
         </Reveal>
       ) : null}
 
