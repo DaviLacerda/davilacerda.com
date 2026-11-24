@@ -24,6 +24,8 @@ export const routes = {
   project: (lang: Locale, slug: string) => `/${lang}/projects/${slug}`,
   /** Personal tab. */
   personal: (lang: Locale) => `/${lang}/personal`,
+  /** The things Davi uses, inside the Personal tab: a wall that zooms into each one. */
+  things: (lang: Locale) => `/${lang}/personal/things`,
   /** Blog index lives inside the Personal tab. */
   blog: (lang: Locale) => `/${lang}/personal#blog`,
   /** A single post. */

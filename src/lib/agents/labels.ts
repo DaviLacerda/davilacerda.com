@@ -18,6 +18,8 @@ const en = {
     since: "since {date}",
   },
   personalTitle: "{name}: personal",
+  thingsTitle: "{name}: things he uses",
+  thingsNote: "Each thing links to its maker's page.",
   workDocTitle: "{name}: {headline}",
   projectsTitle: "{name}: projects",
   topic: {
@@ -72,6 +74,10 @@ const en = {
     personalPt: "Pessoal (Português)",
     personalDesc:
       "What Davi is watching, his teams, where he plays, blog posts and where to find him online.",
+    thingsEn: "Things (English)",
+    thingsPt: "Coisas (Português)",
+    thingsDesc:
+      "The things Davi uses every day (laptop, earbuds, glasses, mouse, sneakers), each with a link to its maker's page.",
     topics: "Work answers",
     topicsIntro:
       "The Work tab is a guided assistant over the profile: each suggested question has its own page with a written answer, in both languages (English links below; Portuguese at the same paths under /pt-br).",
@@ -107,6 +113,8 @@ const ptBr: Labels = {
     since: "desde {date}",
   },
   personalTitle: "{name}: pessoal",
+  thingsTitle: "{name}: coisas que ele usa",
+  thingsNote: "Cada coisa leva à página do fabricante.",
   workDocTitle: "{name}: {headline}",
   projectsTitle: "{name}: projetos",
   topic: {

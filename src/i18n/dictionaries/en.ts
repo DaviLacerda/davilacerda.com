@@ -31,6 +31,11 @@ export const en = {
       description:
         "Music, series, his teams, games, writing and where to find Davi Lacerda.",
     },
+    things: {
+      title: "Things",
+      description:
+        "The things Davi Lacerda uses every day: his MacBook Air, AirPods Pro, Ray-Ban Meta glasses, Logitech G PRO mouse and Nike sneakers, with where to get each one.",
+    },
     blog: {
       title: "Blog",
       description:
@@ -490,6 +495,25 @@ export const en = {
         champion: "Champion",
       },
     },
+    /** The Things page (src/content/things.ts) and its tile on the Personal tab. */
+    things: {
+      title: "Things",
+      lead: "What I carry, wear and work with, every day.",
+      /** The tile on the Personal tab that opens the page. */
+      tile: "Things I use",
+      /** The way back to the Personal tab. */
+      back: "Personal",
+      wall: {
+        label: "Things",
+        zoomIn: "Zoom into {name}",
+        zoomOut: "Zoom out",
+        previous: "Previous thing",
+        next: "Next thing",
+        position: "{index} of {total}",
+        link: "See it on {store}",
+        facts: "Facts",
+      },
+    },
     sections: {
       writing: {
         title: "Writing",
@@ -551,7 +575,6 @@ export const en = {
   footer: {
     rights: "All rights reserved.",
   },
-
 
   common: {
     readMore: "Read more",

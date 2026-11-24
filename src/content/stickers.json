@@ -1,0 +1,26 @@
+{
+  "airpods-pro-2": {
+    "width": 788,
+    "height": 956
+  },
+  "logitech-g-pro": {
+    "width": 512,
+    "height": 956
+  },
+  "macbook-air-m3": {
+    "width": 956,
+    "height": 604
+  },
+  "nike-book-1": {
+    "width": 956,
+    "height": 480
+  },
+  "nike-vomero-5": {
+    "width": 956,
+    "height": 452
+  },
+  "ray-ban-meta-wayfarer": {
+    "width": 956,
+    "height": 445
+  }
+}

@@ -22,6 +22,7 @@ import {
   type FaqItem,
   type Project,
 } from "@/content/profile";
+import { things } from "@/content/things";
 import { getDictionary, localeMeta, locales, t, type Locale } from "@/i18n";
 import { toIsoDate } from "@/i18n/format";
 import { profileLastModified } from "@/lib/agents/dates";
@@ -554,6 +555,43 @@ export function projectsPageJsonLd(lang: Locale): CollectionPageLeaf {
         ...(project.story
           ? { url: absoluteUrl(routes.project(lang, project.id)) }
           : {}),
+      })),
+    },
+  };
+}
+
+/**
+ * The Things page: a CollectionPage whose main entity is the list of things
+ * Davi uses, each linking to its maker's page. They are plain `Thing`s on
+ * purpose: as `Product`s without offers or reviews Google would report every
+ * one as an invalid product snippet.
+ */
+export function thingsPageJsonLd(lang: Locale): CollectionPageLeaf {
+  const dict = getDictionary(lang);
+  const url = absoluteUrl(routes.things(lang));
+  return {
+    "@type": "CollectionPage",
+    "@id": `${url}#page`,
+    url,
+    name: `${dict.meta.things.title} | ${dict.meta.siteName}`,
+    description: dict.meta.things.description,
+    inLanguage: localeMeta[lang].htmlLang,
+    isPartOf: { "@id": jsonLdIds.website },
+    author: { "@id": jsonLdIds.person },
+    about: { "@id": jsonLdIds.person },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: things.length,
+      itemListElement: things.map((thing, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Thing",
+          "@id": `${url}#${thing.id}`,
+          name: thing.name,
+          description: `${t(thing.kind, lang)}, ${thing.brand}`,
+          url: t(thing.url, lang),
+        },
       })),
     },
   };

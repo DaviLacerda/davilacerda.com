@@ -21,7 +21,7 @@
  * Rules the components follow:
  * - Fills, not lines: a surface is one tone step from the page (`bg-surface`),
  *   the emphasis panel is the inverse (`bg-ink`, black in light mode, white
- *   in dark). No 1px outlines, no shadows, no gradients. Only form fields and
+ *   in dark). No 1px outlines, no shadows (the Things stickers aside), no gradients. Only form fields and
  *   real tables have lines.
  * - The primary action is ink (black in light mode, white in dark). There is
  *   no accent colour.
@@ -382,7 +382,57 @@
   }
 }
 
+/*
+ * The Things stickers (see ThingsWall): each rests at its own small angle
+ * with a thin shadow, the one place the site uses shadows, because a sticker
+ * is a thing stuck on the panel. Under a mouse it lifts and turns toward the
+ * pointer in perspective (--rx, --ry), its shadow sliding the other way
+ * (--sx, --sy); it follows the pointer quickly and settles back slowly.
+ */
+[data-sticker] {
+  --rx: 0deg;
+  --ry: 0deg;
+  --sx: 0px;
+  --sy: 2px;
+  --shade: oklch(0 0 0 / 0.14);
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))
+    rotate(var(--tilt, 0deg));
+  filter: drop-shadow(var(--sx) var(--sy) 3px var(--shade));
+  transition:
+    transform 600ms var(--ease-out),
+    filter 600ms var(--ease-out);
+}
+
+.dark [data-sticker] {
+  --shade: oklch(0 0 0 / 0.45);
+}
+
+[data-sticker][data-lifted] {
+  --shade: oklch(0 0 0 / 0.2);
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))
+    rotate(var(--tilt, 0deg)) scale(1.06);
+  filter: drop-shadow(var(--sx) var(--sy) 10px var(--shade));
+  transition-duration: 160ms;
+}
+
+.dark [data-sticker][data-lifted] {
+  --shade: oklch(0 0 0 / 0.6);
+}
+
+/* The Things wall's card arrives once the camera is on its way (see ThingsWall). */
+@keyframes thing-card {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  [data-thing-card] {
+    animation: thing-card 360ms var(--ease-out) 140ms both;
+  }
+
   [data-bar] {
     animation: bar 640ms var(--ease-out) both;
     animation-delay: calc(var(--b, 0) * 140ms + 320ms);
