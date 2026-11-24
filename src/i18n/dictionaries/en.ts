@@ -24,7 +24,7 @@ export const en = {
     projects: {
       title: "Projects",
       description:
-        "What Davi Lacerda built with AI at Algar, and the results: the Sales Copilot, Best AI Project in LATAM, Billy, which cut manual invoice review time by 96%, and the press that covered them.",
+        "What Davi Lacerda built with AI, at Algar and on his own: the Sales Copilot, Best AI Project in LATAM, Billy, which cut manual invoice review time by 96%, piecet, his iPhone app, and the press that covered them.",
     },
     personal: {
       title: "Personal",
@@ -329,7 +329,7 @@ export const en = {
   projects: {
     title: "Projects",
     /** First-person line under the title. */
-    lead: "What I built with AI at Algar, and the results.",
+    lead: "What I built with AI, at Algar and on my own, and the results.",
     /** The outlets' row on the tab, and the coverage on a project's page. */
     press: "In the press",
     /** Under "In the press" on a project's page (the articles do not name Davi). */
@@ -350,6 +350,14 @@ export const en = {
       role: "Role",
       access: "Access",
     },
+    /** The site of a project, beside its name on its page. */
+    /** Where to get the app; before launch, a "coming soon" placeholder. */
+    appStore: "Download on the App Store",
+    appStoreSoon: "Coming soon to the App Store",
+    site: "Visit {host}",
+    /** The blog series about a project, on its page. */
+    series: "On the blog",
+    seriesNote: "The story of how it was made, in parts.",
     problem: "The problem",
     solution: "What it does",
     build: "How it's built",
@@ -553,6 +561,25 @@ export const en = {
     morePosts: "More posts",
     /** RSS channel title, e.g. "Davi Lacerda | Blog". */
     feedTitle: "{name} | Blog",
+    /** The newest post, featured on the home page and in the notice on other pages. */
+    newPost: "New on the blog",
+    readNow: "Read now",
+    dismiss: "Dismiss",
+    /** The parts of a blog series, at the foot of a part and on the project's page. */
+    /** The image viewer on a post (a print, full size). */
+    openImage: "Open image",
+    previousImage: "Previous image",
+    nextImage: "Next image",
+    closeImage: "Close image",
+    /** What Piet, piecet's mascot, says at the top of a page he rides down. */
+    pietHello: "Hi! I'm Piet.",
+    series: {
+      youAreHere: "You are here",
+      /** Beside the next part, once Piet has fitted into it. */
+      fits: "It fits!",
+      soon: "Coming soon",
+      part: "Part {n}",
+    },
   },
 
   dates: {

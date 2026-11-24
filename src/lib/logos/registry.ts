@@ -119,6 +119,13 @@ export const logoRegistry = {
     label: "Claude Code",
     names: ["Claude Code"],
   },
+  apple: { icon: "simple-icons:apple", label: "Apple" },
+  x: { icon: "simple-icons:x", label: "X" },
+  swift: {
+    icon: "logos:swift",
+    label: "Swift",
+    names: ["Swift", "SwiftUI"],
+  },
   githubcopilot: {
     icon: "simple-icons:githubcopilot",
     label: "GitHub Copilot",
@@ -154,6 +161,8 @@ export const logoRegistry = {
   // Where Davi studied (`logo` in the profile): files in public/logos. Algar and
   // Brain use their full-colour PNG logos instead (public/logos/*.png).
   ufu: { icon: "file:ufu", label: "UFU", tint: "#092269" },
+  // Brands a blog post names (src/content/brands.ts).
+  vivet: { icon: "file:vivet", label: "Vivet", tint: "#000" },
 } as const satisfies Record<string, LogoSpec>;
 
 export type LogoId = keyof typeof logoRegistry;

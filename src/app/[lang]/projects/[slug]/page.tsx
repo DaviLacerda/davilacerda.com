@@ -4,15 +4,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 
+import { SeriesList } from "@/components/blog/series-list";
 import { Reveal } from "@/components/motion/reveal";
+import { PietGuide } from "@/components/piet/piet-guide";
 import { NextProjectLink, ProjectHero } from "@/components/projects/cards";
 import { DemoVideo } from "@/components/projects/demo-video";
 import { PressCards } from "@/components/projects/press";
+import { ProjectLinks } from "@/components/projects/project-links";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { BrandLogo, LogoTile } from "@/components/ui/logo";
 import { TagList } from "@/components/ui/tag";
 import { getProjectPage, getProjectPages, profile } from "@/content/profile";
+import { series as allSeries, type SeriesId } from "@/content/series";
 import { getDictionary, interpolate, isLocale, t } from "@/i18n";
 import { formatPartialDate } from "@/i18n/format";
 import { techLogo } from "@/lib/logos";
@@ -75,10 +79,13 @@ export default async function ProjectPage({ params }: PageProps) {
   const { story } = project;
   const name = t(project.name, lang);
   const headline = projectHeadline(project, lang);
-  const demo = projectDemo(project.id);
+  const demo = projectDemo(project.id, lang);
   const next = nextProject(project);
   const employer = profile.experience.find(
     (job) => splitCompanyName(t(job.company, lang)).short === project.context,
+  );
+  const seriesId = (Object.keys(allSeries) as SeriesId[]).find(
+    (id) => allSeries[id].project === project.id,
   );
   const enter = (i: number) => ({
     "data-enter": "",
@@ -111,7 +118,7 @@ export default async function ProjectPage({ params }: PageProps) {
   ].filter((fact) => fact !== null);
 
   return (
-    <Container bento className="pt-8 sm:pt-14">
+    <Container bento className="pt-8 sm:pt-14" data-piet-track="">
       <JsonLd
         data={[
           personJsonLd(lang),
@@ -147,6 +154,9 @@ export default async function ProjectPage({ params }: PageProps) {
           {t(project.summary, lang)}
         </p>
       ) : null}
+      <div {...enter(2)}>
+        <ProjectLinks project={project} lang={lang} className="mt-6" />
+      </div>
 
       {/* The demo first: seeing it work says more than any fact below. */}
       {demo ? (
@@ -179,6 +189,23 @@ export default async function ProjectPage({ params }: PageProps) {
         <div {...enter(4)} className="mt-10">
           <ProjectHero project={project} headline={headline} lang={lang} />
         </div>
+      ) : null}
+
+      {/* The story behind it, part by part, on the blog. */}
+      {seriesId ? (
+        <section aria-labelledby="series-title" className="mt-20 sm:mt-24">
+          <Reveal>
+            <h2 id="series-title" className="text-heading">
+              {p.series}
+            </h2>
+            <p className="mt-2 text-small text-muted-foreground">
+              {p.seriesNote}
+            </p>
+          </Reveal>
+          <Reveal className="mt-6">
+            <SeriesList id={seriesId} lang={lang} />
+          </Reveal>
+        </section>
       ) : null}
 
       {/* The press right under the result: what others wrote comes first. */}
@@ -265,6 +292,14 @@ export default async function ProjectPage({ params }: PageProps) {
           />
         )}
       </Reveal>
+
+      {project.mascot ? (
+        <PietGuide
+          target="[data-piet-track]"
+          hello={dict.blog.pietHello}
+          shapes={project.mascot === true ? undefined : project.mascot}
+        />
+      ) : null}
 
       {next ? (
         <Reveal className="mt-20 sm:mt-24">

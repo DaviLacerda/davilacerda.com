@@ -5,6 +5,7 @@ import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 import Link from "next/link";
 
 import { fit } from "@/components/chat/answers/parts";
+import { PietFigure } from "@/components/piet/piet-figure";
 import { Figure } from "@/components/projects/figure";
 import { TagList } from "@/components/ui/tag";
 import type { Project } from "@/content/profile";
@@ -186,6 +187,11 @@ export function FeaturedProjectCard({
           label={headline.kind === "metric" ? headline.label : ""}
           lang={lang}
         />
+      ) : project.mascot ? (
+        // No figure yet (piecet): its mascot instead, who waves on hover.
+        <span className="piet-card flex items-end">
+          <PietFigure className="w-28 sm:w-36" />
+        </span>
       ) : (
         <span />
       )}
